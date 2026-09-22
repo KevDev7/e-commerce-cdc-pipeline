@@ -31,7 +31,7 @@ Local fixtures cover adversarial ordering and row-identity checks. The live AWS 
 
 The Olist pipeline is **validated locally and end to end on AWS**. All 415,418 selected historical rows passed through RDS PostgreSQL → DMS → S3 → Redshift. The current 19 dbt models and 49 data tests pass on Redshift. Every current source field reconciled after simulated inserts, updates and deletes.
 
-The live demonstration verified 21 changes committed during the initial customer snapshot, recovery of 14 changes committed while DMS was stopped, atomic raw-load and incremental-mart retries, and duplicate-file replay. Two real scheduled Airflow batches passed; the next quiet run skipped loading/building/reporting. Bootstrap timing used 100,002 additional synthetic customer rows, reported separately from Olist's records. The local 36-test suite also passes.
+The live demonstration verified 21 changes committed during the initial customer snapshot, recovery of 14 changes committed while DMS was stopped, atomic raw-load and incremental-mart retries, and duplicate-file replay. Two real scheduled Airflow batches passed; the next quiet run skipped loading/building/reporting. Bootstrap timing used 100,002 additional synthetic customer rows, reported separately from Olist's records. The local suite includes 37 tests, including the measured workload generator.
 
 [Reproducible checks and measured evidence](docs/validation.md) distinguish actual cloud results from local fixtures. Earlier Synthea results remain [archived](docs/archive/synthea/README.md).
 
@@ -108,6 +108,10 @@ uv run python scripts/report_batches.py --run-id 'your-airflow-run-id'
 ```
 
 The local audit records task attempts, run outcomes, elapsed time, committed-file input counts by operation, snapshot rows, dbt outcome and the last successful completion. Quiet batches remain distinguishable from failures. SQLite runs locally alongside Airflow, so reporting does not wake Redshift. Input counts are not claims about new warehouse rows after deduplication. See [audit schema and retry semantics](docs/batch-audit.md).
+
+## Measured workload
+
+On an active 4-RPU Redshift warehouse, a simulated 250-order workload produced **1,600 real captured changes** (1,000 inserts, 500 updates, 100 hard deletes). The final S3 object arrived 60 seconds after source writes finished. Loading took 32 seconds; incremental dbt plus all 49 tests took 102 seconds. All source fields reconciled, 225 orders remained, and totals/customer versions were correct. This was one manually invoked batch over existing Olist history, not sustained throughput or a five-minute latency guarantee. [Conditions and reproduction](docs/workload.md).
 
 ## Remaining validation
 
