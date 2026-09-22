@@ -63,7 +63,7 @@ def check_capture():
     log.info("Capture running; initial load complete for all four source tables")
 
 
-def load_file(connection, s3, bucket, key, role):
+def load_file(connection, s3, bucket, key, role, *, metrics=None):
     body = s3.get_object(Bucket=bucket, Key=key)["Body"].read()
     digest = hashlib.sha256(body).hexdigest()
     source = f"s3://{bucket}/{key}"
@@ -76,6 +76,8 @@ def load_file(connection, s3, bucket, key, role):
             if previous[0] != digest:
                 raise ValueError(f"Previously loaded file changed: {key}")
             connection.commit()
+            if metrics is not None:
+                metrics["files_already_loaded"] = metrics.get("files_already_loaded", 0) + 1
             return 0
         events = parse_csv(body.decode(), source, snapshot_table=snapshot_table(key, os.environ.get("CAPTURE_PREFIX", "olist-v1")))
         for table in TABLES:
@@ -95,6 +97,11 @@ def load_file(connection, s3, bucket, key, role):
             cursor.execute(f"DROP TABLE incoming_{table}")
         cursor.execute('INSERT INTO "raw".loaded_files (source_file,content_sha256,row_count) VALUES (%s,%s,%s)', (source, digest, len(events)))
         connection.commit()
+        if metrics is not None:
+            metrics['files_committed'] = metrics.get('files_committed', 0) + 1
+            for event in events:
+                name = 'snapshot_rows' if event.values[-2] else 'input_' + event.values[-6]
+                metrics[name] = metrics.get(name, 0) + 1
         log.info("Processed %s: %s incoming events (existing event identities are skipped)", key, len(events))
         return len(events)
     except Exception:
@@ -104,7 +111,9 @@ def load_file(connection, s3, bucket, key, role):
         cursor.close()
 
 
-def load_pending():
+def load_pending(*, metrics=None):
+    if metrics is None:
+        metrics = {}
     session = aws_session()
     s3 = session.client("s3")
     bucket = os.environ["S3_BUCKET"]
@@ -119,7 +128,8 @@ def load_pending():
         for statement in raw_ddl():
             cursor.execute(statement)
         connection.commit()
-        total = sum(load_file(connection, s3, bucket, key, os.environ["REDSHIFT_COPY_ROLE"]) for key in keys)
+        metrics["files_listed"] = len(keys)
+        total = sum(load_file(connection, s3, bucket, key, os.environ["REDSHIFT_COPY_ROLE"], metrics=metrics) for key in keys)
         log.info("Inspected %s files; processed %s incoming events from previously unseen files", len(keys), total)
     finally:
         connection.close()
@@ -130,7 +140,7 @@ def report():
     try:
         cursor = connection.cursor()
         counts = {}
-        for table in ("dim_customers", "dim_customer_history", "fct_orders", "fct_order_items", "fct_order_payments"):
+        for table in ("dim_customers", "dim_customer_history", "fct_orders", "fct_order_status_history", "fct_order_items", "fct_order_payments"):
             cursor.execute(f"SELECT count(*) FROM analytics_marts.{table}")
             counts[table] = cursor.fetchone()[0]
         log.info("Populated marts: %s", json.dumps(counts))

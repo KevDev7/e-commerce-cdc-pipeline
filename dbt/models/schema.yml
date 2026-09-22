@@ -131,3 +131,12 @@ models:
         arguments:
           to: ref('fct_orders')
           field: order_id
+- name: fct_order_status_history
+  description: Observed status transitions since capture began, including deletion markers.
+  columns:
+  - name: order_status_version_id
+    data_tests: [unique, not_null]
+  - name: order_id
+    data_tests: [not_null]
+  - name: status
+    data_tests: [not_null]
