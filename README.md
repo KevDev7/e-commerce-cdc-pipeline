@@ -115,4 +115,4 @@ On an active 4-RPU Redshift warehouse, a simulated 250-order workload produced *
 
 ## Remaining validation
 
-The live demo verifies correctness and scheduled execution, not sustained production throughput or a latency SLA. Parquet remains under evaluation. dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.
+The live demo verifies correctness and scheduled execution, not sustained production throughput or a latency SLA. A [measured Parquet comparison](docs/parquet-evaluation.md) supports retaining gzip CSV for the current small batches. dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.
