@@ -1,6 +1,6 @@
 # Olist source contract
 
-Source: [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce), version 2, published under CC BY-NC-SA 4.0. The exact download and SHA-256 are pinned in `src/olist_cdc/seed.py`; mismatched bytes require inspection. Original CSVs are downloaded into ignored `data/olist/source.zip` and never committed.
+Source: [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce), version 2, published under CC BY-NC-SA 4.0. The exact download and SHA-256 are pinned in `src/olist_cdc/seed.py`; mismatched bytes require inspection. Cloud preparation downloads the original ZIP temporarily, retains a copy in S3, and removes the local temporary file. Optional local seeding uses ignored `data/olist/source.zip`. Datasets are never committed.
 
 This is real, anonymized historical business data, not a live API or event stream. The application database is a portfolio reconstruction. New source activity is simulated through real SQL transactions; PostgreSQL produces the WAL read by DMS.
 

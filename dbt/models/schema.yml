@@ -1,14 +1,20 @@
 version: 2
 models:
 - name: stg_customers
+  description: >-
+    One row per captured customer event, including initial snapshots and deletes.
+    Multiple events can share customer_id; _event_id identifies the event.
   columns:
   - name: _event_id
     data_tests:
     - unique
     - not_null
   - name: customer_id
+    description: Source customer-record key associated with an order in the historical Olist export; the key used for CDC history.
     data_tests:
     - not_null
+  - name: customer_unique_id
+    description: Identifier linking the same customer across order-associated records; it is not unique at this model's grain.
   - name: _op
     data_tests:
     - accepted_values:
@@ -81,24 +87,77 @@ models:
     data_tests:
     - not_null
 - name: dim_customers
+  description: >-
+    One row per currently present customer_id, with the latest observed attributes.
+    In historical Olist, customer_id identifies an order-associated record;
+    customer_unique_id links repeat customers. Counting these rows counts customer
+    records, not distinct repeat-customer identities. Deleted records are excluded.
   columns:
   - name: customer_id
+    description: Primary key of the current source customer record; join fct_orders.customer_id here for its current customer attributes.
     data_tests:
     - unique
     - not_null
+  - name: customer_unique_id
+    description: Cross-order customer identity; several customer_id records can share this value. Use it for distinct-customer analysis within the selected population.
+  - name: city
+    description: Latest observed city for this customer record; historical order attributes come from dim_customer_history instead.
+  - name: state
+    description: Latest observed state for this customer record.
+  - name: postal_code
+    description: Latest observed postal-code prefix, stored as text to preserve leading zeroes.
 - name: dim_customer_history
+  description: >-
+    One row per observed attribute version or deletion marker for a customer_id.
+    SCD Type 2 history is derived by dbt SQL from retained CDC events, without
+    dbt snapshots. Changes to customer_unique_id, city, state or postal_code create
+    versions; unchanged attributes do not. History begins at capture observation
+    and does not reconstruct attributes at historical Olist purchase times.
   columns:
   - name: customer_version_id
-    data_tests:
-    - unique
-    - not_null
-- name: fct_orders
-  columns:
-  - name: order_id
+    description: Primary key of a version, derived from customer_id and its starting source sequence; referenced by fct_orders.customer_version_id.
     data_tests:
     - unique
     - not_null
   - name: customer_id
+    description: Source customer-record key whose versions are tracked; repeated across versions.
+  - name: customer_unique_id
+    description: Cross-order identity observed in this version. Histories of separate customer_id records are not combined into one person-level timeline.
+  - name: city
+    description: City observed in this version; used by historical order joins.
+  - name: state
+    description: State observed in this version.
+  - name: postal_code
+    description: Postal-code prefix observed in this version, preserved as text.
+  - name: observed_from
+    description: CDC commit time, or initial snapshot transfer time, starting this observation. This is not a reconstructed business-effective date.
+  - name: observed_to
+    description: Next version's observation time; NULL for the latest version. Versions may share a timestamp, so use source sequence bounds to order them.
+  - name: source_order_from
+    description: Inclusive source sequence starting this version; resolves changes sharing a commit timestamp.
+  - name: source_order_to
+    description: Exclusive source sequence of the next version; NULL for the latest version.
+  - name: is_deleted
+    description: True for a retained deletion marker; such a version cannot supply an order's historical customer attributes.
+  - name: is_initial_snapshot
+    description: True when this version originates in the initial load. An ambiguous snapshot overlapping CDC is excluded from history.
+  - name: is_current
+    description: True only for the latest non-deleted version; a final deletion marker has an open interval but is not current.
+- name: fct_orders
+  description: >-
+    One row per currently present order_id, with current order state and separately
+    aggregated item/payment totals. customer_id links to current customer attributes;
+    customer_version_id links to the customer on the latest captured order INSERT.
+    A later customer change or reassignment does not replace that creation-time
+    association. Snapshot-only orders have unknown pre-capture customer history.
+  columns:
+  - name: order_id
+    description: Primary key of the current order; a captured reinsert starts a new lifecycle for a reused key.
+    data_tests:
+    - unique
+    - not_null
+  - name: customer_id
+    description: Current customer-record reference from the order. Join dim_customers for current attributes; use customer_version_id for creation-time attributes.
     data_tests:
     - not_null
     - relationships:
@@ -113,14 +172,33 @@ models:
           to: ref('dim_customer_history')
           field: customer_version_id
   - name: customer_history_status
+    description: >-
+      matched means a customer version covers the captured creation;
+      creation_not_captured means no order INSERT was captured;
+      customer_history_unavailable means an INSERT exists but no eligible customer
+      version covers it. The latter two have NULL customer_version_id.
     data_tests:
     - not_null
     - accepted_values:
         arguments:
           values: [matched, creation_not_captured, customer_history_unavailable]
+  - name: captured_created_at
+    description: Commit time of the latest captured order INSERT; NULL for snapshot-only orders. Distinct from the source's purchased_at business timestamp.
+  - name: purchased_at
+    description: Source purchase timestamp, preserved without a timezone; it does not establish historical customer attributes.
+  - name: item_total
+    description: Sum of current item prices, aggregated before joining payment totals to avoid multiplying rows.
+  - name: payment_total
+    description: Sum of current payment-entry values, without multiplying by installment counts; may differ from item plus freight totals in the source.
+  - name: has_items
+    description: Whether current item records exist; distinguishes an absent detail set from an observed zero total.
+  - name: has_payments
+    description: Whether current payment records exist; distinguishes an absent detail set from an observed zero total.
 - name: fct_order_items
+  description: One row per currently present order_id and order_item_id combination; item-level amounts must not be multiplied by a direct join to multiple payment rows.
   columns:
   - name: order_item_key
+    description: Primary key derived from order_id and order_item_id; preserves the source's composite grain.
     data_tests:
     - unique
     - not_null
@@ -131,9 +209,15 @@ models:
         arguments:
           to: ref('fct_orders')
           field: order_id
+  - name: product_id
+    description: Source product identifier; product attributes and a product dimension are outside the current four-table scope.
+  - name: seller_id
+    description: Source seller identifier; seller attributes and a seller dimension are outside the current four-table scope.
 - name: fct_order_payments
+  description: One row per currently present order_id and payment_sequential combination; an order can have multiple payment entries.
   columns:
   - name: payment_key
+    description: Primary key derived from order_id and payment_sequential; preserves the source's composite grain.
     data_tests:
     - unique
     - not_null
@@ -144,12 +228,22 @@ models:
         arguments:
           to: ref('fct_orders')
           field: order_id
+  - name: payment_installments
+    description: Installment count recorded for this payment entry; do not multiply payment_value by this count.
+  - name: payment_value
+    description: Total value of this source payment entry; sum entries separately before joining order-item aggregates.
 - name: fct_order_status_history
-  description: Observed status transitions since capture began, including deletion markers.
+  description: >-
+    One row per observed status version or deletion/reinsertion transition for an
+    order_id. Repeated same-status updates are suppressed. Initial snapshots show
+    the observed starting state, not the order's earlier lifecycle.
   columns:
   - name: order_status_version_id
+    description: Primary key derived from order_id and the source sequence starting this status version.
     data_tests: [unique, not_null]
   - name: order_id
     data_tests: [not_null]
   - name: status
     data_tests: [not_null]
+  - name: observed_duration_seconds
+    description: Elapsed observation time for a closed, non-deleted interval; NULL for open intervals and deletion markers. This is not the historical purchase-to-delivery duration.

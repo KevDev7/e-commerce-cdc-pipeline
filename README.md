@@ -111,6 +111,13 @@ Local tests compare successive incremental results with `--full-refresh`, inject
 
 ## Customer versions at order creation
 
+Customer history implements **SCD Type 2 behavior in `dim_customer_history`**,
+derived from retained CDC events using dbt SQL. `dim_customers` holds current
+attributes. Versions track observed city, state, postal-code and customer-identity
+changes; the project does not use dbt snapshots or introduce a customer tier.
+History follows the source `customer_id` record, while `customer_unique_id` links
+repeat customers across records. See the [mart grains and worked join example](docs/warehouse.md#marts-six-incremental-tables).
+
 New captured orders carry a customer_version_id pointing to the observed address version when their INSERT occurred. An order created before a customer correction keeps the earlier version; a later order uses the new version. Customer-only late files also revisit affected orders. Original historical snapshot orders have NULL version IDs with `creation_not_captured`; missing captured history is labeled separately. We do not invent customer history for 2016–2018 purchases.
 
 ## Order-status history
