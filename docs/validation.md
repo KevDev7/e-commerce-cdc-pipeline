@@ -2,6 +2,8 @@
 
 Executed on 2026-09-22. [Machine-readable evidence](evidence/cloud-validation.json) contains the counts, reconciliation hashes, replay checks, business checks and actual Airflow task states.
 
+This report describes the original baseline run. The subsequent [CDC reliability experiment](reliability.md) separately tests concurrent initial-load writes, mid-load recovery and freshness, and documents the resulting patient-history fix.
+
 ## Real AWS end-to-end test
 
 The pipeline used RDS PostgreSQL 17.11, DMS 3.6.1, S3, Redshift Serverless at 4 RPUs, dbt Core 1.12.5 with dbt-redshift 1.11.1, and local Airflow 2.11.2 in Docker.

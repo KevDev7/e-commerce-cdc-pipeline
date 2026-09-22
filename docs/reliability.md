@@ -18,7 +18,30 @@ Local tests establish behavior for the local database or explicit fixtures only.
 - A failure loading the second table rolls back the first table and the file ledger; retry succeeds without duplication.
 - Bootstrap validation rejects missing/partial overlap, and freshness requires the specific probe event and fails when its deadline expires.
 
-The local snapshot test uses PostgreSQL's native snapshot export, not DMS. It establishes the source mechanism; the following cloud experiment is necessary to establish end-to-end behavior. No new AWS run has been executed yet on this branch.
+The local snapshot test uses PostgreSQL's native snapshot export, not DMS. The separate AWS run below establishes end-to-end behavior with actual DMS output and Redshift.
+
+## AWS results — 2026-09-22
+
+The second run used the existing architecture with an additional $5 allowance. [Machine-readable evidence](evidence/cloud-reliability.json) preserves the measurements separately from the original baseline.
+
+| Check | Observed result |
+|---|---|
+| Active initial load | 197 writer transactions; four committed strictly inside the patients full-load interval, 09:39:37.379–09:39:40.033 UTC |
+| Overlapping changes | All 12 inserts, updates and deletes from those four transactions found exactly once in Redshift raw |
+| Raw history | 200,149 snapshot rows plus 527 CDC events: 179 inserts, 175 updates, 173 deletes; 200,676 distinct event identities |
+| Mid-load failure | Injected exception after actual INSERTs into all four Redshift raw tables; all rows and the ledger rolled back |
+| Retry | The same 124-event file loaded once; another retry changed no counts |
+| Freshness | Known committed probe observed in S3 at 61.806s, raw at 72.445s, and the tested mart at 148.877s; passed the configured 300s threshold |
+| Models | All 15 models and 42 dbt tests passed, including the fresh probe rebuild |
+| Reconciliation | Every current field matched between PostgreSQL and Redshift across all four tables |
+
+Final marts contained 100,112 patients, 100,626 patient-history versions, 5,572 encounters, 9,422 claims and 85,049 financial entries. The 100,000 extra synthetic patients were padding for the initial-load experiment. This is not a throughput benchmark.
+
+The history regression was first reproduced locally: snapshot transfer timestamps could introduce backwards history intervals. The corrected model excludes ambiguous snapshot baselines from historical versioning while preserving them in raw/current-state processing. Two such snapshot rows occurred in the AWS data; all captured CDC remains retained. This avoids fabricating a pre-CDC history state.
+
+An initial Redshift connection timed out before SQL work began. Subsequent network checks showed the endpoint reachable and retry succeeded without changing network permissions. The injected warehouse test covers a handled exception before commit, not a killed process or lost commit acknowledgment. Concurrent initial-load writes were tested on patients, not every possible cross-table transaction or schema change. The writer was stopped before final reconciliation.
+
+The pre-teardown usage snapshot showed 1,920 charged RPU-seconds, approximately **$0.20 in Redshift compute** at the checked rate. This excludes later/billing-lag usage and other AWS services, taxes and credits. Teardown has been requested; final absence checks are pending.
 
 ## Bounded cloud experiment
 

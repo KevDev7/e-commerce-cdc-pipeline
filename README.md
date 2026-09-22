@@ -22,6 +22,10 @@ A healthcare billing data engineering project using synthetic Synthea data to si
 
 The business workload is simulated using synthetic data. PostgreSQL generates the actual WAL and AWS DMS captures it. This is a small portfolio demonstration, not a production workload benchmark. See [measured results and limits](docs/validation.md).
 
+## Reliability validation
+
+A second AWS run tested writes during the initial load, rollback after partial warehouse writes, and measured freshness. All 12 changes committed during the patients load reached Redshift exactly once. A failed four-table load rolled back and retried safely. A new source record reached the tested mart in 148.9 seconds, and all current source fields reconciled. This run also exposed and fixed an overlapping-snapshot history bug. See [the experiment, results and limits](docs/reliability.md).
+
 ## Local source
 
 Requires Docker Desktop, Python 3.12 and [uv](https://docs.astral.sh/uv/).
