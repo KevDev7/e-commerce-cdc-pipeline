@@ -142,6 +142,11 @@ retained bucket address stay in ignored `data/`. S3 storage continues to incur
 small charges while retained. Prior sessions' [cleanup evidence](docs/evidence/olist-session-cleanup.json)
 records the older delete-everything policy.
 
+The Parquet session's teardown was verified: all project compute and database
+snapshots are absent; **20 S3 objects totaling about 165 MB remain private and
+encrypted**. No project datasets, database containers or database volumes remain
+on the Mac. [Retention and cleanup evidence](docs/evidence/olist-parquet-retention.json).
+
 ## Remaining validation
 
 The live demo verifies correctness and scheduled execution, not sustained production throughput or a latency SLA. Derived COPY inputs now use typed Zstandard Parquet. The [measured comparison](docs/parquet-evaluation.md) shows smaller large snapshots but larger tiny CDC files; this is not a universal space or speed improvement. The Parquet COPY path is validated on AWS; its scheduled latency and sustained throughput have not been rebenchmarked. dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.

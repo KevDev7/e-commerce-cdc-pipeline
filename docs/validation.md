@@ -19,6 +19,9 @@ All 99,441 historical orders retained unknown pre-capture customer history.
 fingerprints and build outcomes. The 42-test suite and Airflow smoke checks
 passed in GitHub CI. This AWS session invoked shared pipeline commands manually;
 it did not repeat the unchanged scheduler or establish a new latency benchmark.
+[Teardown verification](evidence/olist-parquet-retention.json) confirms paid
+compute/snapshots are absent, S3 data remains private and unchanged, and no full
+local database or dataset files remain.
 
 
 Executed locally on 2026-09-22. [Machine-readable results](evidence/olist-local-validation.json) record source/target fingerprints, counts and aggregate totals.
