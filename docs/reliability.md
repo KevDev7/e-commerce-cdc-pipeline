@@ -6,7 +6,7 @@ The local suite verifies committed I/U/D in PostgreSQL WAL and excludes a rolled
 
 Warehouse fixtures test late snapshots, out-of-order CDC files, hard deletes, replay, separate item/payment aggregation and observed customer history. An invalid second table rolls back the first table's writes and the file ledger. A corrected retry succeeds once. Snapshot transfer times cannot establish an earlier history version when they overlap captured CDC.
 
-Five-minute Airflow batches acknowledge S3 metadata only after load/build/report success. Failed builds stay eligible on the next run even if raw loading already committed. Quiet batches skip all Redshift work. The active freshness script stops nested dbt processes on timeout.
+Five-minute Airflow batches acknowledge S3 metadata only after load/build/report success. Failed builds stay eligible on the next run even if raw loading already committed. Quiet batches skip all Redshift work. Local audit records retain task attempts, partial committed-input metrics, and final batch outcomes; interrupted work stays incomplete. Order-status history retains observed transitions and tombstones without inventing historical states. The active freshness script stops nested dbt processes on timeout.
 
 ## Future paid AWS checks
 
