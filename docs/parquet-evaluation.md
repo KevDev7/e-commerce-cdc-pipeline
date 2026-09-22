@@ -40,6 +40,19 @@ Parquet path is a **derived** representation after capture. See
 [AWS DMS S3 settings](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html#CHAP_Target.S3.Configuring)
 and [Arrow's Parquet documentation](https://arrow.apache.org/docs/python/parquet.html).
 
+## Live Redshift validation
+
+Actual Parquet COPY loaded all 415,418 historical rows. Both initial and
+incremental dbt builds passed 19 models and 49 tests. Exact source-to-warehouse
+reconciliation, four-table rollback/retry, replay, deletes and customer-version
+joins passed after 15 simulated changes. [Evidence](evidence/olist-parquet-validation.json).
+
+The four new snapshot Parquet files total 36,244,702 bytes. Their original
+**uncompressed DMS CSV** captures total 83,870,962 bytes; this is a different
+baseline from the gzip comparison above. Retention keeps both representations,
+so total S3 storage includes both, plus the pinned source ZIP. The in-memory
+conversion does not persist derived datasets on the workstation.
+
 ## Reproduce
 
 During an authorized active AWS session, after the lifecycle/load-failure and

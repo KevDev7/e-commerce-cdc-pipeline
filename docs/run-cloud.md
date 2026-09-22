@@ -59,6 +59,8 @@ cp dbt/profiles.yml.example dbt/profiles.yml
 docker compose -f compose.airflow.yaml up -d --build
 ```
 
+A newly created workgroup can report available before its SQL endpoint is reachable. If the first connection times out, check workgroup status and the existing `/32` security rule, allow initialization to finish, then retry the same command. A connection failure before loading writes no raw data or file checkpoint.
+
 Run `usage-limit` before queries. It checks base/max capacity are both 4 RPUs and creates a monthly 6-RPU-hour limit with the deactivate action. At the checked regional rate, that is $2.25 in compute; enforcement/billing delay and other services mean this is not a guaranteed $5 account cap.
 
 Airflow runs locally at http://localhost:8085 using its standalone development setup. Its generated login is stored in the container's `/opt/airflow/standalone_admin_password.txt`. The six tasks are **check capture → check pending files → load raw → dbt build (including tests) → report marts → acknowledge batch**.

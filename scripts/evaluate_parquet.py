@@ -1,6 +1,6 @@
 """Read-only size/round-trip comparison; does not change capture or COPY behavior.
 
-Run with optional PyArrow: uv run --frozen --with pyarrow==25.0.1 scripts/evaluate_parquet.py
+Run with locked dependencies: uv run --frozen scripts/evaluate_parquet.py
 Requires the completed workload report and active cloud environment. Data stays
 in memory; the saved report contains sizes/types, not source rows or credentials.
 """

@@ -1,4 +1,4 @@
-"""Small CloudFormation template; all billable resources belong to one disposable stack."""
+"""Small CloudFormation template; temporary compute and a retained private S3 dataset bucket."""
 import json
 from pathlib import Path
 

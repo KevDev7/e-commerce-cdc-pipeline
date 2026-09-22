@@ -31,7 +31,9 @@ Local fixtures cover adversarial ordering and row-identity checks. The live AWS 
 
 The Olist pipeline is **validated locally and end to end on AWS**. All 415,418 selected historical rows passed through RDS PostgreSQL → DMS → S3 → Redshift. The current 19 dbt models and 49 data tests pass on Redshift. Every current source field reconciled after simulated inserts, updates and deletes.
 
-The live demonstration verified 21 changes committed during the initial customer snapshot, recovery of 14 changes committed while DMS was stopped, atomic raw-load and incremental-mart retries, and duplicate-file replay. Two real scheduled Airflow batches passed; the next quiet run skipped loading/building/reporting. Bootstrap timing used 100,002 additional synthetic customer rows, reported separately from Olist's records. The local suite includes 37 tests, including the measured workload generator.
+The live demonstration verified 21 changes committed during the initial customer snapshot, recovery of 14 changes committed while DMS was stopped, atomic raw-load and incremental-mart retries, and duplicate-file replay. Two real scheduled Airflow batches passed; the next quiet run skipped loading/building/reporting. Bootstrap timing used 100,002 additional synthetic customer rows, reported separately from Olist's records. That earlier demonstration used gzip CSV COPY inputs; the current Parquet path was validated separately.
+
+**Parquet validation:** all 415,418 historical rows loaded through actual Redshift Parquet COPY. Initial and incremental builds each passed 19 models and 49 tests. A 15-change batch passed raw rollback/retry, hard-delete, customer-history, full-field reconciliation and replay checks. All 42 automated tests and CI Airflow checks passed. [Results](docs/evidence/olist-parquet-validation.json).
 
 [Reproducible checks and measured evidence](docs/validation.md) distinguish actual cloud results from local fixtures. Earlier Synthea results remain [archived](docs/archive/synthea/README.md).
 
@@ -142,4 +144,4 @@ records the older delete-everything policy.
 
 ## Remaining validation
 
-The live demo verifies correctness and scheduled execution, not sustained production throughput or a latency SLA. Derived COPY inputs now use typed Zstandard Parquet. The [measured comparison](docs/parquet-evaluation.md) shows smaller large snapshots but larger tiny CDC files; this is not a universal space or speed improvement. The Parquet path is undergoing a separate AWS validation. dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.
+The live demo verifies correctness and scheduled execution, not sustained production throughput or a latency SLA. Derived COPY inputs now use typed Zstandard Parquet. The [measured comparison](docs/parquet-evaluation.md) shows smaller large snapshots but larger tiny CDC files; this is not a universal space or speed improvement. The Parquet COPY path is validated on AWS; its scheduled latency and sustained throughput have not been rebenchmarked. dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.

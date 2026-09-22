@@ -17,4 +17,4 @@ Prepare a fresh Olist stack according to [the runbook](run-cloud.md). Before ena
 - `scripts/reconcile_cloud.py` with the source quiescent, and `scripts/verify_replay.py` to verify actual file redelivery.
 - `scripts/check_freshness.py --timeout 300` for an active simulated customer probe. Pause the DAG and finish active runs first; this script invokes load/build itself and does not measure the scheduler's waiting interval.
 
-These scripts have been adapted to Olist but have **not** been executed against AWS for Olist. Preserve prior ignored run artifacts in a dated archive before reusing output paths. Do not mix old source files or evidence with the new capture lineage.
+Completed Olist AWS checks and their results are recorded in the dated [validation evidence](validation.md). Re-run relevant checks when changing the capture or loading path. Preserve prior ignored run artifacts in a dated archive before reusing output paths. Do not mix old source files or evidence with the new capture lineage.
