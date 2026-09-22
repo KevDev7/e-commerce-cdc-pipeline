@@ -1,5 +1,29 @@
 # Olist validation
 
+## Current Parquet loading path
+
+The separate Parquet session loaded all 415,418 historical source rows through
+DMS CSV → explicitly typed Zstandard Parquet → Redshift COPY. Initial and
+incremental builds each passed all 19 models and 49 data tests. The simulated
+lifecycle plus repeat order produced 15 captured changes (9 inserts, 4 updates,
+2 deletes), without including the rolled-back update.
+
+An injected failure after writes to all four raw tables rolled back both rows
+and the file ledger; retry succeeded once. Every current source field reconciled
+after dbt finished. Redelivery under another S3 key and a whole-batch retry
+preserved raw counts and event identities. Historical customer joins preserved
+the earlier city on the first order and the corrected city on the repeat order.
+All 99,441 historical orders retained unknown pre-capture customer history.
+
+[Sanitized results](evidence/olist-parquet-validation.json) include exact counts,
+fingerprints and build outcomes. The 42-test suite and Airflow smoke checks
+passed in GitHub CI. This AWS session invoked shared pipeline commands manually;
+it did not repeat the unchanged scheduler or establish a new latency benchmark.
+[Teardown verification](evidence/olist-parquet-retention.json) confirms paid
+compute/snapshots are absent, S3 data remains private and unchanged, and no full
+local database or dataset files remain.
+
+
 Executed locally on 2026-09-22. [Machine-readable results](evidence/olist-local-validation.json) record source/target fingerprints, counts and aggregate totals.
 
 - Downloaded and inspected Kaggle dataset version 2; SHA-256 pinned.

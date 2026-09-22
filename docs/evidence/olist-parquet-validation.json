@@ -1,0 +1,257 @@
+{
+  "started_at": "2026-09-22T19:33:42.750166+00:00",
+  "source_rows": {
+    "customers": 99441,
+    "orders": 99441,
+    "order_items": 112650,
+    "order_payments": 103886
+  },
+  "format": "Zstandard Parquet derived from original transaction-preserving DMS CSV",
+  "automated_tests": 42,
+  "ci_url": "https://github.com/KevDev7/synthea-cdc/actions/runs/35774793247",
+  "seed_archive_in_s3": true,
+  "temporary_seed_removed": true,
+  "initial_dbt": {
+    "models": 19,
+    "tests": 49,
+    "all_successful": true,
+    "elapsed_seconds": 111.09849619865417
+  },
+  "initial_parquet_load_rows": 415418,
+  "readiness_note": "The first TCP connection timed out during workgroup initialization; the endpoint subsequently became reachable with the same restricted security group.",
+  "incremental_dbt": {
+    "models": 19,
+    "tests": 49,
+    "all_successful": true,
+    "elapsed_seconds": 91.62699604034424
+  },
+  "snapshot_files": [
+    {
+      "table": "customers",
+      "rows": 99441,
+      "original_dms_csv_bytes": 14652081,
+      "parquet_bytes": 7710136,
+      "exact_typed_roundtrip": true
+    },
+    {
+      "table": "order_items",
+      "rows": 112650,
+      "original_dms_csv_bytes": 26610550,
+      "parquet_bytes": 9962497,
+      "exact_typed_roundtrip": true
+    },
+    {
+      "table": "order_payments",
+      "rows": 103886,
+      "original_dms_csv_bytes": 15620921,
+      "parquet_bytes": 7930914,
+      "exact_typed_roundtrip": true
+    },
+    {
+      "table": "orders",
+      "rows": 99441,
+      "original_dms_csv_bytes": 26987410,
+      "parquet_bytes": 10641155,
+      "exact_typed_roundtrip": true
+    }
+  ],
+  "capture": {
+    "operations": {
+      "I": 9,
+      "U": 4,
+      "D": 2
+    },
+    "files": [
+      {
+        "key": "olist-v1/cdc/CDC_TXN-20260922195743607.csv",
+        "events": 15,
+        "tables": [
+          "customers",
+          "order_items",
+          "order_payments",
+          "orders"
+        ]
+      }
+    ]
+  },
+  "load_failure_and_retry": {
+    "source_key": "olist-v1/cdc/CDC_TXN-20260922195743607.csv",
+    "inserted_tables_before_failure": [
+      "\"raw\".customers",
+      "\"raw\".orders",
+      "\"raw\".order_items",
+      "\"raw\".order_payments"
+    ],
+    "before": {
+      "customers": [
+        99441,
+        99441
+      ],
+      "orders": [
+        99441,
+        99441
+      ],
+      "order_items": [
+        112650,
+        112650
+      ],
+      "order_payments": [
+        103886,
+        103886
+      ],
+      "loaded_files": 4
+    },
+    "after_failure": {
+      "customers": [
+        99441,
+        99441
+      ],
+      "orders": [
+        99441,
+        99441
+      ],
+      "order_items": [
+        112650,
+        112650
+      ],
+      "order_payments": [
+        103886,
+        103886
+      ],
+      "loaded_files": 4
+    },
+    "after_retry": {
+      "customers": [
+        99445,
+        99445
+      ],
+      "orders": [
+        99448,
+        99448
+      ],
+      "order_items": [
+        112652,
+        112652
+      ],
+      "order_payments": [
+        103888,
+        103888
+      ],
+      "loaded_files": 5
+    },
+    "second_retry_unchanged": true
+  },
+  "scenarios": {
+    "verified_at": "2026-09-22T20:01:26.564264+00:00",
+    "scenarios": [
+      {
+        "scenario": "parquet-001",
+        "operations": {
+          "I": 8,
+          "D": 2,
+          "U": 4
+        },
+        "lifecycle_and_totals": true,
+        "hard_deletes": true,
+        "rollback_excluded": true,
+        "unique_event_ids": true
+      }
+    ]
+  },
+  "customer_join": {
+    "verified_at": "2026-09-22T20:01:28.422646+00:00",
+    "scenario": "parquet-001",
+    "original_order_city": "sao paulo",
+    "followup_order_city": "campinas",
+    "distinct_observed_versions": true,
+    "historical_orders_without_invented_version": 99441
+  },
+  "reconciliation": {
+    "verified_at": "2026-09-22T20:01:47.527109+00:00",
+    "tables": {
+      "customers": {
+        "count": 99442,
+        "sha256": "0b09a2a2d9380ad0f3f1d16fee87e6f794a0c003f0a7e4aecf6ed2dc8afa943d"
+      },
+      "orders": {
+        "count": 99443,
+        "sha256": "9630ecb129854938bf8328ffdb807d1e7712f2a116b6f9bf71b6110c03162422"
+      },
+      "order_items": {
+        "count": 112652,
+        "sha256": "962df5434c4dd47553776853c240da51f0c32010b27fffb02264cceb293f5def"
+      },
+      "order_payments": {
+        "count": 103888,
+        "sha256": "d9572242f9f37212c664836fabd777ce4a17f7139db6881475f078ed98be38c2"
+      }
+    }
+  },
+  "replay": {
+    "before": {
+      "customers": [
+        99445,
+        99445
+      ],
+      "orders": [
+        99448,
+        99448
+      ],
+      "order_items": [
+        112652,
+        112652
+      ],
+      "order_payments": [
+        103888,
+        103888
+      ]
+    },
+    "after_redelivery": {
+      "customers": [
+        99445,
+        99445
+      ],
+      "orders": [
+        99448,
+        99448
+      ],
+      "order_items": [
+        112652,
+        112652
+      ],
+      "order_payments": [
+        103888,
+        103888
+      ]
+    },
+    "after_retry": {
+      "customers": [
+        99445,
+        99445
+      ],
+      "orders": [
+        99448,
+        99448
+      ],
+      "order_items": [
+        112652,
+        112652
+      ],
+      "order_payments": [
+        103888,
+        103888
+      ]
+    },
+    "replayed_key": "olist-v1/cdc/replay-CDC_TXN-20260922195743607.csv"
+  },
+  "marts": {
+    "dim_customers": 99442,
+    "dim_customer_history": 99445,
+    "fct_orders": 99443,
+    "fct_order_status_history": 99448,
+    "fct_order_items": 112652,
+    "fct_order_payments": 103888
+  },
+  "validated_at": "2026-09-22T20:02:54.354559+00:00",
+  "scope": "Manual execution of the shared Airflow pipeline commands on AWS. Scheduler unchanged; CI Airflow smoke checks passed. No new scheduled latency or throughput benchmark."
+}

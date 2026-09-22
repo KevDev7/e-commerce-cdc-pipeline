@@ -2,7 +2,7 @@
 
 A student data engineering portfolio project that loads **real, anonymized historical Olist orders** into PostgreSQL, simulates clearly labeled new business activity, and captures the resulting database changes through transaction logs.
 
-**Architecture:** PostgreSQL → AWS DMS (WAL-based CDC) → S3 → Redshift → dbt raw/staging/intermediate/marts. Airflow and Docker run locally. Five-minute downstream batches run during demos, with one active run and idle-file skipping.
+**Architecture:** PostgreSQL → AWS DMS (WAL-based CDC) → S3 (original CSV + derived Parquet) → Redshift → dbt raw/staging/intermediate/marts. Airflow and Docker run locally. Five-minute downstream batches run during demos, with one active run and idle-file skipping.
 
 **What is real and what is simulated:** the starting records come from [Olist's Brazilian E-Commerce Public Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce). Subsequent new orders, payments, updates and disposable deletes are simulated by our Python application through SQL. PostgreSQL generates real WAL. This is not a connection to Olist's live production systems. Dataset attribution/license: Olist, CC BY-NC-SA 4.0; downloaded data is excluded from Git.
 
@@ -31,7 +31,9 @@ Local fixtures cover adversarial ordering and row-identity checks. The live AWS 
 
 The Olist pipeline is **validated locally and end to end on AWS**. All 415,418 selected historical rows passed through RDS PostgreSQL → DMS → S3 → Redshift. The current 19 dbt models and 49 data tests pass on Redshift. Every current source field reconciled after simulated inserts, updates and deletes.
 
-The live demonstration verified 21 changes committed during the initial customer snapshot, recovery of 14 changes committed while DMS was stopped, atomic raw-load and incremental-mart retries, and duplicate-file replay. Two real scheduled Airflow batches passed; the next quiet run skipped loading/building/reporting. Bootstrap timing used 100,002 additional synthetic customer rows, reported separately from Olist's records. The local suite includes 37 tests, including the measured workload generator.
+The live demonstration verified 21 changes committed during the initial customer snapshot, recovery of 14 changes committed while DMS was stopped, atomic raw-load and incremental-mart retries, and duplicate-file replay. Two real scheduled Airflow batches passed; the next quiet run skipped loading/building/reporting. Bootstrap timing used 100,002 additional synthetic customer rows, reported separately from Olist's records. That earlier demonstration used gzip CSV COPY inputs; the current Parquet path was validated separately.
+
+**Parquet validation:** all 415,418 historical rows loaded through actual Redshift Parquet COPY. Initial and incremental builds each passed 19 models and 49 tests. A 15-change batch passed raw rollback/retry, hard-delete, customer-history, full-field reconciliation and replay checks. All 42 automated tests and CI Airflow checks passed. [Results](docs/evidence/olist-parquet-validation.json).
 
 [Reproducible checks and measured evidence](docs/validation.md) distinguish actual cloud results from local fixtures. Earlier Synthea results remain [archived](docs/archive/synthea/README.md).
 
@@ -48,7 +50,9 @@ The live demonstration verified 21 changes committed during the initial customer
 
 The deliverable ends at populated, tested marts. No dashboards, Spark, Kafka cluster or always-on cloud infrastructure is required for this scope.
 
-## Run locally
+## Optional local development
+
+The normal demo uses cloud databases and retains datasets in S3. These optional commands create full local data copies; skip them when keeping data off the workstation. CI runs integration fixtures on GitHub.
 
 Requires Docker Desktop, Python 3.12 and uv. Copy `.env.example` to `.env` and set a local development password. Existing Synthea users should use `POSTGRES_DB=olist`; the Olist Compose project has a separate data volume.
 
@@ -81,6 +85,21 @@ Use the [AWS runbook](docs/run-cloud.md) after agreeing a budget for a new paid 
 The GitHub repository and existing AWS profile/resource ownership names still use `synthea-cdc` for continuity. The active application/package, DAG, databases, source schema and capture prefix are Olist-specific. Keep using only that project's configured AWS profile, never another project's credentials.
 
 See [source semantics](docs/source.md), [warehouse schema](docs/warehouse.md), [Olist validation](docs/validation.md) and [migration inspection](docs/olist-migration.md).
+
+## S3 file formats
+
+Keep Olist's original ZIP/CSV as source evidence and DMS's transaction-preserving
+CSV as replayable capture. Python writes one derived Parquet file per table per
+capture file under `copy-ready/parquet-v1/`, using Zstandard compression and
+explicit decimal, timestamp, boolean and string types. Redshift loads those
+files with `COPY FORMAT AS PARQUET`. The raw event schema, source ordering,
+file ledger and event deduplication stay the same.
+
+Parquet preserves 35-digit change sequences and exact monetary decimals; invalid
+types fail instead of silently rounding. Its schema is embedded per file, not
+enforced globally by S3. dbt tests still check keys, relationships and business
+rules. Existing loaded CSV captures are safely skipped; switching formats does
+not require resetting their ledger or rewriting the warehouse.
 
 ## Incremental dbt processing
 
@@ -115,12 +134,19 @@ On an active 4-RPU Redshift warehouse, a simulated 250-order workload produced *
 
 ## Demo cleanup
 
-The AWS stack, its database/warehouse/capture resources, bucket and snapshots have
-been removed. Downloaded datasets, local capture files and the project database
-volumes were also removed from the Mac at the user's request. Code and small
-validation reports remain. Teardown no longer downloads captures by default.
-[Cleanup and reported compute usage](docs/evidence/olist-session-cleanup.json).
+Teardown retains the private, encrypted S3 bucket containing the pinned source ZIP,
+original DMS CSV records and derived Parquet. It removes RDS, DMS and Redshift
+compute without downloading datasets. The seed ZIP is temporary during cloud
+initialization; no full local database is needed. Small run reports and the
+retained bucket address stay in ignored `data/`. S3 storage continues to incur
+small charges while retained. Prior sessions' [cleanup evidence](docs/evidence/olist-session-cleanup.json)
+records the older delete-everything policy.
+
+The Parquet session's teardown was verified: all project compute and database
+snapshots are absent; **20 S3 objects totaling about 165 MB remain private and
+encrypted**. No project datasets, database containers or database volumes remain
+on the Mac. [Retention and cleanup evidence](docs/evidence/olist-parquet-retention.json).
 
 ## Remaining validation
 
-The live demo verifies correctness and scheduled execution, not sustained production throughput or a latency SLA. A [measured Parquet comparison](docs/parquet-evaluation.md) supports retaining gzip CSV for the current small batches. dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.
+The live demo verifies correctness and scheduled execution, not sustained production throughput or a latency SLA. Derived COPY inputs now use typed Zstandard Parquet. The [measured comparison](docs/parquet-evaluation.md) shows smaller large snapshots but larger tiny CDC files; this is not a universal space or speed improvement. The Parquet COPY path is validated on AWS; its scheduled latency and sustained throughput have not been rebenchmarked. dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.

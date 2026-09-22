@@ -1,0 +1,48 @@
+{
+  "verified_at": "2026-09-22T20:12:24.859925+00:00",
+  "aws_cleanup": {
+    "stack_deleted": true,
+    "source_absent": true,
+    "dms_replication_absent": true,
+    "dms_task_absent": true,
+    "redshift_workgroup_absent": true,
+    "redshift_namespace_absent": true,
+    "rds_snapshots_absent": true,
+    "redshift_snapshots_absent": true
+  },
+  "retained_s3": {
+    "bucket": "synthea-cdc-demo-bucket-ezajhtylhk8v",
+    "region": "us-east-1",
+    "private": true,
+    "encryption": "AES256",
+    "objects": 20,
+    "bytes": 164895568,
+    "contents": {
+      "copy-ready": {
+        "objects": 12,
+        "bytes": 36292330
+      },
+      "olist-v1": {
+        "objects": 6,
+        "bytes": 83879840
+      },
+      "source": {
+        "objects": 1,
+        "bytes": 44717580
+      },
+      "validation": {
+        "objects": 1,
+        "bytes": 5818
+      }
+    },
+    "contents_unchanged_after_stack_deletion": true
+  },
+  "local_cleanup": {
+    "temporary_seed_removed": true,
+    "dataset_files": [],
+    "project_database_containers": [],
+    "project_database_volumes": [],
+    "temporary_cloud_credentials_removed": true
+  },
+  "billing_note": "Paid compute and database snapshots removed. Retained S3 objects continue to incur storage/request charges."
+}

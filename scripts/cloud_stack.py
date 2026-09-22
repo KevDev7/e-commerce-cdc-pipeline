@@ -140,7 +140,7 @@ def connections():
         print(label, state, connection.get("LastFailureMessage", ""))
 
 
-def delete(*, archive_local=False):
+def delete():
     current = stack()
     result = outputs()
     dms = SESSION.client("dms")
@@ -157,24 +157,21 @@ def delete(*, archive_local=False):
             state["log_group"] = json.loads(task[0]["ReplicationTaskSettings"])["Logging"].get("CloudWatchLogGroup")
             STATE.write_text(json.dumps(state, indent=2))
     if "S3Bucket" in result:
-        s3 = SESSION.client("s3")
+        deployed = CF.get_template(StackName=current["StackId"])["TemplateBody"]
+        if isinstance(deployed, str):
+            deployed = json.loads(deployed)
+        if deployed["Resources"]["Bucket"].get("DeletionPolicy") != "Retain":
+            raise RuntimeError("Update the deployed bucket to DeletionPolicy=Retain before teardown; cloud data must survive")
         bucket = result["S3Bucket"]
-        for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket):
-            objects = page.get("Contents", [])
-            if archive_local:
-                for item in objects:
-                    key = item["Key"]
-                    destination = (ROOT / "data/aws-capture" / key).resolve()
-                    if not destination.is_relative_to((ROOT / "data/aws-capture").resolve()):
-                        raise ValueError("Unsafe object path")
-                    destination.parent.mkdir(parents=True, exist_ok=True)
-                    s3.download_file(bucket, key, str(destination))
-            if objects:
-                response = s3.delete_objects(Bucket=bucket, Delete={"Objects": [{"Key": x["Key"]} for x in objects]})
-                if response.get("Errors"):
-                    raise RuntimeError(response["Errors"])
+        state = json.loads(STATE.read_text())
+        state["retained_bucket"] = bucket
+        state["retained_region"] = "us-east-1"
+        state["capture_prefix"] = "olist-v1"
+        STATE.write_text(json.dumps(state, indent=2))
+        print(f"Retaining s3://{bucket}/ (source archive, original captures and derived Parquet)")
     CF.delete_stack(StackName=current["StackId"])
-    print("Stack deletion started; " + ("captures downloaded to ignored data/aws-capture" if archive_local else "no capture files downloaded") + ". Verify DELETE_COMPLETE.")
+    print("Compute deletion started; S3 data retained, no datasets downloaded. Verify DELETE_COMPLETE.")
+
 
 
 def cleanup_logs():
@@ -193,13 +190,10 @@ def cleanup_logs():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["validate", "create", "status", "env", "warehouse", "usage-limit", "connections", "delete", "cleanup-logs"])
-    parser.add_argument("--archive-local", action="store_true", help="Opt in to downloading captures before deleting the stack")
     args = parser.parse_args()
-    if args.archive_local and args.command != "delete":
-        parser.error("--archive-local is only valid with delete")
     if args.command == "validate":
         CF.validate_template(TemplateBody=template())
         print("CloudFormation template valid")
     else:
         {"create": create, "status": status, "env": sync_env, "warehouse": enable_warehouse,
-         "usage-limit": usage_limit, "connections": connections, "delete": lambda: delete(archive_local=args.archive_local), "cleanup-logs": cleanup_logs}[args.command]()
+         "usage-limit": usage_limit, "connections": connections, "delete": delete, "cleanup-logs": cleanup_logs}[args.command]()

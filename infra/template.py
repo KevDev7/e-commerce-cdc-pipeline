@@ -1,4 +1,4 @@
-"""Small CloudFormation template; all billable resources belong to one disposable stack."""
+"""Small CloudFormation template; temporary compute and a retained private S3 dataset bucket."""
 import json
 from pathlib import Path
 
@@ -21,7 +21,8 @@ def template():
         resources[name] = {"Type": "AWS::" + kind, "Properties": properties, **extra}
     add("Bucket", "S3::Bucket", {
         "PublicAccessBlockConfiguration": {x: True for x in ("BlockPublicAcls", "BlockPublicPolicy", "IgnorePublicAcls", "RestrictPublicBuckets")},
-        "BucketEncryption": {"ServerSideEncryptionConfiguration": [{"ServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]}, "Tags": TAGS})
+        "BucketEncryption": {"ServerSideEncryptionConfiguration": [{"ServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]}, "Tags": TAGS},
+        DeletionPolicy="Retain", UpdateReplacePolicy="Retain")
     add("DmsRole", "IAM::Role", role("dms.amazonaws.com", [
         {"Effect": "Allow", "Action": ["s3:ListBucket", "s3:GetBucketLocation"], "Resource": att("Bucket", "Arn")},
         {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:PutObjectTagging"], "Resource": sub("${Bucket.Arn}/olist-v1/*")},
