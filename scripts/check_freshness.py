@@ -1,0 +1,110 @@
+"""A bounded active probe: commit one synthetic patient and observe S3, raw and marts."""
+import argparse
+from datetime import datetime, timezone
+import json
+import logging
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+from uuid import uuid4
+
+from dotenv import load_dotenv
+
+ROOT = Path(__file__).resolve().parents[1]
+from synthea_cdc.cloud_load import aws_session, check_capture, warehouse_connection
+from synthea_cdc.db import connect
+from synthea_cdc.events import parse_csv
+
+
+def within_budget(started, timeout):
+    remaining = timeout - (time.monotonic() - started)
+    if remaining <= 0:
+        raise TimeoutError(f'Freshness probe exceeded {timeout}s; pipeline did not meet this run\'s threshold')
+    return remaining
+
+
+def find_probe(s3, bucket, prefix, patient_id, seen):
+    for page in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket, Prefix=prefix):
+        for item in page.get('Contents', []):
+            key = item['Key']
+            if key in seen or not key.endswith('.csv'):
+                continue
+            source = f's3://{bucket}/{key}'
+            events = parse_csv(s3.get_object(Bucket=bucket, Key=key)['Body'].read().decode(), source)
+            seen.add(key)
+            for event in events:
+                if event.table == 'patients' and event.values[0] == patient_id and event.values[-6] == 'I':
+                    return key
+    return None
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--timeout', type=int, default=300, help='Seconds for commit through tested marts; default 300')
+    parser.add_argument('--poll', type=float, default=5)
+    args = parser.parse_args()
+    if args.timeout <= 0 or args.poll <= 0:
+        parser.error('timeout and poll must be positive')
+    if not (ROOT / '.env.cloud').exists():
+        raise RuntimeError('No active cloud environment; provision an authorized demo first')
+    load_dotenv(ROOT / '.env.cloud', override=True)
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+    check_capture()
+    patient_id = str(uuid4())
+    city = 'Freshness probe ' + patient_id
+    started = time.monotonic()
+    result = dict(patient_id=patient_id, threshold_seconds=args.timeout, poll_seconds=args.poll,
+                  started_at=datetime.now(timezone.utc).isoformat(), status='running', observations={})
+    output = ROOT / 'data/freshness.json'
+    output.parent.mkdir(exist_ok=True)
+    try:
+        # This is an explicit synthetic workload record, not a timestamp watermark.
+        with connect() as source:
+            source.execute("""INSERT INTO healthcare.patients (patient_id,birth_date,gender,city,state)
+                VALUES (%s,'1990-01-01','F',%s,'TEST')""", (patient_id, city))
+            result['source_write_at'] = source.execute('SELECT clock_timestamp()').fetchone()[0].isoformat()
+        # Measure on one monotonic clock, avoiding database/client clock skew.
+        started = time.monotonic()
+        result['commit_acknowledged_at'] = datetime.now(timezone.utc).isoformat()
+        s3 = aws_session().client('s3')
+        seen = set()
+        bucket = os.environ['S3_BUCKET']
+        prefix = os.environ.get('CAPTURE_PREFIX', 'capture-v1') + '/cdc/'
+        while True:
+            within_budget(started, args.timeout)
+            key = find_probe(s3, bucket, prefix, patient_id, seen)
+            if key:
+                result['source_key'] = key
+                result['observations']['s3_seconds'] = round(time.monotonic() - started, 3)
+                logging.info('Probe reached S3 after %.3fs', result['observations']['s3_seconds'])
+                break
+            time.sleep(min(args.poll, within_budget(started, args.timeout)))
+        for step in ('load', 'build'):
+            subprocess.run([sys.executable, str(ROOT / 'scripts/run_cloud.py'), step],
+                           check=True, timeout=within_budget(started, args.timeout))
+            with warehouse_connection() as target:
+                cursor = target.cursor()
+                if step == 'load':
+                    cursor.execute('SELECT count(*) FROM "raw".patients WHERE patient_id=%s AND city=%s AND _op=\'I\' AND NOT _is_snapshot', (patient_id, city))
+                else:
+                    cursor.execute('SELECT count(*) FROM analytics_marts.dim_patients WHERE patient_id=%s AND city=%s', (patient_id, city))
+                if cursor.fetchone()[0] != 1:
+                    raise AssertionError(f'Probe missing or duplicated after {step}')
+                target.commit()
+            within_budget(started, args.timeout)
+            result['observations']['raw_seconds' if step == 'load' else 'marts_seconds'] = round(time.monotonic() - started, 3)
+        result['status'] = 'passed'
+    except Exception as error:
+        result['status'] = 'failed'
+        result['error'] = f'{type(error).__name__}: {error}'
+        raise
+    finally:
+        result['finished_at'] = datetime.now(timezone.utc).isoformat()
+        output.write_text(json.dumps(result, indent=2))
+        print(json.dumps(result, indent=2), flush=True)
+
+
+if __name__ == '__main__':
+    main()
