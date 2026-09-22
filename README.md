@@ -29,9 +29,9 @@ Local fixtures cover adversarial ordering and row-identity checks. The live AWS 
 
 ## Current validation
 
-The Olist pipeline is **validated locally and end to end on AWS**. All 415,418 selected historical rows passed through RDS PostgreSQL → DMS → S3 → Redshift. All 18 dbt models and 45 data tests passed. Every current source field reconciled after simulated inserts, updates and deletes.
+The Olist pipeline is **validated locally and end to end on AWS**. All 415,418 selected historical rows passed through RDS PostgreSQL → DMS → S3 → Redshift. The current 19 dbt models and 49 data tests pass on Redshift. Every current source field reconciled after simulated inserts, updates and deletes.
 
-The live demonstration verified 21 changes committed during the initial customer snapshot, recovery of 14 changes committed while DMS was stopped, atomic raw-load and incremental-mart retries, and duplicate-file replay. Two real scheduled Airflow batches passed; the next quiet run skipped loading/building/reporting. Bootstrap timing used 100,002 additional synthetic customer rows, reported separately from Olist's records. The local 35-test suite also passes.
+The live demonstration verified 21 changes committed during the initial customer snapshot, recovery of 14 changes committed while DMS was stopped, atomic raw-load and incremental-mart retries, and duplicate-file replay. Two real scheduled Airflow batches passed; the next quiet run skipped loading/building/reporting. Bootstrap timing used 100,002 additional synthetic customer rows, reported separately from Olist's records. The local 36-test suite also passes.
 
 [Reproducible checks and measured evidence](docs/validation.md) distinguish actual cloud results from local fixtures. Earlier Synthea results remain [archived](docs/archive/synthea/README.md).
 
@@ -89,6 +89,10 @@ All six marts use dbt incremental models with `unique_key` and the `delete+inser
 Affected entities are replaced inside a transaction, including removing hard-deleted records and obsolete history versions. Window calculations filter to affected entities before ranking events; history is recalculated from each entity's retained events, so a late file can correct earlier intervals. The mart's file checkpoint commits with its changes; a failed model retries those files. Unchanged entities retain their existing rows. This adds incremental warehouse processing to the existing log-based capture.
 
 Local tests compare successive incremental results with `--full-refresh`, inject a SQL failure after the checkpoint write, and verify quiet/replayed batches do not rewrite mart rows. This reduces mart writes; it is not a claim that every upstream scan or data-quality test is incremental. See [processing and recovery details](docs/incremental-dbt.md).
+
+## Customer versions at order creation
+
+New captured orders carry a customer_version_id pointing to the observed address version when their INSERT occurred. An order created before a customer correction keeps the earlier version; a later order uses the new version. Customer-only late files also revisit affected orders. Original historical snapshot orders have NULL version IDs with `creation_not_captured`; missing captured history is labeled separately. We do not invent customer history for 2016–2018 purchases.
 
 ## Order-status history
 

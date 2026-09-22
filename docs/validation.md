@@ -41,3 +41,16 @@ Commands and prerequisites are in the [cloud runbook](run-cloud.md). Original ca
 ## Limits
 
 The measured demonstration does not establish sustained throughput or a latency SLA. Airflow's interval is five minutes; capture delivery and build time add latency. Row-identity checks and exhaustive late-event fixtures run on local PostgreSQL. dbt tests gate batch acknowledgement, not atomic publication of the entire warehouse. Historical customer attributes before capture remain unknown.
+
+## Customer-version join upgrade
+
+The next verified model version contains **19 models and 49 data tests**; all pass
+on Redshift after rebuilding retained raw events. The local suite now has **36 passing tests**.
+A live follow-up order for an existing simulated customer resolves to campinas,
+while that customer's original order retains sao paulo. All 99,441 original
+snapshot orders keep NULL version IDs with creation_not_captured.
+
+Local multi-batch tests additionally cover equal commit timestamps, customer-only
+late files correcting assignments, missing history filled later, key reuse and
+subsequent customer reassignment. Incremental results equal a full refresh.
+[Join evidence](evidence/olist-customer-join.json) records the actual cloud check.

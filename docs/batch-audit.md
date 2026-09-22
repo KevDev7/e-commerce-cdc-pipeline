@@ -31,4 +31,4 @@ Exception classes and subprocess exit codes are recorded, rather than potentiall
 
 ## Verification
 
-Five SQLite tests cover failed attempts, retry recovery, quiet runs, partial metrics and clearing tasks after completion. SQL/S3 fixtures verify load counters do not advance on an injected commit failure. The real Airflow task-state checks execute the actual audit wrapper around shell fixtures and compare audit status with DAG outcomes. None of these invoke AWS; the Olist live scheduled demo remains pending.
+Five SQLite tests cover failed attempts, retry recovery, quiet runs, partial metrics and clearing tasks after completion. SQL/S3 fixtures verify load counters do not advance on an injected commit failure. The real Airflow task-state checks execute the actual audit wrapper around shell fixtures and compare audit status with DAG outcomes. These fixture tests do not invoke AWS. A separate live Olist demonstration now verifies two successful scheduled batches and one quiet skip, with matching audit and Airflow states; see [cloud evidence](evidence/olist-aws-validation.json).

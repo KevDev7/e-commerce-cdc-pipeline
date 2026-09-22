@@ -66,7 +66,7 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
     second_payment = {**payment, 'payment_key': 'o1:2', 'payment_sequential': 2, 'payment_value': 50}
     baseline = [event('customers', customer, 1), event('customers', spare_customer, 2),
                 event('customers', untouched_customer, 3), event('orders', order, 10),
-                event('orders', {**order, 'order_id': 'o2'}, 11),
+                event('orders', {**order, 'order_id': 'o2', 'customer_id': 'c3'}, 11),
                 event('orders', {**order, 'order_id': 'o3'}, 12),
                 event('order_items', item, 13), event('order_items', second_item, 14),
                 event('order_payments', payment, 15), event('order_payments', second_payment, 16),

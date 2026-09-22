@@ -139,3 +139,21 @@ The scenario check requires all eight simulation phases. It verifies 8 inserts,
 independent item/payment totals, customer address history, hard-delete application
 and exclusion of the rolled-back update. Reconciliation compares every current
 source field after the source is quiet. Saved reports remain in ignored `data/`.
+
+## Verify customer versions for new orders
+
+With Airflow paused, after a full simulated lifecycle corrected the customer's city:
+
+```sh
+uv run python scripts/verify_customer_join.py write --scenario demo-001
+# Wait for DMS to deliver the new INSERT, then load and build.
+uv run python scripts/run_cloud.py load
+uv run python scripts/run_cloud.py build
+uv run python scripts/verify_customer_join.py verify --scenario demo-001
+```
+
+The added order intentionally has no items/payments. The check proves the original
+order retains sao paulo, the follow-up uses campinas, and all 99,441 original orders
+retain unknown pre-capture customer history. This is a simulated repeat order on
+the reconstructed source, not an extra record from Olist. Existing warehouses need
+one full refresh to add the new fact columns before returning to incremental runs.
