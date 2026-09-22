@@ -93,6 +93,22 @@ After changing transformation logic that must apply to existing rows, pause sche
 
 This rebuilds marts from retained raw events and resets each model's file checkpoint in its transaction. It runs tests and uses Redshift compute within the agreed session budget. Normal scheduled builds remain incremental. See [incremental recovery](incremental-dbt.md).
 
+## Incremental mart rollback check
+
+With Airflow paused and the initial marts already built, simulate another order
+scenario and load its capture files without building marts. Then run:
+
+```sh
+.venv/bin/python scripts/verify_mart_failure.py
+.venv/bin/python scripts/run_cloud.py build
+```
+
+The check injects a SQL error after the `fct_orders` checkpoint write using a
+temporary copy of the dbt project. It compares actual Redshift rows and checkpoint
+state before and after failure, retries the model, and records the result under
+ignored `data/mart-failure.json`. The normal build afterward updates the remaining
+marts and runs all data tests. Original project SQL is not modified by the check.
+
 ## Replay and cleanup
 
 The loader stores original DMS files unchanged, derives compressed COPY inputs under `copy-ready/`, and commits the raw records with the file ledger in one transaction. A replay skips identical files; events redelivered under another file name are deduplicated by source identity. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
