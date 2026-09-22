@@ -10,7 +10,7 @@ A healthcare billing data engineering project using synthetic Synthea data to si
 
 **Deliverable:** populated, tested Redshift marts, using raw → staging → intermediate → marts layers. Dashboards and data visualizations are out of scope.
 
-**Status:** local PostgreSQL source, seed loader and business simulator implemented. AWS capture, warehouse models and orchestration are next; no cloud pipeline is deployed yet.
+**Status:** local source and simulator implemented; change-file parsing and 15 dbt models validated locally. The five marts are populated in a local test warehouse. AWS DMS/S3/Redshift integration and Airflow orchestration are not deployed yet.
 
 ## Local source
 
@@ -32,4 +32,12 @@ Run a single business phase with `--phase open`, `--phase bill`, etc. Repeating 
 
 `docker compose stop` stops the local service while keeping its data. The `.env` file and downloaded sample are ignored by Git. AWS commands must explicitly use the `synthea-cdc` profile.
 
-See [source design and simulation](docs/source.md). Cloud resource provisioning awaits an agreed spending limit.
+## Warehouse models
+
+```bash
+uv run python scripts/build_local_warehouse.py
+```
+
+This loads a snapshot fixture into a separate local PostgreSQL warehouse and runs dbt. It is a development check, not a replacement for the planned DMS capture or a claim of Redshift deployment. The project includes Redshift and local PostgreSQL dbt profiles; credentials come from environment variables.
+
+See [source design and simulation](docs/source.md), [warehouse design](docs/warehouse.md), and [validation results](docs/validation.md). Cloud resource provisioning awaits an agreed spending limit.

@@ -1,0 +1,146 @@
+version: 2
+models:
+- name: stg_patients
+  columns:
+  - name: _event_id
+    data_tests:
+    - unique
+    - not_null
+  - name: patient_id
+    data_tests:
+    - not_null
+  - name: _op
+    data_tests:
+    - accepted_values:
+        arguments:
+          values:
+          - I
+          - U
+          - D
+  - name: _source_order
+    data_tests:
+    - not_null
+- name: stg_encounters
+  columns:
+  - name: _event_id
+    data_tests:
+    - unique
+    - not_null
+  - name: encounter_id
+    data_tests:
+    - not_null
+  - name: _op
+    data_tests:
+    - accepted_values:
+        arguments:
+          values:
+          - I
+          - U
+          - D
+  - name: _source_order
+    data_tests:
+    - not_null
+- name: stg_claims
+  columns:
+  - name: _event_id
+    data_tests:
+    - unique
+    - not_null
+  - name: claim_id
+    data_tests:
+    - not_null
+  - name: _op
+    data_tests:
+    - accepted_values:
+        arguments:
+          values:
+          - I
+          - U
+          - D
+  - name: _source_order
+    data_tests:
+    - not_null
+- name: stg_claim_transactions
+  columns:
+  - name: _event_id
+    data_tests:
+    - unique
+    - not_null
+  - name: transaction_id
+    data_tests:
+    - not_null
+  - name: _op
+    data_tests:
+    - accepted_values:
+        arguments:
+          values:
+          - I
+          - U
+          - D
+  - name: _source_order
+    data_tests:
+    - not_null
+- name: dim_patients
+  columns:
+  - name: patient_id
+    data_tests:
+    - unique
+    - not_null
+- name: dim_patient_history
+  columns:
+  - name: patient_version_id
+    data_tests:
+    - unique
+    - not_null
+- name: fct_encounters
+  columns:
+  - name: encounter_id
+    data_tests:
+    - unique
+    - not_null
+  - name: patient_id
+    data_tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('dim_patients')
+          field: patient_id
+- name: fct_claims
+  columns:
+  - name: claim_id
+    data_tests:
+    - unique
+    - not_null
+  - name: patient_id
+    data_tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('dim_patients')
+          field: patient_id
+  - name: encounter_id
+    data_tests:
+    - relationships:
+        arguments:
+          to: ref('fct_encounters')
+          field: encounter_id
+- name: fct_claim_transactions
+  columns:
+  - name: transaction_id
+    data_tests:
+    - unique
+    - not_null
+  - name: patient_id
+    data_tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('dim_patients')
+          field: patient_id
+  - name: claim_id
+    data_tests:
+    - not_null
+    - relationships:
+        arguments:
+          to: ref('fct_claims')
+          field: claim_id

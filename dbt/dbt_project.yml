@@ -1,0 +1,19 @@
+name: synthea_cdc
+version: '1.0.0'
+config-version: 2
+profile: synthea_cdc
+model-paths: [models]
+test-paths: [tests]
+macro-paths: [macros]
+models:
+  synthea_cdc:
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table
+
