@@ -69,7 +69,7 @@ DMS captures continuously while the stack exists. The Airflow schedule processes
 
 The pending-file task compares S3 CSV keys, ETags and sizes with the last completed batch. When unchanged, it exits with Airflow's skip code and **load, build, report and acknowledgement are skipped without connecting to Redshift**. Capture health is still checked. Empty or inaccessible capture fails visibly rather than being treated as a quiet batch.
 
-The local checkpoint is under ignored `data/olist-microbatch/` in the bind-mounted project directory. It advances only after loading, dbt tests and reporting succeed. If loading succeeds but dbt fails, the next run still builds the marts even though the raw file ledger already contains those files. Files arriving after the pending check are picked up again next run if necessary. Missing checkpoint state causes a safe extra load/build. Keep one scheduler for this checkout, do not run manual warehouse commands concurrently, and clear this checkpoint directory while paused if resetting the warehouse, restoring a baseline, or changing transformation code that needs a rebuild without new source files. Per-run manifests are small local demo artifacts and may also be cleared while paused.
+The local checkpoint is under ignored `data/olist-microbatch/` in the bind-mounted project directory. It advances only after loading, dbt tests and reporting succeed. If loading succeeds but dbt fails, the next run still builds the marts even though the raw file ledger already contains those files. Files arriving after the pending check are picked up again next run if necessary. Missing checkpoint state causes a safe extra load/build. Keep one scheduler for this checkout, do not run manual warehouse commands concurrently, and clear this checkpoint directory while paused if resetting the warehouse or restoring a baseline. Transformation changes also require the explicit full-refresh procedure below; clearing only the local checkpoint does not reset dbt model checkpoints. Per-run manifests are small local demo artifacts and may also be cleared while paused.
 
 Inspect batches without querying Redshift using `.venv/bin/python scripts/report_batches.py`; add `--run-id` to see task attempts and load counts. [The local audit](batch-audit.md) lives in `data/olist-microbatch/audit.sqlite`. When resetting only replay-control state, remove `completed.json` and per-run JSON manifests while paused; keep the SQLite file if retaining monitoring history.
 
@@ -84,6 +84,14 @@ docker compose -f compose.airflow.yaml stop
 Skipping idle warehouse work reduces query activity, but RDS and DMS still cost money while provisioned. Delete the stack after each demo using the cleanup steps below.
 
 `scripts/run_cloud.py check|load|build|report` runs the exact same commands manually. The project virtual environment is separate from Airflow's dependencies inside the image. Only a temporary session for the project AWS profile is made available to the container; other AWS profiles are not mounted. It inherits the developer user's permissions for this portfolio test, not a production runtime role. Refresh that session after one hour if a later authorized demo needs it.
+
+After changing transformation logic that must apply to existing rows, pause scheduling and wait for any active run to finish, then run:
+
+```sh
+.venv/bin/python scripts/run_cloud.py build --full-refresh
+```
+
+This rebuilds marts from retained raw events and resets each model's file checkpoint in its transaction. It runs tests and uses Redshift compute within the agreed session budget. Normal scheduled builds remain incremental. See [incremental recovery](incremental-dbt.md).
 
 ## Replay and cleanup
 

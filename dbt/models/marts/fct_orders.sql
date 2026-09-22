@@ -2,15 +2,28 @@
     pre_hook="{{ cdc_prepare('orders', 'order_id', true) }}",
     post_hook="{{ cdc_acknowledge() }}") }}
 
+-- Canonical intermediate views remain in the tested graph. Shared SQL filters
+-- complete entity histories before ranking; merely filtering a view can rank all rows.
+-- depends_on: {{ ref('int_orders_current') }}
+-- depends_on: {{ ref('int_order_item_totals') }}
+-- depends_on: {{ ref('int_order_payment_totals') }}
 with orders as (
-    select * from {{ ref('int_orders_current') }}
-    {{ cdc_filter('order_id') }}
+    {{ current_state('stg_orders', 'order_id') }}
+), current_items as (
+    {{ current_state('stg_order_items', 'order_item_key', order_details=true) }}
+), current_payments as (
+    {{ current_state('stg_order_payments', 'payment_key', order_details=true) }}
 ), items as (
-    select * from {{ ref('int_order_item_totals') }}
+    select order_id, sum(price) as item_total, sum(freight_value) as freight_total,
+           count(*) as item_count
+    from current_items
     {{ cdc_filter('order_id') }}
+    group by order_id
 ), payments as (
-    select * from {{ ref('int_order_payment_totals') }}
+    select order_id, sum(payment_value) as payment_total, count(*) as payment_count
+    from current_payments
     {{ cdc_filter('order_id') }}
+    group by order_id
 )
 select o.order_id, o.customer_id, o.status, o.purchased_at, o.approved_at,
        o.carrier_delivered_at, o.customer_delivered_at, o.estimated_delivery_at,

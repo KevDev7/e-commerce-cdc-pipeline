@@ -1,7 +1,7 @@
 {
   "source_url": "https://www.kaggle.com/api/v1/datasets/download/olistbr/brazilian-ecommerce?datasetVersionNumber=2",
   "archive_sha256": "967e41e04fc306fe604e2a693f488995a8b41e5047418f8a5c8e4abd6deca784",
-  "verified_at": "2026-09-22T14:40:20.626728+00:00",
+  "verified_at": "2026-09-22T16:43:50.977835+00:00",
   "validation": "Local PostgreSQL snapshot fixture; not AWS CDC",
   "tables": {
     "customers": {
@@ -37,5 +37,13 @@
     "payments": "16008872.12"
   },
   "dbt_models": 18,
-  "dbt_tests": 45
+  "dbt_tests": 45,
+  "dbt_incremental_models": [
+    "dim_customer_history",
+    "dim_customers",
+    "fct_order_items",
+    "fct_order_payments",
+    "fct_order_status_history",
+    "fct_orders"
+  ]
 }

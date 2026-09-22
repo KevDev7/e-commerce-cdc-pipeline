@@ -19,13 +19,17 @@ A student data engineering portfolio project that loads **real, anonymized histo
 | Raw load succeeds but dbt fails | Batch is not acknowledged; next run still builds marts | Batch checkpoint and Airflow tests |
 | No new capture files | Skip warehouse work without waking Redshift | S3 metadata fixtures and Airflow tests |
 | Multiple status changes between warehouse batches | Retain observed transitions; suppress same-status updates without losing deletes/reinserts | Order-history integration fixtures |
+| Late file changes a previously built history interval | Recompute affected entity history, including removing obsolete versions | Successive incremental-build tests |
+| Item/payment changes without an order update | Recalculate that order, including when its last detail is deleted | Successive incremental-build tests |
+| Incremental mart fails after writing rows and its checkpoint | Roll back both; retry matches a full rebuild | SQL failure-injection test |
+| Quiet build or duplicate event delivery | Leave existing mart rows untouched | PostgreSQL row-identity checks |
 | Failed task followed by a successful retry | Preserve both attempts and report final batch outcome correctly | SQLite audit tests and real Airflow task-state checks |
 
 These are local results. The Olist AWS demonstration is still pending; the tests do not substitute for real DMS → S3 → Redshift validation.
 
 ## Current validation
 
-The Olist migration is **locally validated; its AWS end-to-end run is still pending**. All 415,418 selected source rows loaded successfully. All 18 dbt models and 45 data tests passed against the real seed using a local snapshot fixture; every current source field reconciled. The 34-test suite covers real local WAL, retries, rollback, deletes, history, late files and batch checkpoints. Separate Airflow container checks verify idle skips and failure propagation.
+The Olist migration is **locally validated; its AWS end-to-end run is still pending**. All 415,418 selected source rows loaded successfully. All 18 dbt models and 45 data tests passed against the real seed using a local snapshot fixture; every current source field reconciled. The 35-test suite covers real local WAL, retries, rollback, deletes, history, late files and batch checkpoints. Separate Airflow container checks verify idle skips and failure propagation.
 
 Previous AWS results belong to the [archived Synthea implementation](docs/archive/synthea/README.md). They do not validate the new Olist DMS layout or cloud marts. No AWS infrastructure was started for this migration.
 
@@ -76,6 +80,14 @@ The GitHub repository and existing AWS profile/resource ownership names still us
 
 See [source semantics](docs/source.md), [warehouse schema](docs/warehouse.md), [Olist validation](docs/validation.md) and [migration inspection](docs/olist-migration.md).
 
+## Incremental dbt processing
+
+All six marts use dbt incremental models with `unique_key` and the `delete+insert` strategy. Each mart tracks the raw files it has processed and selects affected customer, order, item or payment keys. Order totals also refresh when item or payment records change. Staging and intermediate models remain views.
+
+Affected entities are replaced inside a transaction, including removing hard-deleted records and obsolete history versions. Window calculations filter to affected entities before ranking events; history is recalculated from each entity's retained events, so a late file can correct earlier intervals. The mart's file checkpoint commits with its changes; a failed model retries those files. Unchanged entities retain their existing rows. This adds incremental warehouse processing to the existing log-based capture.
+
+Local tests compare successive incremental results with `--full-refresh`, inject a SQL failure after the checkpoint write, and verify quiet/replayed batches do not rewrite mart rows. This reduces mart writes; it is not a claim that every upstream scan or data-quality test is incremental. See [processing and recovery details](docs/incremental-dbt.md).
+
 ## Order-status history
 
 `fct_orders` answers “what is the order's current state?” `fct_order_status_history` answers “which states did we observe, and when did they change?” It retains transitions such as created → approved → shipped → delivered, even when multiple changes arrive in one batch. Repeated updates with the same status do not create extra versions; deletes and reinserts remain visible.
@@ -93,4 +105,4 @@ The local audit records task attempts, run outcomes, elapsed time, committed-fil
 
 ## Remaining validation
 
-A separately budgeted Olist AWS run is still needed to verify live DMS files, Redshift loading, scheduled latency, recovery and cost. Parquet and incremental mart optimization are deferred. Current marts rebuild from retained raw events; dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.
+A separately budgeted Olist AWS run is still needed to verify live DMS files, Redshift loading, scheduled latency, recovery and cost. Parquet is deferred. Incremental marts are locally validated; dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.

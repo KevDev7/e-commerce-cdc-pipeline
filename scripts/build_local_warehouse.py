@@ -3,6 +3,7 @@
 This is not CDC extraction. Actual cloud capture is AWS DMS; the Olist AWS run is pending; see docs/validation.md.
 Existing warehouse state is retained; a changed fixture must use a fresh test DB.
 """
+import argparse
 import csv
 from datetime import datetime, timezone
 import hashlib
@@ -21,6 +22,9 @@ from olist_cdc.warehouse import initialize_raw, load_local
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--full-refresh', action='store_true', help='Rebuild all marts from the retained raw fixture')
+    args = parser.parse_args()
     name = os.environ.get("WAREHOUSE_DATABASE", "olist_warehouse")
     if os.environ.get("POSTGRES_HOST", "127.0.0.1") not in ("127.0.0.1", "localhost"):
         raise ValueError("This fixture builder is local-only")
@@ -30,7 +34,7 @@ def main():
     with connect(name) as target:
         initialize_raw(target)
         if target.execute("SELECT count(*) FROM raw.loaded_files").fetchone()[0]:
-            print("Existing local fixture retained; rebuilding models from captured raw data.")
+            print("Existing local raw fixture retained; running dbt build.")
             target.commit()
         else:
             target.commit()
@@ -48,7 +52,7 @@ def main():
                     result=load_local(target,events,file,hashlib.sha256(text.encode()).hexdigest())
                     print(f"{table}: {len(events)} rows, {result}")
     shutil.copyfile(ROOT/"dbt/profiles.yml.example",ROOT/"dbt/profiles.yml")
-    subprocess.run([str(ROOT/".venv/bin/dbt"),"build","--project-dir",str(ROOT/"dbt"),"--profiles-dir",str(ROOT/"dbt"),"--target","local"],check=True,
+    subprocess.run([str(ROOT/".venv/bin/dbt"),"build","--project-dir",str(ROOT/"dbt"),"--profiles-dir",str(ROOT/"dbt"),"--target","local", *(["--full-refresh"] if args.full_refresh else [])],check=True,
                    env={**os.environ,"DBT_SEND_ANONYMOUS_USAGE_STATS":"false"})
 
 
