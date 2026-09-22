@@ -7,8 +7,7 @@ import io
 from olist_cdc.seed import TABLES
 
 # DMS transformations append these columns after the original source columns.
-# Metadata layout was observed on the preceding Synthea DMS run.
-# The Olist column mapping is locally tested; verify its real DMS files in the next AWS demo.
+# Olist source/metadata ordering was verified against real DMS files; see docs/validation.md.
 DMS_METADATA = ("_source_lsn", "_source_order", "_commit_at")
 RAW_METADATA = ("_event_id", "_op", "_source_lsn", "_source_order", "_commit_at", "_is_snapshot", "_source_file")
 NULL = "__OLIST_NULL__"

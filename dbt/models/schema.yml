@@ -105,6 +105,19 @@ models:
         arguments:
           to: ref('dim_customers')
           field: customer_id
+  - name: customer_version_id
+    description: Observed customer version at the latest captured order INSERT; NULL if history is unknown.
+    data_tests:
+    - relationships:
+        arguments:
+          to: ref('dim_customer_history')
+          field: customer_version_id
+  - name: customer_history_status
+    data_tests:
+    - not_null
+    - accepted_values:
+        arguments:
+          values: [matched, creation_not_captured, customer_history_unavailable]
 - name: fct_order_items
   columns:
   - name: order_item_key

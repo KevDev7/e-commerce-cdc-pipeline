@@ -1,0 +1,40 @@
+{
+  "verified_at": "2026-09-22T19:09:42.244686+00:00",
+  "aws_cleanup": {
+    "stack_deleted": true,
+    "source_absent": true,
+    "redshift_workgroup_absent": true,
+    "redshift_namespace_absent": true,
+    "bucket_absent": true,
+    "dms_replication_absent": true,
+    "dms_task_absent": true,
+    "rds_snapshots_absent": true,
+    "redshift_snapshots_absent": true
+  },
+  "usage": {
+    "observed_at": "2026-09-22T18:58:03.923756+00:00",
+    "reported_rpu_seconds": 6000,
+    "reported_extra_optimization_rpu_seconds": 0,
+    "last_usage_interval": "2026-09-22 18:59:00",
+    "note": "Usage may lag. This is Redshift compute only, not the final AWS invoice.",
+    "usd_per_rpu_hour": 0.375,
+    "price_source": "AWS Price List API: AmazonRedshift / USE1-Redshift:ServerlessUsage",
+    "price_checked_at": "2026-09-22T19:02:18.358323+00:00",
+    "reported_compute_usd": 0.625
+  },
+  "local_cleanup": {
+    "seed_archive_removed": true,
+    "capture_archive_removed": true,
+    "dataset_file_bytes_removed": 196182013,
+    "docker_data_volumes_removed": [
+      "olist-cdc_source-data",
+      "olist-cdc_airflow-data"
+    ]
+  },
+  "validation": {
+    "local_tests": 37,
+    "redshift_models": 19,
+    "redshift_data_tests": 49
+  },
+  "billing_note": "Reported Redshift compute is not the final AWS bill; RDS/DMS, storage, networking and billing lag are additional."
+}

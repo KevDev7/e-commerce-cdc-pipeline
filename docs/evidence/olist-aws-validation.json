@@ -1,0 +1,249 @@
+{
+  "verified_at": "2026-09-22T18:41:26.790528+00:00",
+  "target": "RDS PostgreSQL 17.11 / DMS 3.6.1 / S3 / Redshift Serverless 4 RPU",
+  "real_seed_rows": 415418,
+  "synthetic_bootstrap_snapshot_rows": 100002,
+  "snapshot_rows": 515420,
+  "bootstrap": {
+    "status": "overlapping_events_verified",
+    "overlapping_transactions": 7,
+    "verified_operations": 21,
+    "total_writer_cdc_events": 399
+  },
+  "dbt_models": 18,
+  "dbt_tests": 45,
+  "local_tests": 35,
+  "source_reconciliation": {
+    "verified_at": "2026-09-22T18:39:44.838169+00:00",
+    "tables": {
+      "customers": {
+        "count": 199445,
+        "sha256": "0b64035871f1afede99bce81ac8e77abe8c16c09e999df7724b4e1966bb16935"
+      },
+      "orders": {
+        "count": 99443,
+        "sha256": "66f19860b1cb50aeb96f9fa294994ad7cab41050c6a136618687530aa3d28ced"
+      },
+      "order_items": {
+        "count": 112654,
+        "sha256": "12bbb6f1a8fb0501612bb74282da4f11e11f1edf696fd68338fdc357bf1309f1"
+      },
+      "order_payments": {
+        "count": 103890,
+        "sha256": "e816c1cc68fdf32e6e6e8544ca73504e02c027fbfd4cd4ab17863141dc8be981"
+      }
+    }
+  },
+  "scenarios": {
+    "verified_at": "2026-09-22T18:39:23.593996+00:00",
+    "scenarios": [
+      {
+        "scenario": "aws-olist-001",
+        "operations": {
+          "D": 2,
+          "I": 8,
+          "U": 4
+        },
+        "lifecycle_and_totals": true,
+        "hard_deletes": true,
+        "rollback_excluded": true,
+        "unique_event_ids": true
+      },
+      {
+        "scenario": "aws-olist-resume-001",
+        "operations": {
+          "I": 8,
+          "D": 2,
+          "U": 4
+        },
+        "lifecycle_and_totals": true,
+        "hard_deletes": true,
+        "rollback_excluded": true,
+        "unique_event_ids": true
+      }
+    ]
+  },
+  "capture_resume": {
+    "status_before_writes": "stopped",
+    "recovery_checkpoint_present": true,
+    "scenario": "aws-olist-resume-001"
+  },
+  "raw_failure": {
+    "source_key": "olist-v1/cdc/CDC_TXN-20260922183256544.csv",
+    "inserted_tables_before_failure": [
+      "\"raw\".customers",
+      "\"raw\".orders",
+      "\"raw\".order_items",
+      "\"raw\".order_payments"
+    ],
+    "before": {
+      "customers": [
+        199842,
+        199842
+      ],
+      "orders": [
+        99441,
+        99441
+      ],
+      "order_items": [
+        112650,
+        112650
+      ],
+      "order_payments": [
+        103886,
+        103886
+      ],
+      "loaded_files": 8
+    },
+    "after_failure": {
+      "customers": [
+        199842,
+        199842
+      ],
+      "orders": [
+        99441,
+        99441
+      ],
+      "order_items": [
+        112650,
+        112650
+      ],
+      "order_payments": [
+        103886,
+        103886
+      ],
+      "loaded_files": 8
+    },
+    "after_retry": {
+      "customers": [
+        199846,
+        199846
+      ],
+      "orders": [
+        99447,
+        99447
+      ],
+      "order_items": [
+        112652,
+        112652
+      ],
+      "order_payments": [
+        103888,
+        103888
+      ],
+      "loaded_files": 9
+    },
+    "second_retry_unchanged": true
+  },
+  "mart_failure": {
+    "verified_at": "2026-09-22T18:34:53.316021+00:00",
+    "target": "Redshift",
+    "model": "fct_orders",
+    "rollback_preserved_rows_and_checkpoint": true,
+    "retry_applied_changes": true,
+    "pending_order_events": 6,
+    "before_rows": 99441,
+    "after_retry_rows": 99442,
+    "before_sha256": "681c74ac76bb86cb675120e0947390490b702403b64a8fc7fa1d8f0b255568d3",
+    "after_retry_sha256": "826f60e467454d66b70cdb012854c81cd7df031a56dc808e84886f223ba0adbd"
+  },
+  "replay": {
+    "before": {
+      "customers": [
+        199850,
+        199850
+      ],
+      "orders": [
+        99453,
+        99453
+      ],
+      "order_items": [
+        112654,
+        112654
+      ],
+      "order_payments": [
+        103890,
+        103890
+      ]
+    },
+    "after_redelivery": {
+      "customers": [
+        199850,
+        199850
+      ],
+      "orders": [
+        99453,
+        99453
+      ],
+      "order_items": [
+        112654,
+        112654
+      ],
+      "order_payments": [
+        103890,
+        103890
+      ]
+    },
+    "after_retry": {
+      "customers": [
+        199850,
+        199850
+      ],
+      "orders": [
+        99453,
+        99453
+      ],
+      "order_items": [
+        112654,
+        112654
+      ],
+      "order_payments": [
+        103890,
+        103890
+      ]
+    },
+    "replayed_key": "olist-v1/cdc/replay-CDC_TXN-20260922181301159.csv"
+  },
+  "scheduled_batches": [
+    {
+      "run_id": "scheduled__2026-09-22T18:25:00+00:00",
+      "started_at": "2026-09-22T18:35:08.058199+00:00",
+      "last_finished_at": "2026-09-22T18:36:58.682409+00:00",
+      "elapsed_seconds": 110.624,
+      "status": "success",
+      "dbt_status": "success",
+      "files_committed": 0,
+      "input_inserts": 0,
+      "input_updates": 0,
+      "input_deletes": 0,
+      "snapshot_rows": 0
+    },
+    {
+      "run_id": "scheduled__2026-09-22T18:30:00+00:00",
+      "started_at": "2026-09-22T18:37:01.837456+00:00",
+      "last_finished_at": "2026-09-22T18:38:49.287767+00:00",
+      "elapsed_seconds": 107.451,
+      "status": "success",
+      "dbt_status": "success",
+      "files_committed": 1,
+      "input_inserts": 8,
+      "input_updates": 4,
+      "input_deletes": 2,
+      "snapshot_rows": 0
+    },
+    {
+      "run_id": "scheduled__2026-09-22T18:35:00+00:00",
+      "started_at": "2026-09-22T18:40:03.095452+00:00",
+      "last_finished_at": "2026-09-22T18:40:05.881206+00:00",
+      "elapsed_seconds": 2.786,
+      "status": "skipped",
+      "dbt_status": null,
+      "files_committed": 0,
+      "input_inserts": 0,
+      "input_updates": 0,
+      "input_deletes": 0,
+      "snapshot_rows": 0
+    }
+  ],
+  "cleanup": "AWS stack deletion and resource absence verified; local datasets removed at user request. See olist-session-cleanup.json."
+}

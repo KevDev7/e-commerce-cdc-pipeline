@@ -93,6 +93,22 @@ After changing transformation logic that must apply to existing rows, pause sche
 
 This rebuilds marts from retained raw events and resets each model's file checkpoint in its transaction. It runs tests and uses Redshift compute within the agreed session budget. Normal scheduled builds remain incremental. See [incremental recovery](incremental-dbt.md).
 
+## Incremental mart rollback check
+
+With Airflow paused and the initial marts already built, simulate another order
+scenario and load its capture files without building marts. Then run:
+
+```sh
+.venv/bin/python scripts/verify_mart_failure.py
+.venv/bin/python scripts/run_cloud.py build
+```
+
+The check injects a SQL error after the `fct_orders` checkpoint write using a
+temporary copy of the dbt project. It compares actual Redshift rows and checkpoint
+state before and after failure, retries the model, and records the result under
+ignored `data/mart-failure.json`. The normal build afterward updates the remaining
+marts and runs all data tests. Original project SQL is not modified by the check.
+
 ## Replay and cleanup
 
 The loader stores original DMS files unchanged, derives compressed COPY inputs under `copy-ready/`, and commits the raw records with the file ledger in one transaction. A replay skips identical files; events redelivered under another file name are deduplicated by source identity. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
@@ -105,6 +121,50 @@ The loader stores original DMS files unchanged, derives compressed COPY inputs u
 docker compose -f compose.airflow.yaml stop
 ```
 
-Deletion downloads captured files to ignored `data/aws-capture`, empties the project bucket, then deletes the stack. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS-generated log group. Verify no project RDS/DMS/Redshift resources remain. The local state file records the stack ID and test start time; creation refuses another session while that record exists. Keep it as evidence until reviewing costs and approving any additional session. Remove `.aws/credentials` after the test. Do not delete or modify resources belonging to other projects.
+Deletion empties the project bucket and deletes the stack without downloading datasets to the Mac. Local capture archiving is opt-in with `delete --archive-local`; it is not used for this project's normal cleanup. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS-generated log group. Verify no project RDS/DMS/Redshift resources remain. The local state file records the stack ID and test start time; creation refuses another session while that record exists. Keep it as evidence until reviewing costs and approving any additional session. Remove `.aws/credentials` after the test. Do not delete or modify resources belonging to other projects.
 
 With the source quiescent and the latest DMS batch loaded, `.venv/bin/python scripts/reconcile_cloud.py` compares every current field with Redshift. `.venv/bin/python scripts/verify_replay.py` redelivers a real CDC file and retries the batch, asserting unchanged raw counts and unique event identities. These tools were adapted for Olist; their previous AWS executions used Synthea and do not validate this new schema. Reconciliation against an actively changing source would require coordinating a common checkpoint, which this small demo does not automate.
+
+## Verify a completed simulated lifecycle
+
+After dbt succeeds, check named scenarios against real raw events and marts:
+
+```sh
+uv run python scripts/verify_cloud_scenario.py demo-001
+uv run python scripts/reconcile_cloud.py
+```
+
+The scenario check requires all eight simulation phases. It verifies 8 inserts,
+4 updates and 2 deletes, unique event identities, the four observed order statuses,
+independent item/payment totals, customer address history, hard-delete application
+and exclusion of the rolled-back update. Reconciliation compares every current
+source field after the source is quiet. Saved reports remain in ignored `data/`.
+
+## Verify customer versions for new orders
+
+With Airflow paused, after a full simulated lifecycle corrected the customer's city:
+
+```sh
+uv run python scripts/verify_customer_join.py write --scenario demo-001
+# Wait for DMS to deliver the new INSERT, then load and build.
+uv run python scripts/run_cloud.py load
+uv run python scripts/run_cloud.py build
+uv run python scripts/verify_customer_join.py verify --scenario demo-001
+```
+
+The added order intentionally has no items/payments. The check proves the original
+order retains sao paulo, the follow-up uses campinas, and all 99,441 original orders
+retain unknown pre-capture customer history. This is a simulated repeat order on
+the reconstructed source, not an extra record from Olist. Existing warehouses need
+one full refresh to add the new fact columns before returning to incremental runs.
+
+## Local data retention
+
+Keep code and small sanitized validation reports, not local datasets after demos.
+Remove the downloaded `data/olist` seed and any explicitly requested
+`data/aws-capture` archive when finished. The local PostgreSQL volume contains both
+source and warehouse rows; remove the stopped project containers and their
+`olist-cdc_source-data` volume to remove those rows too. The
+`olist-cdc_airflow-data` volume holds local Airflow metadata/logs and can also be
+removed after saving the small validation summary. Do not remove other projects'
+containers or volumes. Future local tests recreate disposable databases.

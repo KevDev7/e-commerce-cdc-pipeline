@@ -1,0 +1,135 @@
+{
+  "scenario": "aws-measured-250",
+  "simulated": true,
+  "orders_created": 250,
+  "orders_deleted": 25,
+  "source_transactions": 3,
+  "expected_operations": {
+    "I": 1000,
+    "U": 500,
+    "D": 100
+  },
+  "write_started_at": "2026-09-22T18:51:02.797314+00:00",
+  "write_finished_at": "2026-09-22T18:51:05.782380+00:00",
+  "write_seconds": 2.985,
+  "capture_complete_observed_at": "2026-09-22T18:52:12.730179+00:00",
+  "captured_operations": {
+    "I": 1000,
+    "U": 500,
+    "D": 100
+  },
+  "capture_files": [
+    "olist-v1/cdc/CDC_TXN-20260922185104311.csv",
+    "olist-v1/cdc/CDC_TXN-20260922185104794.csv",
+    "olist-v1/cdc/CDC_TXN-20260922185205738.csv"
+  ],
+  "capture_bytes": 453359,
+  "capture_last_object_at": "2026-09-22T18:52:06+00:00",
+  "verified_at": "2026-09-22T18:55:29.554354+00:00",
+  "actual_operations": {
+    "I": 1000,
+    "U": 500,
+    "D": 100
+  },
+  "current_rows_per_table": 225,
+  "totals_and_creation_versions_verified": true,
+  "batch": {
+    "run_id": "benchmark__aws-measured-250",
+    "started_at": "2026-09-22T18:52:24.332017+00:00",
+    "last_finished_at": "2026-09-22T18:54:41.575432+00:00",
+    "elapsed_seconds": 137.243,
+    "status": "success",
+    "dbt_status": "success",
+    "files_committed": 3,
+    "input_inserts": 1000,
+    "input_updates": 500,
+    "input_deletes": 100,
+    "snapshot_rows": 0
+  },
+  "steps": [
+    {
+      "step": "check",
+      "duration_seconds": 0.457,
+      "status": "success",
+      "details": {}
+    },
+    {
+      "step": "pending",
+      "duration_seconds": 0.321,
+      "status": "success",
+      "details": {}
+    },
+    {
+      "step": "load",
+      "duration_seconds": 32.041,
+      "status": "success",
+      "details": {
+        "files_already_loaded": 12,
+        "files_committed": 3,
+        "files_listed": 15,
+        "input_D": 100,
+        "input_I": 1000,
+        "input_U": 500
+      }
+    },
+    {
+      "step": "build",
+      "duration_seconds": 101.631,
+      "status": "success",
+      "details": {
+        "full_refresh": false
+      }
+    },
+    {
+      "step": "report",
+      "duration_seconds": 1.756,
+      "status": "success",
+      "details": {
+        "mart_rows": {
+          "dim_customer_history": 200373,
+          "dim_customers": 199670,
+          "fct_order_items": 112879,
+          "fct_order_payments": 104115,
+          "fct_order_status_history": 99979,
+          "fct_orders": 99669
+        }
+      }
+    },
+    {
+      "step": "complete",
+      "duration_seconds": 0.002,
+      "status": "success",
+      "details": {}
+    }
+  ],
+  "source_to_last_s3_object_seconds": 60.218,
+  "conditions": {
+    "redshift_base_and_max_rpu": 4,
+    "warehouse": "already active; existing Olist/bootstrap/history data",
+    "execution": "manually invoked normal DAG steps; excludes scheduled wait",
+    "dbt_models": 19,
+    "dbt_tests": 49,
+    "scope": "single modest demonstration, not sustained capacity"
+  },
+  "source_reconciliation": {
+    "verified_at": "2026-09-22T18:55:54.511489+00:00",
+    "tables": {
+      "customers": {
+        "count": 199670,
+        "sha256": "9cbbd0128ad18a5b6136bce134fb8af62f9c894e4acffa120a8197884f88cb7f"
+      },
+      "orders": {
+        "count": 99669,
+        "sha256": "962967acc99390fbb3904ee86eabaad5c1df8927981529b6599c29d98a6fe2c8"
+      },
+      "order_items": {
+        "count": 112879,
+        "sha256": "84f734bcadb28fc0e4963181acc9157a2fc69db5e966e2fc84d0286448c65b65"
+      },
+      "order_payments": {
+        "count": 104115,
+        "sha256": "0836365167f80e485737c49d57d26edfbc3ba8da5dbb6b352a66be24c4d13192"
+      }
+    }
+  }
+}

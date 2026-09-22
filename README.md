@@ -25,13 +25,15 @@ A student data engineering portfolio project that loads **real, anonymized histo
 | Quiet build or duplicate event delivery | Leave existing mart rows untouched | PostgreSQL row-identity checks |
 | Failed task followed by a successful retry | Preserve both attempts and report final batch outcome correctly | SQLite audit tests and real Airflow task-state checks |
 
-These are local results. The Olist AWS demonstration is still pending; the tests do not substitute for real DMS → S3 → Redshift validation.
+Local fixtures cover adversarial ordering and row-identity checks. The live AWS run additionally verified bootstrap overlap, raw/mart rollback, capture recovery, replay, scheduled processing and source-to-Redshift reconciliation; see [cloud evidence](docs/evidence/olist-aws-validation.json).
 
 ## Current validation
 
-The Olist migration is **locally validated; its AWS end-to-end run is still pending**. All 415,418 selected source rows loaded successfully. All 18 dbt models and 45 data tests passed against the real seed using a local snapshot fixture; every current source field reconciled. The 35-test suite covers real local WAL, retries, rollback, deletes, history, late files and batch checkpoints. Separate Airflow container checks verify idle skips and failure propagation.
+The Olist pipeline is **validated locally and end to end on AWS**. All 415,418 selected historical rows passed through RDS PostgreSQL → DMS → S3 → Redshift. The current 19 dbt models and 49 data tests pass on Redshift. Every current source field reconciled after simulated inserts, updates and deletes.
 
-Previous AWS results belong to the [archived Synthea implementation](docs/archive/synthea/README.md). They do not validate the new Olist DMS layout or cloud marts. No AWS infrastructure was started for this migration.
+The live demonstration verified 21 changes committed during the initial customer snapshot, recovery of 14 changes committed while DMS was stopped, atomic raw-load and incremental-mart retries, and duplicate-file replay. Two real scheduled Airflow batches passed; the next quiet run skipped loading/building/reporting. Bootstrap timing used 100,002 additional synthetic customer rows, reported separately from Olist's records. The local suite includes 37 tests, including the measured workload generator.
+
+[Reproducible checks and measured evidence](docs/validation.md) distinguish actual cloud results from local fixtures. Earlier Synthea results remain [archived](docs/archive/synthea/README.md).
 
 ## Source and model scope
 
@@ -88,6 +90,10 @@ Affected entities are replaced inside a transaction, including removing hard-del
 
 Local tests compare successive incremental results with `--full-refresh`, inject a SQL failure after the checkpoint write, and verify quiet/replayed batches do not rewrite mart rows. This reduces mart writes; it is not a claim that every upstream scan or data-quality test is incremental. See [processing and recovery details](docs/incremental-dbt.md).
 
+## Customer versions at order creation
+
+New captured orders carry a customer_version_id pointing to the observed address version when their INSERT occurred. An order created before a customer correction keeps the earlier version; a later order uses the new version. Customer-only late files also revisit affected orders. Original historical snapshot orders have NULL version IDs with `creation_not_captured`; missing captured history is labeled separately. We do not invent customer history for 2016–2018 purchases.
+
 ## Order-status history
 
 `fct_orders` answers “what is the order's current state?” `fct_order_status_history` answers “which states did we observe, and when did they change?” It retains transitions such as created → approved → shipped → delivered, even when multiple changes arrive in one batch. Repeated updates with the same status do not create extra versions; deletes and reinserts remain visible.
@@ -103,6 +109,18 @@ uv run python scripts/report_batches.py --run-id 'your-airflow-run-id'
 
 The local audit records task attempts, run outcomes, elapsed time, committed-file input counts by operation, snapshot rows, dbt outcome and the last successful completion. Quiet batches remain distinguishable from failures. SQLite runs locally alongside Airflow, so reporting does not wake Redshift. Input counts are not claims about new warehouse rows after deduplication. See [audit schema and retry semantics](docs/batch-audit.md).
 
+## Measured workload
+
+On an active 4-RPU Redshift warehouse, a simulated 250-order workload produced **1,600 real captured changes** (1,000 inserts, 500 updates, 100 hard deletes). The final S3 object arrived 60 seconds after source writes finished. Loading took 32 seconds; incremental dbt plus all 49 tests took 102 seconds. All source fields reconciled, 225 orders remained, and totals/customer versions were correct. This was one manually invoked batch over existing Olist history, not sustained throughput or a five-minute latency guarantee. [Conditions and reproduction](docs/workload.md).
+
+## Demo cleanup
+
+The AWS stack, its database/warehouse/capture resources, bucket and snapshots have
+been removed. Downloaded datasets, local capture files and the project database
+volumes were also removed from the Mac at the user's request. Code and small
+validation reports remain. Teardown no longer downloads captures by default.
+[Cleanup and reported compute usage](docs/evidence/olist-session-cleanup.json).
+
 ## Remaining validation
 
-A separately budgeted Olist AWS run is still needed to verify live DMS files, Redshift loading, scheduled latency, recovery and cost. Parquet is deferred. Incremental marts are locally validated; dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.
+The live demo verifies correctness and scheduled execution, not sustained production throughput or a latency SLA. A [measured Parquet comparison](docs/parquet-evaluation.md) supports retaining gzip CSV for the current small batches. dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.

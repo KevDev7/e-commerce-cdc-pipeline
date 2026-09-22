@@ -1,0 +1,539 @@
+{
+  "verified_at": "2026-09-22T18:57:43.484853+00:00",
+  "pyarrow_version": "25.0.1",
+  "scope": "Actual DMS records; derived file size and typed round-trip only; no Redshift Parquet COPY timing",
+  "grouping": "One derived file per table per original DMS file, matching the current loader",
+  "summary": {
+    "14_event_lifecycle": {
+      "rows": 14,
+      "derived_files": 4,
+      "gzip_csv_bytes": 1980,
+      "snappy_bytes": 23531,
+      "zstd_bytes": 23864
+    },
+    "1600_event_workload": {
+      "rows": 1600,
+      "derived_files": 10,
+      "gzip_csv_bytes": 136570,
+      "snappy_bytes": 304110,
+      "zstd_bytes": 185626
+    },
+    "real_order_items_snapshot": {
+      "rows": 112650,
+      "derived_files": 1,
+      "gzip_csv_bytes": 12863840,
+      "snappy_bytes": 17672320,
+      "zstd_bytes": 9973835
+    }
+  },
+  "measurements": [
+    {
+      "table": "customers",
+      "rows": 4,
+      "gzip_csv_bytes": 552,
+      "schema": {
+        "customer_id": "string",
+        "customer_unique_id": "string",
+        "postal_code": "string",
+        "city": "string",
+        "state": "string",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 5271,
+        "write_and_roundtrip_seconds": 0.8768,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 5303,
+        "write_and_roundtrip_seconds": 0.002,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "14_event_lifecycle",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922183256544.csv"
+    },
+    {
+      "table": "orders",
+      "rows": 6,
+      "gzip_csv_bytes": 751,
+      "schema": {
+        "order_id": "string",
+        "customer_id": "string",
+        "status": "string",
+        "purchased_at": "timestamp[us]",
+        "approved_at": "timestamp[us]",
+        "carrier_delivered_at": "timestamp[us]",
+        "customer_delivered_at": "timestamp[us]",
+        "estimated_delivery_at": "timestamp[us]",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 6673,
+        "write_and_roundtrip_seconds": 0.0013,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 6666,
+        "write_and_roundtrip_seconds": 0.0011,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "14_event_lifecycle",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922183256544.csv"
+    },
+    {
+      "table": "order_items",
+      "rows": 2,
+      "gzip_csv_bytes": 352,
+      "schema": {
+        "order_item_key": "string",
+        "order_id": "string",
+        "order_item_id": "int32",
+        "product_id": "string",
+        "seller_id": "string",
+        "shipping_limit_at": "timestamp[us]",
+        "price": "decimal128(14, 2)",
+        "freight_value": "decimal128(14, 2)",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 6189,
+        "write_and_roundtrip_seconds": 0.0011,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 6361,
+        "write_and_roundtrip_seconds": 0.0013,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "14_event_lifecycle",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922183256544.csv"
+    },
+    {
+      "table": "order_payments",
+      "rows": 2,
+      "gzip_csv_bytes": 325,
+      "schema": {
+        "payment_key": "string",
+        "order_id": "string",
+        "payment_sequential": "int32",
+        "payment_type": "string",
+        "payment_installments": "int32",
+        "payment_value": "decimal128(14, 2)",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 5398,
+        "write_and_roundtrip_seconds": 0.0015,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 5534,
+        "write_and_roundtrip_seconds": 0.0012,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "14_event_lifecycle",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922183256544.csv"
+    },
+    {
+      "table": "customers",
+      "rows": 250,
+      "gzip_csv_bytes": 19552,
+      "schema": {
+        "customer_id": "string",
+        "customer_unique_id": "string",
+        "postal_code": "string",
+        "city": "string",
+        "state": "string",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 43704,
+        "write_and_roundtrip_seconds": 0.0023,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 24919,
+        "write_and_roundtrip_seconds": 0.002,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "1600_event_workload",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922185104311.csv"
+    },
+    {
+      "table": "orders",
+      "rows": 250,
+      "gzip_csv_bytes": 23826,
+      "schema": {
+        "order_id": "string",
+        "customer_id": "string",
+        "status": "string",
+        "purchased_at": "timestamp[us]",
+        "approved_at": "timestamp[us]",
+        "carrier_delivered_at": "timestamp[us]",
+        "customer_delivered_at": "timestamp[us]",
+        "estimated_delivery_at": "timestamp[us]",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 44464,
+        "write_and_roundtrip_seconds": 0.0012,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 25764,
+        "write_and_roundtrip_seconds": 0.0013,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "1600_event_workload",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922185104311.csv"
+    },
+    {
+      "table": "order_items",
+      "rows": 250,
+      "gzip_csv_bytes": 19956,
+      "schema": {
+        "order_item_key": "string",
+        "order_id": "string",
+        "order_item_id": "int32",
+        "product_id": "string",
+        "seller_id": "string",
+        "shipping_limit_at": "timestamp[us]",
+        "price": "decimal128(14, 2)",
+        "freight_value": "decimal128(14, 2)",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 45126,
+        "write_and_roundtrip_seconds": 0.0011,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 26393,
+        "write_and_roundtrip_seconds": 0.0013,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "1600_event_workload",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922185104311.csv"
+    },
+    {
+      "table": "order_payments",
+      "rows": 250,
+      "gzip_csv_bytes": 19849,
+      "schema": {
+        "payment_key": "string",
+        "order_id": "string",
+        "payment_sequential": "int32",
+        "payment_type": "string",
+        "payment_installments": "int32",
+        "payment_value": "decimal128(14, 2)",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 44307,
+        "write_and_roundtrip_seconds": 0.0008,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 25453,
+        "write_and_roundtrip_seconds": 0.001,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "1600_event_workload",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922185104311.csv"
+    },
+    {
+      "table": "customers",
+      "rows": 250,
+      "gzip_csv_bytes": 19868,
+      "schema": {
+        "customer_id": "string",
+        "customer_unique_id": "string",
+        "postal_code": "string",
+        "city": "string",
+        "state": "string",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 44176,
+        "write_and_roundtrip_seconds": 0.0019,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 25709,
+        "write_and_roundtrip_seconds": 0.0016,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "1600_event_workload",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922185104794.csv"
+    },
+    {
+      "table": "orders",
+      "rows": 250,
+      "gzip_csv_bytes": 24519,
+      "schema": {
+        "order_id": "string",
+        "customer_id": "string",
+        "status": "string",
+        "purchased_at": "timestamp[us]",
+        "approved_at": "timestamp[us]",
+        "carrier_delivered_at": "timestamp[us]",
+        "customer_delivered_at": "timestamp[us]",
+        "estimated_delivery_at": "timestamp[us]",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 45033,
+        "write_and_roundtrip_seconds": 0.0012,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 26298,
+        "write_and_roundtrip_seconds": 0.0013,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "1600_event_workload",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922185104794.csv"
+    },
+    {
+      "table": "customers",
+      "rows": 25,
+      "gzip_csv_bytes": 2127,
+      "schema": {
+        "customer_id": "string",
+        "customer_unique_id": "string",
+        "postal_code": "string",
+        "city": "string",
+        "state": "string",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 8749,
+        "write_and_roundtrip_seconds": 0.0018,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 7140,
+        "write_and_roundtrip_seconds": 0.0014,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "1600_event_workload",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922185205738.csv"
+    },
+    {
+      "table": "orders",
+      "rows": 25,
+      "gzip_csv_bytes": 2609,
+      "schema": {
+        "order_id": "string",
+        "customer_id": "string",
+        "status": "string",
+        "purchased_at": "timestamp[us]",
+        "approved_at": "timestamp[us]",
+        "carrier_delivered_at": "timestamp[us]",
+        "customer_delivered_at": "timestamp[us]",
+        "estimated_delivery_at": "timestamp[us]",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 9640,
+        "write_and_roundtrip_seconds": 0.0011,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 8069,
+        "write_and_roundtrip_seconds": 0.0011,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "1600_event_workload",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922185205738.csv"
+    },
+    {
+      "table": "order_items",
+      "rows": 25,
+      "gzip_csv_bytes": 2156,
+      "schema": {
+        "order_item_key": "string",
+        "order_id": "string",
+        "order_item_id": "int32",
+        "product_id": "string",
+        "seller_id": "string",
+        "shipping_limit_at": "timestamp[us]",
+        "price": "decimal128(14, 2)",
+        "freight_value": "decimal128(14, 2)",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 9847,
+        "write_and_roundtrip_seconds": 0.0014,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 8341,
+        "write_and_roundtrip_seconds": 0.0011,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "1600_event_workload",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922185205738.csv"
+    },
+    {
+      "table": "order_payments",
+      "rows": 25,
+      "gzip_csv_bytes": 2108,
+      "schema": {
+        "payment_key": "string",
+        "order_id": "string",
+        "payment_sequential": "int32",
+        "payment_type": "string",
+        "payment_installments": "int32",
+        "payment_value": "decimal128(14, 2)",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 9064,
+        "write_and_roundtrip_seconds": 0.0013,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 7540,
+        "write_and_roundtrip_seconds": 0.0012,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "1600_event_workload",
+      "source_key": "olist-v1/cdc/CDC_TXN-20260922185205738.csv"
+    },
+    {
+      "table": "order_items",
+      "rows": 112650,
+      "gzip_csv_bytes": 12863840,
+      "schema": {
+        "order_item_key": "string",
+        "order_id": "string",
+        "order_item_id": "int32",
+        "product_id": "string",
+        "seller_id": "string",
+        "shipping_limit_at": "timestamp[us]",
+        "price": "decimal128(14, 2)",
+        "freight_value": "decimal128(14, 2)",
+        "updated_at": "timestamp[us, tz=UTC]",
+        "_event_id": "string",
+        "_op": "string",
+        "_source_lsn": "string",
+        "_source_order": "decimal128(35, 0)",
+        "_commit_at": "timestamp[us, tz=UTC]",
+        "_is_snapshot": "bool",
+        "_source_file": "string"
+      },
+      "snappy": {
+        "bytes": 17672320,
+        "write_and_roundtrip_seconds": 0.0759,
+        "exact_typed_roundtrip": true
+      },
+      "zstd": {
+        "bytes": 9973835,
+        "write_and_roundtrip_seconds": 0.0716,
+        "exact_typed_roundtrip": true
+      },
+      "sample": "real_order_items_snapshot",
+      "source_key": "olist-v1/ecommerce/order_items/LOAD00000001.csv"
+    }
+  ],
+  "decision": "Keep existing gzip CSV COPY inputs for this small-batch warehouse; revisit derived Parquet for larger analytical batches. Original transaction-preserving DMS capture stays CSV."
+}

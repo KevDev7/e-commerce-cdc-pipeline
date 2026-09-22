@@ -1,0 +1,11 @@
+{
+  "verified_at": "2026-09-22T18:48:30.680351+00:00",
+  "scenario": "aws-olist-001",
+  "original_order_city": "sao paulo",
+  "followup_order_city": "campinas",
+  "distinct_observed_versions": true,
+  "historical_orders_without_invented_version": 99441,
+  "dbt_models": 19,
+  "dbt_tests": 49,
+  "local_tests": 36
+}

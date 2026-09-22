@@ -19,10 +19,38 @@ The six marts now use dbt incremental materialization. The existing real Olist w
 
 Successive DMS-format fixture batches verify updates, hard deletes, reinserts, detail-only changes, late lower-sequence files, changed history boundaries, and snapshots arriving after an earlier build. A duplicate delivery and a no-input build preserve PostgreSQL row identities. A forced SQL failure after the mart and checkpoint writes rolls back both. A selected model advances only its own checkpoint. Final results in all six marts equal a full rebuild, and the following incremental run leaves those rows untouched.
 
-These are local PostgreSQL results; Redshift execution and performance remain unverified.
+The local fixtures test edge cases and physical row identities. The live Redshift checks below independently validate cloud execution and rollback.
 
-## What remains unverified
+## Live Olist AWS validation — 2026-09-22
 
-This migration did not provision AWS. New Olist DMS CSVs, Redshift COPY, live scheduled batches, source-to-Redshift reconciliation, bootstrap overlap and cloud freshness still require an explicitly budgeted AWS demonstration. Local snapshot files are test fixtures; they are not evidence of DMS capture. Local WAL tests exercise real logs independently of those fixtures.
+[Machine-readable cloud evidence](evidence/olist-aws-validation.json) records this new Olist run. It does not reuse Synthea results.
 
-Earlier AWS runs validated the **Synthea** implementation. Their evidence is preserved under [archive/synthea](archive/synthea/README.md) and must not be presented as Olist results.
+- RDS PostgreSQL 17.11 with logical replication, DMS 3.6.1 full-load-and-cdc, original transaction-preserving CSV in S3, Redshift Serverless capped at 4 RPUs.
+- All 415,418 real selected records were seeded. To make bootstrap overlap observable, the test added 100,000 padding customers and two disposable tracking customers. These are explicitly synthetic, not additional Olist records.
+- Seven source transactions committed fully inside the customers' DMS full-load interval. All 21 corresponding insert/update/delete events were verified exactly once in Redshift. The full writer produced 399 CDC events.
+- A 14-event lifecycle passed through live WAL and all warehouse layers: 8 inserts, 4 updates, 2 hard deletes; the rolled-back update was absent. Created/approved/shipped/delivered history, observed city changes, and independent item/payment totals were verified.
+- DMS was stopped before a second lifecycle was committed, then resumed using its saved checkpoint. Airflow loaded all 14 events and passed the dbt build. All current source columns reconciled afterward.
+- `verify_load_failure.py` injected an exception after actual raw INSERTs across all four tables but before the file ledger. Counts and ledger rolled back; retry inserted each new event once; another retry changed nothing.
+- `verify_mart_failure.py` injected actual SQL division-by-zero after the fct_orders checkpoint insert in a temporary dbt project. Rows and checkpoint remained unchanged; retry applied the pending changes.
+- `verify_replay.py` redelivered a captured CDC file under a different S3 key and retried loading; raw counts and unique event identities stayed equal and unchanged.
+- Two scheduler-created Airflow runs completed with all six tasks successful. The following quiet run executed check/pending and skipped load/build/report/complete. The task audit agrees with actual Airflow states.
+- The first Redshift build exposed a TIMESTAMPTZ/DATEDIFF incompatibility. UTC normalization fixed it without weakening types or history semantics; a local DST regression confirms one elapsed hour across a clock change. The corrected live build passed all 18 models and 45 tests.
+
+Commands and prerequisites are in the [cloud runbook](run-cloud.md). Original captures, full logs and credentials are excluded from Git; only sanitized summaries are committed.
+
+## Limits
+
+The measured demonstration does not establish sustained throughput or a latency SLA. Airflow's interval is five minutes; capture delivery and build time add latency. Row-identity checks and exhaustive late-event fixtures run on local PostgreSQL. dbt tests gate batch acknowledgement, not atomic publication of the entire warehouse. Historical customer attributes before capture remain unknown.
+
+## Customer-version join upgrade
+
+The next verified model version contains **19 models and 49 data tests**; all pass
+on Redshift after rebuilding retained raw events. The local suite now has **36 passing tests**.
+A live follow-up order for an existing simulated customer resolves to campinas,
+while that customer's original order retains sao paulo. All 99,441 original
+snapshot orders keep NULL version IDs with creation_not_captured.
+
+Local multi-batch tests additionally cover equal commit timestamps, customer-only
+late files correcting assignments, missing history filled later, key reuse and
+subsequent customer reassignment. Incremental results equal a full refresh.
+[Join evidence](evidence/olist-customer-join.json) records the actual cloud check.

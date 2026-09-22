@@ -40,4 +40,22 @@ Incremental here means window calculations use the affected entities' histories 
 
 `tests/test_incremental_marts.py` compares successive builds against a full refresh across all six marts, checks that unrelated rows retain their PostgreSQL row identities, and injects a failure after checkpoint insertion to verify transaction rollback. It covers detail-only changes, deleting the last item/payment, reinsertion, late changes that remove old history boundaries, duplicate delivery, no-input runs and independent model checkpoints. `tests/test_marts.py` additionally loads stable or overlapping snapshots after the first mart build.
 
-The real 415,418-row Olist fixture also upgrades and reconciles locally. PostgreSQL validation does not establish Redshift compatibility or production throughput; the Olist AWS run remains pending.
+The real 415,418-row Olist fixture also upgrades and reconciles locally. The live Olist AWS demonstration also verifies Redshift execution, rollback, replay and scheduled batches; see [validation evidence](validation.md). Neither demonstration establishes sustained production throughput.
+
+## Customer version dependencies
+
+Order facts also revisit orders linked to customers with newly loaded events.
+This handles late customer history even when the order itself did not change.
+Creation anchors come only from non-snapshot INSERT events; key reuse selects
+the latest INSERT. Canonical observed history provides stable version IDs shared
+with dim_customer_history. A full build orders that dimension before the fact.
+The fact reads the intermediate history view so an isolated fact run does not
+silently use an older materialized dimension. Run the complete graph before
+claiming all mart relationships have passed.
+
+The customer join adds columns to fct_orders. Existing warehouses must run
+`python scripts/run_cloud.py build --full-refresh` once (or the local equivalent)
+after this upgrade. Retained raw events rebuild the assignments; no source reload
+or capture reset is needed. Normal runs afterward remain incremental.
+
+The customer-version lookup reads the canonical history view; unlike the fact's order/detail calculations, its customer window scan is not guaranteed to be limited to affected customers. Incremental materialization reduces fact writes, not necessarily every upstream scan.

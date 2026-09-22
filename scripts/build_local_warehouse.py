@@ -1,6 +1,6 @@
 """Exercise dbt on real seed records using an explicitly labeled snapshot fixture.
 
-This is not CDC extraction. Actual cloud capture is AWS DMS; the Olist AWS run is pending; see docs/validation.md.
+This is not CDC extraction. Actual cloud capture is AWS DMS; see docs/validation.md for separate cloud evidence.
 Existing warehouse state is retained; a changed fixture must use a fresh test DB.
 """
 import argparse
