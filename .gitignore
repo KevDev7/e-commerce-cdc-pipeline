@@ -17,3 +17,6 @@ profiles.yml
 .terraform/
 *.tfstate
 *.tfstate.*
+.pytest_cache/
+*.egg-info/
+.coverage
