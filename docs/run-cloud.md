@@ -124,3 +124,18 @@ docker compose -f compose.airflow.yaml stop
 Deletion downloads captured files to ignored `data/aws-capture`, empties the project bucket, then deletes the stack. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS-generated log group. Verify no project RDS/DMS/Redshift resources remain. The local state file records the stack ID and test start time; creation refuses another session while that record exists. Keep it as evidence until reviewing costs and approving any additional session. Remove `.aws/credentials` after the test. Do not delete or modify resources belonging to other projects.
 
 With the source quiescent and the latest DMS batch loaded, `.venv/bin/python scripts/reconcile_cloud.py` compares every current field with Redshift. `.venv/bin/python scripts/verify_replay.py` redelivers a real CDC file and retries the batch, asserting unchanged raw counts and unique event identities. These tools were adapted for Olist; their previous AWS executions used Synthea and do not validate this new schema. Reconciliation against an actively changing source would require coordinating a common checkpoint, which this small demo does not automate.
+
+## Verify a completed simulated lifecycle
+
+After dbt succeeds, check named scenarios against real raw events and marts:
+
+```sh
+uv run python scripts/verify_cloud_scenario.py demo-001
+uv run python scripts/reconcile_cloud.py
+```
+
+The scenario check requires all eight simulation phases. It verifies 8 inserts,
+4 updates and 2 deletes, unique event identities, the four observed order statuses,
+independent item/payment totals, customer address history, hard-delete application
+and exclusion of the rolled-back update. Reconciliation compares every current
+source field after the source is quiet. Saved reports remain in ignored `data/`.

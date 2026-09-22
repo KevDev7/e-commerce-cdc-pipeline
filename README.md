@@ -25,13 +25,15 @@ A student data engineering portfolio project that loads **real, anonymized histo
 | Quiet build or duplicate event delivery | Leave existing mart rows untouched | PostgreSQL row-identity checks |
 | Failed task followed by a successful retry | Preserve both attempts and report final batch outcome correctly | SQLite audit tests and real Airflow task-state checks |
 
-These are local results. The Olist AWS demonstration is still pending; the tests do not substitute for real DMS → S3 → Redshift validation.
+Local fixtures cover adversarial ordering and row-identity checks. The live AWS run additionally verified bootstrap overlap, raw/mart rollback, capture recovery, replay, scheduled processing and source-to-Redshift reconciliation; see [cloud evidence](docs/evidence/olist-aws-validation.json).
 
 ## Current validation
 
-The Olist migration is **locally validated; its AWS end-to-end run is still pending**. All 415,418 selected source rows loaded successfully. All 18 dbt models and 45 data tests passed against the real seed using a local snapshot fixture; every current source field reconciled. The 35-test suite covers real local WAL, retries, rollback, deletes, history, late files and batch checkpoints. Separate Airflow container checks verify idle skips and failure propagation.
+The Olist pipeline is **validated locally and end to end on AWS**. All 415,418 selected historical rows passed through RDS PostgreSQL → DMS → S3 → Redshift. All 18 dbt models and 45 data tests passed. Every current source field reconciled after simulated inserts, updates and deletes.
 
-Previous AWS results belong to the [archived Synthea implementation](docs/archive/synthea/README.md). They do not validate the new Olist DMS layout or cloud marts. No AWS infrastructure was started for this migration.
+The live demonstration verified 21 changes committed during the initial customer snapshot, recovery of 14 changes committed while DMS was stopped, atomic raw-load and incremental-mart retries, and duplicate-file replay. Two real scheduled Airflow batches passed; the next quiet run skipped loading/building/reporting. Bootstrap timing used 100,002 additional synthetic customer rows, reported separately from Olist's records. The local 35-test suite also passes.
+
+[Reproducible checks and measured evidence](docs/validation.md) distinguish actual cloud results from local fixtures. Earlier Synthea results remain [archived](docs/archive/synthea/README.md).
 
 ## Source and model scope
 
@@ -105,4 +107,4 @@ The local audit records task attempts, run outcomes, elapsed time, committed-fil
 
 ## Remaining validation
 
-A separately budgeted Olist AWS run is still needed to verify live DMS files, Redshift loading, scheduled latency, recovery and cost. Parquet is deferred. Incremental marts are locally validated; dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.
+The live demo verifies correctness and scheduled execution, not sustained production throughput or a latency SLA. Parquet remains under evaluation. dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.
