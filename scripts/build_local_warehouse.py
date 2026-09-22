@@ -1,6 +1,6 @@
 """Exercise dbt on real seed records using an explicitly labeled snapshot fixture.
 
-This is not CDC extraction. Actual cloud capture is AWS DMS; see docs/validation.md for the AWS results.
+This is not CDC extraction. Actual cloud capture is AWS DMS; the Olist AWS run is pending; see docs/validation.md.
 Existing warehouse state is retained; a changed fixture must use a fresh test DB.
 """
 import csv
@@ -14,14 +14,14 @@ import subprocess
 
 from psycopg import sql
 
-from synthea_cdc.db import ROOT, connect
-from synthea_cdc.events import NULL, parse_csv, source_columns
-from synthea_cdc.seed import TABLES
-from synthea_cdc.warehouse import initialize_raw, load_local
+from olist_cdc.db import ROOT, connect
+from olist_cdc.events import NULL, parse_csv, source_columns
+from olist_cdc.seed import TABLES
+from olist_cdc.warehouse import initialize_raw, load_local
 
 
 def main():
-    name = os.environ.get("WAREHOUSE_DATABASE", "synthea_warehouse")
+    name = os.environ.get("WAREHOUSE_DATABASE", "olist_warehouse")
     if os.environ.get("POSTGRES_HOST", "127.0.0.1") not in ("127.0.0.1", "localhost"):
         raise ValueError("This fixture builder is local-only")
     with connect("postgres", autocommit=True) as admin:
@@ -38,7 +38,7 @@ def main():
             with connect() as source:
                 source.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
                 for table in TABLES:
-                    rows = source.execute(sql.SQL("SELECT {} FROM healthcare.{} ORDER BY 1").format(
+                    rows = source.execute(sql.SQL("SELECT {} FROM ecommerce.{} ORDER BY 1").format(
                         sql.SQL(",").join(map(sql.Identifier,source_columns(table))), sql.Identifier(table)))
                     stream = io.StringIO(newline=""); writer = csv.writer(stream)
                     for row in rows:

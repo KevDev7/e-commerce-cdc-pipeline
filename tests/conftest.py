@@ -4,7 +4,7 @@ from uuid import uuid4
 import pytest
 from psycopg import sql
 
-from synthea_cdc.db import connect, initialize
+from olist_cdc.db import connect, initialize
 
 
 def pytest_addoption(parser):
@@ -17,7 +17,7 @@ def database(request):
         pytest.skip("Pass --integration with the local PostgreSQL service running")
     if os.environ.get("POSTGRES_HOST", "127.0.0.1") not in ("127.0.0.1", "localhost"):
         pytest.fail("Integration tests create temporary databases only on local PostgreSQL")
-    name = "synthea_test_" + uuid4().hex
+    name = "olist_test_" + uuid4().hex
     with connect("postgres", autocommit=True) as admin:
         admin.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
         try:

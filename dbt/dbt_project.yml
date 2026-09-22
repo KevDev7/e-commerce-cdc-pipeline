@@ -1,12 +1,12 @@
-name: synthea_cdc
+name: olist_cdc
 version: '1.0.0'
 config-version: 2
-profile: synthea_cdc
+profile: olist_cdc
 model-paths: [models]
 test-paths: [tests]
 macro-paths: [macros]
 models:
-  synthea_cdc:
+  olist_cdc:
     staging:
       +schema: staging
       +materialized: view

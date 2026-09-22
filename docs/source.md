@@ -1,44 +1,26 @@
-# Operational source
+# Olist source contract
 
-The project uses four Synthea CSVs to seed a simplified PostgreSQL application database. The simulation then commits new business activity to that database. The workload is simulated; the resulting PostgreSQL WAL is real.
+Source: [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce), version 2, published under CC BY-NC-SA 4.0. The exact download and SHA-256 are pinned in `src/olist_cdc/seed.py`; mismatched bytes require inspection. Original CSVs are downloaded into ignored `data/olist/source.zip` and never committed.
 
-| Table | Grain / key | Relationship |
-|---|---|---|
-| patients | One patient / patient_id | Parent of encounters and claims |
-| encounters | One encounter / encounter_id | Belongs to a patient |
-| claims | One claim / claim_id | References patient and encounter |
-| claim_transactions | One financial entry / transaction_id | References claim and patient |
+This is real, anonymized historical business data, not a live API or event stream. The application database is a portfolio reconstruction. New source activity is simulated through real SQL transactions; PostgreSQL produces the WAL read by DMS.
 
-Native Synthea UUIDs are retained. The field mapping is explicit in `src/synthea_cdc/seed.py`. We copy a focused subset of columns, not an entire EHR schema. Foreign keys verify identity links, but they do not prove every clinical or financial interpretation.
+## Selected tables
 
-Blank values stay NULL. In particular, AMOUNT is not a universal payment measure: a PAYMENT row can have AMOUNT blank and PAYMENTS populated. Keep AMOUNT, PAYMENTS, ADJUSTMENTS, TRANSFERS and OUTSTANDING separate when modeling billing. Claim STATUS1 and its three outstanding fields are retained; STATUS1 is not a summary of all payer statuses.
+- **customers:** customer_id, customer_unique_id, postal_code, city, state.
+- **orders:** order_id, customer_id, status, purchased_at, approved_at, carrier_delivered_at, customer_delivered_at, estimated_delivery_at.
+- **order_items:** order_item_key, order_id, order_item_id, product_id, seller_id, shipping_limit_at, price, freight_value.
+- **order_payments:** payment_key, order_id, payment_sequential, payment_type, payment_installments, payment_value.
 
-Dates and timestamps are parsed by PostgreSQL with UTC set for loading. A date-only value becomes midnight UTC if loaded into a timestamp column. Added `updated_at` timestamps describe writes to our database, not original Synthea change times, and are not used to extract CDC. Updates refresh them through a trigger.
+All tables also have database audit `updated_at`. This timestamp is not a CDC watermark. All use `REPLICA IDENTITY FULL`; primary and foreign keys enforce source relationships.
 
-`REPLICA IDENTITY FULL` allows old values to be available for update/delete decoding. It increases WAL volume; this is an intentional learning choice for a small source.
+`customer_id` identifies the customer record associated with an order, while `customer_unique_id` links a person across orders. We preserve both. We do not merge address records into a supposed historical person dimension. Product and seller IDs remain available, but their dimension files are outside this scoped implementation.
 
-## Data provenance and repeatability
+Item/payment rows have composite natural keys. We derive `order_item_key = order_id || ':' || order_item_id` and `payment_key = order_id || ':' || payment_sequential`, preserve the original components, and enforce uniqueness and key consistency. No generated business values are inserted into the historical seed.
 
-Source: [official Synthea sample downloads](https://synthetichealth.github.io/downloads.html). The latest CSV sample URL is pinned by SHA-256 in the loader. If its contents change, loading stops for inspection instead of silently changing the dataset. The archive remains in ignored `data/`; it is never committed.
+## Preservation and limitations
 
-The seed load is one database transaction in parent-before-child order. A completed archive hash is recorded in `project_meta.seed_runs`. Repeating the load leaves subsequent application changes intact. A different seed requires an intentional fresh database rather than an implicit truncate.
+The archive's business timestamps have no timezone offset. Store them as `timestamp` and preserve their literal values. PostgreSQL audit and CDC commit times use `timestamptz`. New simulated business timestamps explicitly use America/Sao_Paulo; that is a simulation choice, not a claim about the export's timezone.
 
-Docker Compose uses an isolated `synthea-cdc` project and volume, binds PostgreSQL only to localhost port 55432, and enables logical WAL. The local owner is a development superuser; the cloud demonstration uses the source owner for setup/simulation and a separate DMS reader with SELECT and replication grants. The Docker image digest and Python lockfile pin the tested environment.
+Empty CSV values become SQL NULL. Zip-code prefixes remain strings, preserving leading zeroes. Money uses decimal types. Missing delivery/approval dates and orders without item/payment records are retained. No rule forces payment totals to equal item plus freight totals: they differ in the actual data.
 
-## Business simulation
-
-Each scenario uses deterministic UUIDs and records completed phases in the same transaction as its business writes. Retrying a completed phase has no effect. Different scenario names create independent activity.
-
-1. `open`: insert a fictional patient, encounter, OPEN claim, and $100 charge in one transaction.
-2. `bill`: close the encounter and mark the claim BILLED.
-3. `pay`: insert a $100 payment and close the claim with zero primary outstanding.
-4. `correct`: correct the fictional patient's city/postal code.
-5. `create-delete-test`: insert dedicated disposable patient/encounter records.
-6. `delete-test`: hard-delete only those disposable records, child before parent.
-7. `rollback-test`: roll back a sentinel claim status update; CDC must never emit it.
-
-The first four phases are a simplified learning workflow, not a recreation of an insurer's adjudication rules. Hard deletion is a technical test, not a recommended clinical-record workflow. Historical seed records are not modified by the simulation.
-
-To observe each transition separately, execute one phase at a time. The default `all` option still commits separate transactions, but does not simulate realistic elapsed time.
-
-The local integration test uses PostgreSQL's `test_decoding` output plugin to inspect actual WAL. This is a verification tool; the cloud demonstration uses AWS DMS with the same PostgreSQL logical decoding plugin.
+Source seeding is atomic, checksum-pinned and recorded once. Retrying never overwrites subsequent changes. Start a fresh database for a different seed or source schema. The inspected counts and anomalies are in [the migration record](olist-migration.md).

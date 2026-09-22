@@ -1,7 +1,7 @@
 [project]
-name = "synthea-cdc"
+name = "olist-cdc"
 version = "0.1.0"
-description = "A student portfolio project for healthcare billing CDC"
+description = "A student portfolio project for e-commerce orders CDC"
 requires-python = ">=3.12,<3.14"
 dependencies = [
     "boto3>=1.35,<2",
@@ -16,7 +16,7 @@ dependencies = [
 dev = ["pytest>=8,<9"]
 
 [project.scripts]
-synthea-cdc = "synthea_cdc.cli:main"
+olist-cdc = "olist_cdc.cli:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -1,82 +1,67 @@
-CREATE SCHEMA IF NOT EXISTS healthcare;
+CREATE SCHEMA IF NOT EXISTS ecommerce;
 CREATE SCHEMA IF NOT EXISTS project_meta;
 
-CREATE TABLE IF NOT EXISTS healthcare.patients (
-    patient_id uuid PRIMARY KEY,
-    birth_date date NOT NULL,
-    death_date date,
-    gender varchar(256) NOT NULL,
-    city varchar(256),
-    state varchar(256),
-    postal_code varchar(256),
+CREATE TABLE IF NOT EXISTS ecommerce.customers (
+    customer_id varchar(32) PRIMARY KEY,
+    customer_unique_id varchar(32) NOT NULL,
+    postal_code varchar(5), city varchar(256), state varchar(2),
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-CREATE TABLE IF NOT EXISTS healthcare.encounters (
-    encounter_id uuid PRIMARY KEY,
-    patient_id uuid NOT NULL REFERENCES healthcare.patients,
-    started_at timestamptz NOT NULL,
-    ended_at timestamptz,
-    encounter_class varchar(256) NOT NULL,
-    total_claim_cost numeric(14,2) NOT NULL,
+CREATE TABLE IF NOT EXISTS ecommerce.orders (
+    order_id varchar(32) PRIMARY KEY,
+    customer_id varchar(32) NOT NULL REFERENCES ecommerce.customers,
+    status varchar(32) NOT NULL,
+    purchased_at timestamp NOT NULL, approved_at timestamp,
+    carrier_delivered_at timestamp, customer_delivered_at timestamp,
+    estimated_delivery_at timestamp,
+    updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS ecommerce.order_items (
+    order_item_key varchar(64) PRIMARY KEY,
+    order_id varchar(32) NOT NULL REFERENCES ecommerce.orders,
+    order_item_id integer NOT NULL,
+    product_id varchar(32) NOT NULL, seller_id varchar(32) NOT NULL,
+    shipping_limit_at timestamp NOT NULL,
+    price numeric(14,2) NOT NULL, freight_value numeric(14,2) NOT NULL,
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CHECK (ended_at IS NULL OR ended_at >= started_at)
+    UNIQUE (order_id, order_item_id),
+    CHECK (order_item_key = order_id || ':' || order_item_id::text)
+);
+CREATE TABLE IF NOT EXISTS ecommerce.order_payments (
+    payment_key varchar(64) PRIMARY KEY,
+    order_id varchar(32) NOT NULL REFERENCES ecommerce.orders,
+    payment_sequential integer NOT NULL, payment_type varchar(32) NOT NULL,
+    payment_installments integer NOT NULL, payment_value numeric(14,2) NOT NULL,
+    updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (order_id, payment_sequential),
+    CHECK (payment_key = order_id || ':' || payment_sequential::text)
 );
 
-CREATE TABLE IF NOT EXISTS healthcare.claims (
-    claim_id uuid PRIMARY KEY,
-    patient_id uuid NOT NULL REFERENCES healthcare.patients,
-    encounter_id uuid REFERENCES healthcare.encounters,
-    status varchar(256) NOT NULL,
-    outstanding_primary numeric(14,2),
-    outstanding_secondary numeric(14,2),
-    outstanding_patient numeric(14,2),
-    updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS healthcare.claim_transactions (
-    transaction_id uuid PRIMARY KEY,
-    claim_id uuid NOT NULL REFERENCES healthcare.claims,
-    patient_id uuid NOT NULL REFERENCES healthcare.patients,
-    transaction_type varchar(256) NOT NULL,
-    amount numeric(14,2),
-    posted_at timestamptz NOT NULL,
-    payments numeric(14,2),
-    adjustments numeric(14,2),
-    transfers numeric(14,2),
-    outstanding numeric(14,2),
-    updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- IDs are stable. These timestamps describe this operational database's writes,
--- not when the historical Synthea export originally changed. CDC reads WAL.
-CREATE OR REPLACE FUNCTION healthcare.touch_updated_at() RETURNS trigger
+-- Business timestamps retain the export's timezone-less values. updated_at is
+-- this database's audit time, not an extraction watermark. DMS reads WAL.
+CREATE OR REPLACE FUNCTION ecommerce.touch_updated_at() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
     NEW.updated_at = clock_timestamp();
     RETURN NEW;
 END;
 $$;
-
 DO $$
 DECLARE table_name text;
 BEGIN
-    FOREACH table_name IN ARRAY ARRAY['patients','encounters','claims','claim_transactions'] LOOP
-        EXECUTE format('ALTER TABLE healthcare.%I REPLICA IDENTITY FULL', table_name);
-        EXECUTE format('CREATE OR REPLACE TRIGGER touch_updated_at BEFORE UPDATE ON healthcare.%I FOR EACH ROW EXECUTE FUNCTION healthcare.touch_updated_at()', table_name);
+    FOREACH table_name IN ARRAY ARRAY['customers','orders','order_items','order_payments'] LOOP
+        EXECUTE format('ALTER TABLE ecommerce.%I REPLICA IDENTITY FULL', table_name);
+        EXECUTE format('CREATE OR REPLACE TRIGGER touch_updated_at BEFORE UPDATE ON ecommerce.%I FOR EACH ROW EXECUTE FUNCTION ecommerce.touch_updated_at()', table_name);
     END LOOP;
 END;
 $$;
-
 CREATE TABLE IF NOT EXISTS project_meta.seed_runs (
     archive_sha256 text PRIMARY KEY,
     loaded_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     row_counts jsonb NOT NULL
 );
-
 CREATE TABLE IF NOT EXISTS project_meta.simulation_steps (
-    scenario text NOT NULL,
-    phase text NOT NULL,
+    scenario text NOT NULL, phase text NOT NULL,
     completed_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (scenario, phase)
 );

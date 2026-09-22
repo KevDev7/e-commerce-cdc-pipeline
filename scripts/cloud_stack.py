@@ -59,10 +59,10 @@ def create():
     if len(selected) != 3:
         raise RuntimeError("Expected three default public subnets; inspect network before deployment")
     ip = str(ipaddress.IPv4Address(urllib.request.urlopen("https://checkip.amazonaws.com", timeout=10).read().decode().strip()))
-    env = {"AWS_PROFILE": "synthea-cdc", "AWS_DEFAULT_REGION": "us-east-1", "CAPTURE_PREFIX": "capture-v1",
-           "POSTGRES_DB": "synthea", "POSTGRES_PORT": "5432", "POSTGRES_USER": "cdc_owner", "POSTGRES_SSLMODE": "require",
+    env = {"AWS_PROFILE": "synthea-cdc", "AWS_DEFAULT_REGION": "us-east-1", "CAPTURE_PREFIX": "olist-v1",
+           "POSTGRES_DB": "olist", "POSTGRES_PORT": "5432", "POSTGRES_USER": "cdc_owner", "POSTGRES_SSLMODE": "require",
            "POSTGRES_PASSWORD": "Aa1" + secrets.token_hex(16), "DMS_PASSWORD": "Bb2" + secrets.token_hex(16),
-           "REDSHIFT_USER": "warehouse_owner", "REDSHIFT_DATABASE": "synthea", "REDSHIFT_PASSWORD": "Cc3" + secrets.token_hex(16)}
+           "REDSHIFT_USER": "warehouse_owner", "REDSHIFT_DATABASE": "olist", "REDSHIFT_PASSWORD": "Cc3" + secrets.token_hex(16)}
     write_env(env)
     parameters = {"Vpc": vpc, "Subnets": ",".join(s["SubnetId"] for s in selected), "ClientCidr": ip + "/32", "EnableWarehouse": "false",
                   "SourcePassword": env["POSTGRES_PASSWORD"], "DmsPassword": env["DMS_PASSWORD"], "WarehousePassword": env["REDSHIFT_PASSWORD"]}

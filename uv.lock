@@ -632,6 +632,37 @@ wheels = [
 ]
 
 [[package]]
+name = "olist-cdc"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "boto3" },
+    { name = "dbt-postgres" },
+    { name = "dbt-redshift" },
+    { name = "psycopg", extra = ["binary"] },
+    { name = "python-dotenv" },
+    { name = "redshift-connector" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "boto3", specifier = ">=1.35,<2" },
+    { name = "dbt-postgres", specifier = ">=1.9,<2" },
+    { name = "dbt-redshift", specifier = ">=1.9,<2" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
+    { name = "python-dotenv", specifier = ">=1.0,<2" },
+    { name = "redshift-connector", specifier = ">=2.1,<3" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8,<9" }]
+
+[[package]]
 name = "opentelemetry-api"
 version = "1.44.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1149,37 +1180,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/5f/d3/3f06a1006f2261d13
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d9/50/f00935da0ec7cbf325f8dc4f772ae46fbc7b672dd62876e73f0a94adda57/sqlparse-0.6.0-py3-none-any.whl", hash = "sha256:b861c0288ce2fa56209a9a6412d2e066ac664b3873b89c26c9d8415e8e32996f", size = 50070, upload-time = "2026-08-13T19:16:04.062Z" },
 ]
-
-[[package]]
-name = "synthea-cdc"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "boto3" },
-    { name = "dbt-postgres" },
-    { name = "dbt-redshift" },
-    { name = "psycopg", extra = ["binary"] },
-    { name = "python-dotenv" },
-    { name = "redshift-connector" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "boto3", specifier = ">=1.35,<2" },
-    { name = "dbt-postgres", specifier = ">=1.9,<2" },
-    { name = "dbt-redshift", specifier = ">=1.9,<2" },
-    { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
-    { name = "python-dotenv", specifier = ">=1.0,<2" },
-    { name = "redshift-connector", specifier = ">=2.1,<3" },
-]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8,<9" }]
 
 [[package]]
 name = "tabulate"

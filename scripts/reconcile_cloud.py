@@ -8,14 +8,14 @@ from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env.cloud", override=True)
-from synthea_cdc.cloud_load import warehouse_connection
-from synthea_cdc.db import connect
-from synthea_cdc.events import source_columns
-from synthea_cdc.seed import TABLES
+from olist_cdc.cloud_load import warehouse_connection
+from olist_cdc.db import connect
+from olist_cdc.events import source_columns
+from olist_cdc.seed import TABLES
 
 
 def canonical(value):
-    if isinstance(value, datetime):
+    if isinstance(value, datetime) and value.tzinfo is not None:
         return value.astimezone(timezone.utc).isoformat()
     return None if value is None else str(value)
 
@@ -34,7 +34,7 @@ with connect() as source, warehouse_connection() as target:
     result = {}
     for table in TABLES:
         columns = ",".join(source_columns(table))
-        source_rows = source.execute(f"SELECT {columns} FROM healthcare.{table} ORDER BY 1")
+        source_rows = source.execute(f"SELECT {columns} FROM ecommerce.{table} ORDER BY 1")
         cursor = target.cursor()
         cursor.execute(f"SELECT {columns} FROM analytics_intermediate.int_{table}_current ORDER BY 1")
         actual, expected = fingerprint(cursor), fingerprint(source_rows)

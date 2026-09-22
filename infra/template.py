@@ -24,7 +24,7 @@ def template():
         "BucketEncryption": {"ServerSideEncryptionConfiguration": [{"ServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]}, "Tags": TAGS})
     add("DmsRole", "IAM::Role", role("dms.amazonaws.com", [
         {"Effect": "Allow", "Action": ["s3:ListBucket", "s3:GetBucketLocation"], "Resource": att("Bucket", "Arn")},
-        {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:PutObjectTagging"], "Resource": sub("${Bucket.Arn}/capture-v1/*")},
+        {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:PutObjectTagging"], "Resource": sub("${Bucket.Arn}/olist-v1/*")},
     ]))
     add("CopyRole", "IAM::Role", role(["redshift.amazonaws.com", "redshift-serverless.amazonaws.com"], [
         {"Effect": "Allow", "Action": ["s3:ListBucket", "s3:GetBucketLocation"], "Resource": att("Bucket", "Arn")},
@@ -36,22 +36,22 @@ def template():
         properties.pop("Policies")
         properties.update(RoleName=role_name, ManagedPolicyArns=[f"arn:aws:iam::aws:policy/service-role/{policy}"])
         add(name, "IAM::Role", properties, Condition="Create" + name)
-    add("DmsSecurityGroup", "EC2::SecurityGroup", {"GroupDescription": "Synthea DMS outbound access", "VpcId": ref("Vpc"), "Tags": TAGS})
+    add("DmsSecurityGroup", "EC2::SecurityGroup", {"GroupDescription": "Olist DMS outbound access", "VpcId": ref("Vpc"), "Tags": TAGS})
     add("SourceSecurityGroup", "EC2::SecurityGroup", {
-        "GroupDescription": "Synthea PostgreSQL: local developer and DMS only", "VpcId": ref("Vpc"), "Tags": TAGS,
+        "GroupDescription": "Olist PostgreSQL: local developer and DMS only", "VpcId": ref("Vpc"), "Tags": TAGS,
         "SecurityGroupIngress": [{"IpProtocol": "tcp", "FromPort": 5432, "ToPort": 5432, "CidrIp": ref("ClientCidr")},
                                  {"IpProtocol": "tcp", "FromPort": 5432, "ToPort": 5432, "SourceSecurityGroupId": ref("DmsSecurityGroup")}],
     })
     add("WarehouseSecurityGroup", "EC2::SecurityGroup", {
-        "GroupDescription": "Synthea Redshift: local developer only", "VpcId": ref("Vpc"), "Tags": TAGS,
+        "GroupDescription": "Olist Redshift: local developer only", "VpcId": ref("Vpc"), "Tags": TAGS,
         "SecurityGroupIngress": [{"IpProtocol": "tcp", "FromPort": 5439, "ToPort": 5439, "CidrIp": ref("ClientCidr")}],
     }, Condition="WarehouseEnabled")
-    add("SourceSubnets", "RDS::DBSubnetGroup", {"DBSubnetGroupDescription": "Synthea demo", "SubnetIds": ref("Subnets"), "Tags": TAGS})
-    add("DmsSubnets", "DMS::ReplicationSubnetGroup", {"ReplicationSubnetGroupDescription": "Synthea demo", "SubnetIds": ref("Subnets"), "Tags": TAGS}, DependsOn="DmsVpcRole")
-    add("SourceParameters", "RDS::DBParameterGroup", {"Description": "Synthea WAL capture", "Family": "postgres17", "Parameters": {"rds.logical_replication": "1"}, "Tags": TAGS})
+    add("SourceSubnets", "RDS::DBSubnetGroup", {"DBSubnetGroupDescription": "Olist demo", "SubnetIds": ref("Subnets"), "Tags": TAGS})
+    add("DmsSubnets", "DMS::ReplicationSubnetGroup", {"ReplicationSubnetGroupDescription": "Olist demo", "SubnetIds": ref("Subnets"), "Tags": TAGS}, DependsOn="DmsVpcRole")
+    add("SourceParameters", "RDS::DBParameterGroup", {"Description": "Olist WAL capture", "Family": "postgres17", "Parameters": {"rds.logical_replication": "1"}, "Tags": TAGS})
     add("Source", "RDS::DBInstance", {
         "DBInstanceIdentifier": "synthea-cdc-source", "DBInstanceClass": "db.t4g.micro", "Engine": "postgres", "EngineVersion": "17.11",
-        "DBName": "synthea", "MasterUsername": "cdc_owner", "MasterUserPassword": ref("SourcePassword"),
+        "DBName": "olist", "MasterUsername": "cdc_owner", "MasterUserPassword": ref("SourcePassword"),
         "AllocatedStorage": "20", "StorageType": "gp3", "StorageEncrypted": True,
         "DBSubnetGroupName": ref("SourceSubnets"), "DBParameterGroupName": ref("SourceParameters"),
         "VPCSecurityGroups": [ref("SourceSecurityGroup")], "MultiAZ": False, "PubliclyAccessible": True,
@@ -65,7 +65,7 @@ def template():
     }, DependsOn=["DmsVpcRole", "DmsLogRole"])
     add("SourceEndpoint", "DMS::Endpoint", {
         "EndpointIdentifier": "synthea-cdc-source", "EndpointType": "source", "EngineName": "postgres",
-        "ServerName": att("Source", "Endpoint.Address"), "Port": 5432, "DatabaseName": "synthea",
+        "ServerName": att("Source", "Endpoint.Address"), "Port": 5432, "DatabaseName": "olist",
         "Username": "dms_reader", "Password": ref("DmsPassword"), "SslMode": "require", "Tags": TAGS,
         "PostgreSqlSettings": {"PluginName": "test_decoding", "CaptureDdls": False},
     })
@@ -84,7 +84,7 @@ def template():
         }),
     })
     add("Namespace", "RedshiftServerless::Namespace", {
-        "NamespaceName": "synthea-cdc", "DbName": "synthea", "AdminUsername": "warehouse_owner", "AdminUserPassword": ref("WarehousePassword"),
+        "NamespaceName": "synthea-cdc", "DbName": "olist", "AdminUsername": "warehouse_owner", "AdminUserPassword": ref("WarehousePassword"),
         "IamRoles": [att("CopyRole", "Arn")], "DefaultIamRoleArn": att("CopyRole", "Arn"), "Tags": TAGS,
     }, Condition="WarehouseEnabled", DeletionPolicy="Delete", UpdateReplacePolicy="Delete")
     add("Workgroup", "RedshiftServerless::Workgroup", {
@@ -107,7 +107,7 @@ def template():
                "SourceEndpointArn": {"Value": ref("SourceEndpoint")}, "TargetEndpointArn": {"Value": ref("TargetEndpoint")},
                "CopyRoleArn": {"Value": att("CopyRole", "Arn")},
                "WarehouseHost": {"Value": att("Workgroup", "Workgroup.Endpoint.Address"), "Condition": "WarehouseEnabled"}}
-    return {"AWSTemplateFormatVersion": "2010-09-09", "Description": "Temporary Synthea CDC portfolio test", "Parameters": parameters,
+    return {"AWSTemplateFormatVersion": "2010-09-09", "Description": "Temporary Olist CDC portfolio test", "Parameters": parameters,
             "Conditions": conditions, "Resources": resources, "Outputs": outputs}
 
 

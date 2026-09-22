@@ -1,46 +1,44 @@
 # Warehouse layers
 
-The warehouse contains an append-only raw event history, staging views, intermediate views, and five materialized marts. At this project's volume, rebuilding these small mart tables is easier to understand and verify than adding incremental state to every model. Raw ingestion is incremental and records processed files; mart computation is currently a full rebuild from retained events.
+The same raw/staging/intermediate/marts structure targets local PostgreSQL for development and Redshift for cloud demonstrations. DMS writes original transaction-preserving CSVs to S3 under `olist-v1/`. They are retained unchanged; compressed CSV inputs for Redshift COPY are derived under `copy-ready/`.
 
-| Layer | Responsibility |
+## Raw: four append-only event tables
+
+`raw.customers`, `raw.orders`, `raw.order_items`, `raw.order_payments` retain [all source columns](source.md), including `updated_at`, plus:
+
+| Metadata | Meaning |
 |---|---|
-| S3 raw landing | Retain original DMS snapshot and change files for replay |
-| Redshift raw | Typed source values plus operation, sequence, position, commit timestamp and file provenance |
-| staging | Consistent source/event columns |
-| intermediate | Latest state, delete handling, patient history and claim-level payment aggregates |
-| marts | Current patients, observed patient history, encounters, claims and financial entries |
+| _event_id | Deterministic identity for deduplication |
+| _op | I, U, or D |
+| _source_lsn | DMS source log position |
+| _source_order | DMS change sequence; snapshots use zero |
+| _commit_at | CDC commit time; snapshot transfer time |
+| _is_snapshot | Initial-load record flag |
+| _source_file | Original S3 object URI |
 
-dbt's default schema naming yields `analytics_staging`, `analytics_intermediate`, and `analytics_marts`. Raw data uses `raw`. There is one staging layer. The same SQL is exercised on PostgreSQL for inexpensive local validation and was also executed successfully with the Redshift adapter against real Redshift.
+`raw.loaded_files` stores source_file, content_sha256, loaded_at, row_count. Raw rows and their ledger entry commit atomically. Redelivery is deduplicated by event identity; changed contents at an already loaded key are rejected. A new capture lineage requires fresh raw storage, not reuse of old sequence numbers.
 
-## Event ordering and replay
+## Staging: four views
 
-DMS uses a single task for the four `healthcare` tables. The validated S3 contract is transaction-ordered CSV with `PreserveTransactions=true`, all I/U/D operations, an explicit null marker, and added source-position, change-sequence and commit-timestamp fields. The parser follows the [documented DMS CSV layout](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html): operation, table, schema, original columns, then configured metadata. The transformed column order and metadata were confirmed against real DMS 3.6.1 full-load and CDC files.
+`stg_customers`, `stg_orders`, `stg_order_items`, `stg_order_payments` expose typed source fields and event ID, operation, sequence, timestamp and snapshot flag. Tests check event uniqueness, required identifiers and supported operations. This is the only staging layer.
 
-The [DMS change sequence](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.SelectionTransformation.Expressions.html) provides a task-level ordering value. An event identity combines table and sequence. Snapshot rows have sequence zero and identity based on table and primary key. Current state selects the greatest sequence, then excludes tombstones; filtering deletes before ranking would resurrect deleted records. Re-delivery is deduplicated and arrival order does not determine current state.
+## Intermediate: seven views
 
-One warehouse corresponds to one baseline and one DMS task lineage. An intentional full reload or replacement task must use a fresh landing prefix and fresh raw tables; do not mix independent sequence histories. This simple project does not automate task-lineage migration or source failover.
+- Four `int_*_current` views rank each source row key by source sequence, select its latest state and exclude tombstones. Late snapshots never overwrite newer changes.
+- `int_order_item_totals` aggregates item prices, freight and item count by order.
+- `int_order_payment_totals` aggregates payment value and payment-entry count by order. An installment count is not a multiplier for payment_value.
+- `int_customer_history` records observed attribute changes with version IDs, observed_from/to, source_order_from/to, is_deleted and is_initial_snapshot. A snapshot that overlaps already captured CDC cannot establish an earlier history version; it stays in raw/current processing, but ambiguous history begins with CDC. This preserves the preceding project's overlap fix.
 
-The processed-file ledger and each file's raw writes commit together. File retries are skipped only after a successful transaction, and changing already-loaded file content is an error. Raw values remain available for rebuilding models. An unexpected CSV layout or missing sequence stops loading rather than silently guessing. The source schema is fixed; automatic DDL propagation and schema evolution are not implemented.
+## Marts: five tables
 
-## Marts and grain
+- **dim_customers:** one current customer record, with customer_id, customer_unique_id, postal_code, city, state.
+- **dim_customer_history:** those attributes plus customer_version_id, observed_from/to, source_order_from/to, is_deleted, is_initial_snapshot and is_current.
+- **fct_orders:** source order fields excluding updated_at, plus item_total, freight_total, order_total, item_count, payment_total, payment_count, has_items and has_payments.
+- **fct_order_items:** source item fields excluding updated_at; one row per order and item sequence.
+- **fct_order_payments:** source payment fields excluding updated_at; one row per order and payment sequence.
 
-- `dim_patients`: one row per currently present patient.
-- `dim_patient_history`: one row per observed patient attribute change or deletion. It exposes observation-time and source-order bounds plus a current flag.
-- `fct_encounters`: one row per currently present encounter.
-- `fct_claims`: one row per currently present claim, joined to financial totals aggregated to claim grain first.
-- `fct_claim_transactions`: one row per currently present financial entry. Charges, payments, adjustments and transfers retain separate source fields.
+Items and payments are aggregated separately before joining orders. Two items and two payments therefore remain two of each, not four duplicated combinations. Orders lacking details survive left joins, with explicit presence flags and zero aggregate counts.
 
-Patient history begins when capture starts. It cannot reconstruct a patient's address at a historical 2016 encounter from a later static export. Facts therefore retain patient IDs; they do not claim an unknowable historical address match. Source-order bounds distinguish changes with identical timestamps. No-change patient updates do not create a new attribute version; deletions close the previous version and add a tombstone.
+Customer history begins at capture observation, years after most historical purchases. Facts reference customer_id; we do not invent a transaction-time version key for historical orders that predate capture. `customer_unique_id` remains available for repeat-customer analysis.
 
-DMS snapshot timestamps describe transfer time, whereas CDC timestamps describe source commit time. When a patient's first CDC commit is no later than its snapshot timestamp, the snapshot cannot establish a preceding history version: it may already reflect a later change. History then starts with captured CDC for that patient. The snapshot remains unchanged in raw and remains available for current-state reconstruction. Snapshots with no competing earlier CDC remain baseline observations. This avoids invented backwards history during an active initial load. See [AWS header semantics](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.SelectionTransformation.Expressions.html).
-
-Payment totals sum the PAYMENTS field, not generic AMOUNT. Charge totals sum AMOUNT only on CHARGE records. NULL contributions count as zero for those aggregate measures, while raw NULLs and the three original claim outstanding fields are preserved. TRANSFERIN/TRANSFEROUT are not added to revenue. These definitions describe the sample fields, not a complete insurance accounting system.
-
-## Local verification
-
-```bash
-uv run python scripts/build_local_warehouse.py
-uv run pytest --integration -q
-```
-
-The first command creates a separate local `synthea_warehouse` database, loads an explicitly labeled snapshot fixture from the source and runs dbt. It is **not** a CDC extractor. Repeating it retains the existing fixture and rebuilds models. Integration tests separately exercise DMS-format change fixtures in temporary databases, including out-of-order arrival, replay, hard deletes, multiple payments per claim, and patient history. The source WAL test independently confirms actual PostgreSQL log behavior. The real end-to-end DMS → S3 → Redshift and Airflow results are recorded in [validation results](validation.md).
+All 16 models rebuild the small current views/marts from retained raw events. Raw ingestion is incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.

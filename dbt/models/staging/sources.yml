@@ -1,10 +1,9 @@
 version: 2
 sources:
-  - name: raw
-    schema: raw
-    tables:
-      - name: patients
-      - name: encounters
-      - name: claims
-      - name: claim_transactions
-
+- name: raw
+  schema: raw
+  tables:
+  - name: customers
+  - name: orders
+  - name: order_items
+  - name: order_payments

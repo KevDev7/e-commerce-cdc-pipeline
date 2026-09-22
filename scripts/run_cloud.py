@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env.cloud", override=True)
-from synthea_cdc.cloud_load import check_capture, load_pending, report
+from olist_cdc.cloud_load import check_capture, load_pending, report
 
 parser = argparse.ArgumentParser()
 parser.add_argument("step", choices=["check", "load", "build", "report"])

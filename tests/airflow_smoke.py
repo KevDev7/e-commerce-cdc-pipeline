@@ -11,7 +11,7 @@ from airflow.utils.state import DagRunState, TaskInstanceState
 root = Path(__file__).resolve().parents[1]
 bag = DagBag(str(root / 'dags'), include_examples=False)
 assert not bag.import_errors, bag.import_errors
-dag = bag.get_dag('synthea_cdc')
+dag = bag.get_dag('olist_cdc')
 assert dag.schedule_interval == '*/5 * * * *'
 assert not dag.catchup and dag.max_active_runs == 1 and dag.is_paused_upon_creation
 expected = ['check', 'pending', 'load', 'build', 'report', 'complete']

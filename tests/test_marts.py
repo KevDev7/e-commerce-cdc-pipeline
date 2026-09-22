@@ -1,4 +1,4 @@
-"""Warehouse behavior tests use explicit DMS-format fixtures, not fake WAL claims."""
+"""Warehouse behavior uses explicit DMS-format fixtures, not fabricated WAL."""
 import hashlib
 import os
 import shutil
@@ -6,64 +6,48 @@ import subprocess
 
 import pytest
 
-from synthea_cdc.db import ROOT
-from synthea_cdc.events import NULL, parse_csv, source_columns
-from synthea_cdc.warehouse import initialize_raw, load_local
+from olist_cdc.db import ROOT
+from olist_cdc.events import NULL, parse_csv, source_columns
+from olist_cdc.warehouse import initialize_raw, load_local
 from test_events import csv_text
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize("overlap_snapshot", [False, True])
-def test_marts_handle_late_files_deletes_history_and_multiple_payments(database, tmp_path, overlap_snapshot):
+@pytest.mark.parametrize('overlap_snapshot',[False,True])
+def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,tmp_path,overlap_snapshot):
     initialize_raw(database)
-    time0 = "2026-01-01T00:00:00Z"
-    time1 = "2026-01-02T00:00:00Z"
-
-    def row(table, data, sequence, op="I", timestamp=time0):
-        values = [str(data.get(c, time0 if c=="updated_at" else NULL)) for c in source_columns(table)]
-        return [op,table,"healthcare",*values,"0/ABC",str(sequence),timestamp]
-
-    patient = dict(patient_id="p1",birth_date="1990-01-01",gender="F",city="Boston",state="MA",postal_code="02108")
-    encounter = dict(encounter_id="e1",patient_id="p1",started_at=time0,encounter_class="ambulatory",total_claim_cost="100")
-    claim = dict(claim_id="c1",patient_id="p1",encounter_id="e1",status="OPEN",outstanding_primary="100")
-    charge = dict(transaction_id="t1",claim_id="c1",patient_id="p1",transaction_type="CHARGE",amount="100",posted_at=time0)
-    payment = dict(transaction_id="t2",claim_id="c1",patient_id="p1",transaction_type="PAYMENT",payments="50",posted_at=time0)
-    earlier = [row("patients",patient,1),row("patients",{**patient,"patient_id":"p2"},2),
-               row("encounters",encounter,3),row("claims",claim,4),row("claim_transactions",charge,5),
-               row("claim_transactions",payment,6),row("claim_transactions",{**payment,"transaction_id":"t3"},7),
-               row("claims",{**claim,"status":"BILLED"},8,"U")]
-    later = [row("claims",{**claim,"status":"CLOSED","outstanding_primary":"0"},9,"U",time1),
-             row("patients",{**patient,"city":"Cambridge"},10,"U",time1),
-             row("patients",{**patient,"patient_id":"p2"},11,"D",time1)]
-    for name, rows in [("later.csv",later),("earlier.csv",earlier),("replayed.csv",earlier)]:
-        text=csv_text(rows)
-        load_local(database,parse_csv(text,name),name,hashlib.sha256(text.encode()).hexdigest())
-    # An initial snapshot can arrive after CDC files. It must neither overwrite
-    # Cambridge nor resurrect the patient whose DELETE was already received.
-    snapshot_rows = [[r[0], *r[3:]] for r in earlier[:2]]
-    # DMS snapshot metadata is transfer time, which can be later than committed
-    # CDC. The snapshot may already contain a later state (Cambridge here).
-    if overlap_snapshot:
-        snapshot_rows[0][5] = "Cambridge"
-        for snapshot_row in snapshot_rows:
-            snapshot_row[-1] = "2026-01-03T00:00:00Z"
-    else:
-        for snapshot_row in snapshot_rows:
-            snapshot_row[-1] = "2025-12-31T00:00:00Z"
-    snapshot_text = csv_text(snapshot_rows)
-    load_local(database, parse_csv(snapshot_text, "patients/LOAD.csv", snapshot_table="patients"),
-               "patients/LOAD.csv", hashlib.sha256(snapshot_text.encode()).hexdigest())
-    profiles = tmp_path/"profiles"; profiles.mkdir()
-    shutil.copyfile(ROOT/"dbt/profiles.yml.example",profiles/"profiles.yml")
-    result = subprocess.run([str(ROOT/".venv/bin/dbt"),"build","--project-dir",str(ROOT/"dbt"),
-        "--profiles-dir",str(profiles),"--target","local"],capture_output=True,text=True,
-        env={**os.environ,"WAREHOUSE_DATABASE":database.info.dbname,"DBT_SEND_ANONYMOUS_USAGE_STATS":"false",
-             "DBT_TARGET_PATH":str(tmp_path/"target"),"DBT_LOG_PATH":str(tmp_path/"logs")},timeout=120)
-    assert result.returncode==0, result.stdout[-8000:]+result.stderr[-2000:]
-    assert database.execute("SELECT claim_id,status,charge_total,payment_total,financial_entry_count FROM analytics_marts.fct_claims").fetchall()==[("c1","CLOSED",100,100,3)]
-    assert database.execute("SELECT patient_id,city FROM analytics_marts.dim_patients").fetchall()==[("p1","Cambridge")]
-    history=database.execute("SELECT city,is_current FROM analytics_marts.dim_patient_history WHERE patient_id='p1' ORDER BY source_order_from").fetchall()
-    assert history==[("Boston",False),("Cambridge",True)]
-    assert database.execute("SELECT count(*) FROM analytics_marts.dim_patient_history WHERE patient_id='p2' AND is_current").fetchone()[0]==0
-    assert database.execute("SELECT count(*) FROM raw.claim_transactions").fetchone()[0]==3
-    assert database.execute("SELECT count(*) FROM raw.patients WHERE _is_snapshot").fetchone()[0]==2
+    time0='2026-01-01T00:00:00Z';time1='2026-01-02T00:00:00Z'
+    def row(table,data,sequence,op='I',timestamp=time0):
+        values=[str(data.get(c,time0 if c=='updated_at' else NULL)) for c in source_columns(table)]
+        return [op,table,'ecommerce',*values,'0/ABC',str(sequence),timestamp]
+    customer=dict(customer_id='c1',customer_unique_id='person1',city='sao paulo',state='SP',postal_code='00123')
+    order=dict(order_id='o1',customer_id='c1',status='created',purchased_at='2017-01-01 12:00:00')
+    item=dict(order_item_key='o1:1',order_id='o1',order_item_id=1,product_id='prod',seller_id='seller',shipping_limit_at='2017-01-02',price=50,freight_value=5)
+    payment=dict(payment_key='o1:1',order_id='o1',payment_sequential=1,payment_type='credit_card',payment_installments=1,payment_value=60)
+    earlier=[row('customers',customer,1),row('customers',{**customer,'customer_id':'c2'},2),
+             row('orders',order,3),row('order_items',item,4),row('order_items',{**item,'order_item_key':'o1:2','order_item_id':2},5),
+             row('order_payments',payment,6),row('order_payments',{**payment,'payment_key':'o1:2','payment_sequential':2,'payment_value':50},7),
+             row('orders',{**order,'status':'approved'},8,'U'),
+             row('orders',{**order,'order_id':'o2','status':'canceled'},12)]
+    later=[row('orders',{**order,'status':'delivered'},9,'U',time1),
+           row('customers',{**customer,'city':'campinas'},10,'U',time1),
+           row('customers',{**customer,'customer_id':'c2'},11,'D',time1)]
+    for name,rows in [('later.csv',later),('earlier.csv',earlier),('replayed.csv',earlier)]:
+        text=csv_text(rows);load_local(database,parse_csv(text,name),name,hashlib.sha256(text.encode()).hexdigest())
+    snapshots=[[r[0],*r[3:]] for r in earlier[:2]]
+    if overlap_snapshot:snapshots[0][4]='campinas'
+    for snapshot in snapshots:snapshot[-1]='2026-01-03T00:00:00Z' if overlap_snapshot else '2025-12-31T00:00:00Z'
+    text=csv_text(snapshots)
+    load_local(database,parse_csv(text,'customers/LOAD.csv',snapshot_table='customers'),'customers/LOAD.csv',hashlib.sha256(text.encode()).hexdigest())
+    profiles=tmp_path/'profiles';profiles.mkdir();shutil.copyfile(ROOT/'dbt/profiles.yml.example',profiles/'profiles.yml')
+    result=subprocess.run([str(ROOT/'.venv/bin/dbt'),'build','--project-dir',str(ROOT/'dbt'),'--profiles-dir',str(profiles),'--target','local'],capture_output=True,text=True,
+        env={**os.environ,'WAREHOUSE_DATABASE':database.info.dbname,'DBT_SEND_ANONYMOUS_USAGE_STATS':'false',
+             'DBT_TARGET_PATH':str(tmp_path/'target'),'DBT_LOG_PATH':str(tmp_path/'logs')},timeout=120)
+    assert result.returncode==0,result.stdout[-8000:]+result.stderr[-2000:]
+    assert database.execute("SELECT status,item_total,freight_total,order_total,payment_total,item_count,payment_count FROM analytics_marts.fct_orders WHERE order_id='o1'").fetchone()==('delivered',100,10,110,110,2,2)
+    assert database.execute("SELECT item_count,payment_count,has_items,has_payments FROM analytics_marts.fct_orders WHERE order_id='o2'").fetchone()==(0,0,False,False)
+    assert database.execute('SELECT customer_id,city FROM analytics_marts.dim_customers').fetchall()==[('c1','campinas')]
+    assert database.execute("SELECT city,is_current FROM analytics_marts.dim_customer_history WHERE customer_id='c1' ORDER BY source_order_from").fetchall()==[('sao paulo',False),('campinas',True)]
+    assert database.execute("SELECT count(*) FROM analytics_marts.dim_customer_history WHERE customer_id='c2' AND is_current").fetchone()[0]==0
+    assert database.execute('SELECT count(*) FROM raw.order_payments').fetchone()[0]==2
+    assert database.execute('SELECT count(*) FROM raw.customers WHERE _is_snapshot').fetchone()[0]==2

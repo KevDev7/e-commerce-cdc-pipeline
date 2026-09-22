@@ -1,0 +1,40 @@
+{
+  "source_url": "https://www.kaggle.com/api/v1/datasets/download/olistbr/brazilian-ecommerce?datasetVersionNumber=2",
+  "archive_sha256": "967e41e04fc306fe604e2a693f488995a8b41e5047418f8a5c8e4abd6deca784",
+  "verified_at": "2026-09-22T14:12:00.498337+00:00",
+  "validation": "Local PostgreSQL snapshot fixture; not AWS CDC",
+  "tables": {
+    "customers": {
+      "rows": 99441,
+      "sha256": "9be8d465308403a6ac32d0e8cb76c34222fb09732cfac0362bd5be97757cdd0a"
+    },
+    "orders": {
+      "rows": 99441,
+      "sha256": "ae8bec589a01c976c8ca34a2af071614a8f74ae6174826383367dce5de1de9af"
+    },
+    "order_items": {
+      "rows": 112650,
+      "sha256": "5c2a096b8a003882940ee8eb948276bd67a34ebc046678cf8eccccb2d7b16eb1"
+    },
+    "order_payments": {
+      "rows": 103886,
+      "sha256": "e1e3cbad888fb655ea3d3206cd9d714db1106e7047ad4ab8ce6352838b3f43c7"
+    }
+  },
+  "marts": {
+    "dim_customers": 99441,
+    "dim_customer_history": 99441,
+    "fct_orders": 99441,
+    "fct_order_items": 112650,
+    "fct_order_payments": 103886
+  },
+  "orders_without_items": 775,
+  "orders_without_payments": 1,
+  "order_grain_totals": {
+    "items": "13591643.70",
+    "freight": "2251909.54",
+    "payments": "16008872.12"
+  },
+  "dbt_models": 16,
+  "dbt_tests": 39
+}
