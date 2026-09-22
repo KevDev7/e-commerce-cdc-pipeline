@@ -10,10 +10,11 @@ Local tests establish behavior for the local database or explicit fixtures only.
 
 ## Local results
 
-18 tests pass locally, including the 42 dbt data tests run by the model integration test. New coverage demonstrates:
+19 tests pass locally, including the 42 dbt data tests run by each model integration case. New coverage demonstrates:
 
 - PostgreSQL exports a consistent snapshot while a separate connection commits an insert, update and delete; real logical decoding contains all three operations.
 - A late snapshot does not overwrite a newer update or resurrect a deleted patient in the marts (explicit DMS-format fixture).
+- A snapshot transferred after CDC begins does not introduce an invented earlier patient-history version. This regression test initially failed with two backwards history intervals; the model now retains the snapshot in raw while deriving that patient's history from captured CDC.
 - A failure loading the second table rolls back the first table and the file ledger; retry succeeds without duplication.
 - Bootstrap validation rejects missing/partial overlap, and freshness requires the specific probe event and fails when its deadline expires.
 

@@ -13,7 +13,8 @@ from test_events import csv_text
 
 
 @pytest.mark.integration
-def test_marts_handle_late_files_deletes_history_and_multiple_payments(database, tmp_path):
+@pytest.mark.parametrize("overlap_snapshot", [False, True])
+def test_marts_handle_late_files_deletes_history_and_multiple_payments(database, tmp_path, overlap_snapshot):
     initialize_raw(database)
     time0 = "2026-01-01T00:00:00Z"
     time1 = "2026-01-02T00:00:00Z"
@@ -40,6 +41,15 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     # An initial snapshot can arrive after CDC files. It must neither overwrite
     # Cambridge nor resurrect the patient whose DELETE was already received.
     snapshot_rows = [[r[0], *r[3:]] for r in earlier[:2]]
+    # DMS snapshot metadata is transfer time, which can be later than committed
+    # CDC. The snapshot may already contain a later state (Cambridge here).
+    if overlap_snapshot:
+        snapshot_rows[0][5] = "Cambridge"
+        for snapshot_row in snapshot_rows:
+            snapshot_row[-1] = "2026-01-03T00:00:00Z"
+    else:
+        for snapshot_row in snapshot_rows:
+            snapshot_row[-1] = "2025-12-31T00:00:00Z"
     snapshot_text = csv_text(snapshot_rows)
     load_local(database, parse_csv(snapshot_text, "patients/LOAD.csv", snapshot_table="patients"),
                "patients/LOAD.csv", hashlib.sha256(snapshot_text.encode()).hexdigest())
@@ -56,3 +66,4 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     assert history==[("Boston",False),("Cambridge",True)]
     assert database.execute("SELECT count(*) FROM analytics_marts.dim_patient_history WHERE patient_id='p2' AND is_current").fetchone()[0]==0
     assert database.execute("SELECT count(*) FROM raw.claim_transactions").fetchone()[0]==3
+    assert database.execute("SELECT count(*) FROM raw.patients WHERE _is_snapshot").fetchone()[0]==2
