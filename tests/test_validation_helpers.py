@@ -11,7 +11,7 @@ import pytest
 
 from scripts.check_freshness import find_probe, run_step, within_budget
 from scripts.verify_bootstrap import overlaps
-from test_events import csv_text, patient_row
+from test_events import csv_text, customer_row
 
 
 def test_bootstrap_requires_commit_to_fit_inside_table_load():
@@ -66,18 +66,18 @@ def test_step_preserves_command_failure():
 def test_freshness_requires_specific_probe_not_any_recent_file():
     class S3Fixture:
         def __init__(self):
-            self.rows = [patient_row(patient_id='unrelated')]
+            self.rows = [customer_row(customer_id='unrelated')]
 
         def get_paginator(self, _):
             return self
 
         def paginate(self, **_):
-            return [{'Contents': [{'Key': 'capture-v1/cdc/test.csv'}]}]
+            return [{'Contents': [{'Key': 'olist-v1/cdc/test.csv'}]}]
 
         def get_object(self, **_):
             return {'Body': io.BytesIO(csv_text(self.rows).encode())}
 
     s3 = S3Fixture()
-    assert find_probe(s3, 'bucket', 'capture-v1/cdc/', 'probe', set()) is None
-    s3.rows.append(patient_row(patient_id='probe', sequence='2'))
-    assert find_probe(s3, 'bucket', 'capture-v1/cdc/', 'probe', set()) == 'capture-v1/cdc/test.csv'
+    assert find_probe(s3, 'bucket', 'olist-v1/cdc/', 'probe', set()) is None
+    s3.rows.append(customer_row(customer_id='probe', sequence='2'))
+    assert find_probe(s3, 'bucket', 'olist-v1/cdc/', 'probe', set()) == 'olist-v1/cdc/test.csv'

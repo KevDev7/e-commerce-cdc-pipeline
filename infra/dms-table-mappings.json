@@ -3,40 +3,40 @@
     {
       "rule-type": "selection",
       "rule-id": "1",
-      "rule-name": "include-patients",
+      "rule-name": "include-customers",
       "object-locator": {
-        "schema-name": "healthcare",
-        "table-name": "patients"
+        "schema-name": "ecommerce",
+        "table-name": "customers"
       },
       "rule-action": "include"
     },
     {
       "rule-type": "selection",
       "rule-id": "2",
-      "rule-name": "include-encounters",
+      "rule-name": "include-orders",
       "object-locator": {
-        "schema-name": "healthcare",
-        "table-name": "encounters"
+        "schema-name": "ecommerce",
+        "table-name": "orders"
       },
       "rule-action": "include"
     },
     {
       "rule-type": "selection",
       "rule-id": "3",
-      "rule-name": "include-claims",
+      "rule-name": "include-order_items",
       "object-locator": {
-        "schema-name": "healthcare",
-        "table-name": "claims"
+        "schema-name": "ecommerce",
+        "table-name": "order_items"
       },
       "rule-action": "include"
     },
     {
       "rule-type": "selection",
       "rule-id": "4",
-      "rule-name": "include-claim_transactions",
+      "rule-name": "include-order_payments",
       "object-locator": {
-        "schema-name": "healthcare",
-        "table-name": "claim_transactions"
+        "schema-name": "ecommerce",
+        "table-name": "order_payments"
       },
       "rule-action": "include"
     },
@@ -46,7 +46,7 @@
       "rule-name": "add-_source_lsn",
       "rule-target": "column",
       "object-locator": {
-        "schema-name": "healthcare",
+        "schema-name": "ecommerce",
         "table-name": "%"
       },
       "rule-action": "add-column",
@@ -63,7 +63,7 @@
       "rule-name": "add-_source_order",
       "rule-target": "column",
       "object-locator": {
-        "schema-name": "healthcare",
+        "schema-name": "ecommerce",
         "table-name": "%"
       },
       "rule-action": "add-column",
@@ -80,7 +80,7 @@
       "rule-name": "add-_commit_at",
       "rule-target": "column",
       "object-locator": {
-        "schema-name": "healthcare",
+        "schema-name": "ecommerce",
         "table-name": "%"
       },
       "rule-action": "add-column",

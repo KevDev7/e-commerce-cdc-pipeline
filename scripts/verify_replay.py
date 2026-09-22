@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env.cloud", override=True)
-from synthea_cdc.cloud_load import aws_session, load_pending, warehouse_connection
-from synthea_cdc.seed import TABLES
+from olist_cdc.cloud_load import aws_session, load_pending, warehouse_connection
+from olist_cdc.seed import TABLES
 
 
 def counts():
@@ -28,7 +28,7 @@ def counts():
 before = counts()
 s3 = aws_session().client("s3")
 bucket = os.environ["S3_BUCKET"]
-prefix = os.environ.get("CAPTURE_PREFIX", "capture-v1") + "/cdc/"
+prefix = os.environ.get("CAPTURE_PREFIX", "olist-v1") + "/cdc/"
 originals = sorted(x["Key"] for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix)
                    for x in page.get("Contents", []) if x["Key"].split("/")[-1].startswith("CDC_TXN-"))
 if not originals:

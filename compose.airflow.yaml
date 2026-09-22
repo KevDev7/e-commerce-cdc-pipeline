@@ -1,4 +1,4 @@
-name: synthea-cdc
+name: olist-cdc
 services:
   airflow:
     build:

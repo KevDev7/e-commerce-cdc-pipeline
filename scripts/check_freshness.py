@@ -1,4 +1,4 @@
-"""A bounded active probe: commit one synthetic patient and observe S3, raw and marts."""
+"""A bounded active probe: commit one synthetic customer and observe S3, raw and marts."""
 import argparse
 from datetime import datetime, timezone
 import json
@@ -14,9 +14,9 @@ from uuid import uuid4
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
-from synthea_cdc.cloud_load import aws_session, check_capture, warehouse_connection
-from synthea_cdc.db import connect
-from synthea_cdc.events import parse_csv
+from olist_cdc.cloud_load import aws_session, check_capture, warehouse_connection
+from olist_cdc.db import connect
+from olist_cdc.events import parse_csv
 
 
 def within_budget(started, timeout):
@@ -45,7 +45,7 @@ def run_step(command, timeout):
             raise subprocess.CalledProcessError(returncode, command)
 
 
-def find_probe(s3, bucket, prefix, patient_id, seen):
+def find_probe(s3, bucket, prefix, customer_id, seen):
     for page in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket, Prefix=prefix):
         for item in page.get('Contents', []):
             key = item['Key']
@@ -55,7 +55,7 @@ def find_probe(s3, bucket, prefix, patient_id, seen):
             events = parse_csv(s3.get_object(Bucket=bucket, Key=key)['Body'].read().decode(), source)
             seen.add(key)
             for event in events:
-                if event.table == 'patients' and event.values[0] == patient_id and event.values[-6] == 'I':
+                if event.table == 'customers' and event.values[0] == customer_id and event.values[-6] == 'I':
                     return key
     return None
 
@@ -72,18 +72,18 @@ def main():
     load_dotenv(ROOT / '.env.cloud', override=True)
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
     check_capture()
-    patient_id = str(uuid4())
-    city = 'Freshness probe ' + patient_id
+    customer_id = uuid4().hex
+    city = 'Freshness probe ' + customer_id
     started = time.monotonic()
-    result = dict(patient_id=patient_id, threshold_seconds=args.timeout, poll_seconds=args.poll,
+    result = dict(customer_id=customer_id, threshold_seconds=args.timeout, poll_seconds=args.poll,
                   started_at=datetime.now(timezone.utc).isoformat(), status='running', observations={})
     output = ROOT / 'data/freshness.json'
     output.parent.mkdir(exist_ok=True)
     try:
         # This is an explicit synthetic workload record, not a timestamp watermark.
         with connect() as source:
-            source.execute("""INSERT INTO healthcare.patients (patient_id,birth_date,gender,city,state)
-                VALUES (%s,'1990-01-01','F',%s,'TEST')""", (patient_id, city))
+            source.execute("""INSERT INTO ecommerce.customers (customer_id,customer_unique_id,city,state)
+                VALUES (%s,%s,%s,'SP')""", (customer_id, customer_id, city))
             result['source_write_at'] = source.execute('SELECT clock_timestamp()').fetchone()[0].isoformat()
         # Measure on one monotonic clock, avoiding database/client clock skew.
         started = time.monotonic()
@@ -91,10 +91,10 @@ def main():
         s3 = aws_session().client('s3')
         seen = set()
         bucket = os.environ['S3_BUCKET']
-        prefix = os.environ.get('CAPTURE_PREFIX', 'capture-v1') + '/cdc/'
+        prefix = os.environ.get('CAPTURE_PREFIX', 'olist-v1') + '/cdc/'
         while True:
             within_budget(started, args.timeout)
-            key = find_probe(s3, bucket, prefix, patient_id, seen)
+            key = find_probe(s3, bucket, prefix, customer_id, seen)
             if key:
                 result['source_key'] = key
                 result['observations']['s3_seconds'] = round(time.monotonic() - started, 3)
@@ -107,9 +107,9 @@ def main():
             with warehouse_connection() as target:
                 cursor = target.cursor()
                 if step == 'load':
-                    cursor.execute('SELECT count(*) FROM "raw".patients WHERE patient_id=%s AND city=%s AND _op=\'I\' AND NOT _is_snapshot', (patient_id, city))
+                    cursor.execute('SELECT count(*) FROM "raw".customers WHERE customer_id=%s AND city=%s AND _op=\'I\' AND NOT _is_snapshot', (customer_id, city))
                 else:
-                    cursor.execute('SELECT count(*) FROM analytics_marts.dim_patients WHERE patient_id=%s AND city=%s', (patient_id, city))
+                    cursor.execute('SELECT count(*) FROM analytics_marts.dim_customers WHERE customer_id=%s AND city=%s', (customer_id, city))
                 if cursor.fetchone()[0] != 1:
                     raise AssertionError(f'Probe missing or duplicated after {step}')
                 target.commit()

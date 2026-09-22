@@ -1,12 +1,12 @@
 version: 2
 models:
-- name: stg_patients
+- name: stg_customers
   columns:
   - name: _event_id
     data_tests:
     - unique
     - not_null
-  - name: patient_id
+  - name: customer_id
     data_tests:
     - not_null
   - name: _op
@@ -20,13 +20,13 @@ models:
   - name: _source_order
     data_tests:
     - not_null
-- name: stg_encounters
+- name: stg_orders
   columns:
   - name: _event_id
     data_tests:
     - unique
     - not_null
-  - name: encounter_id
+  - name: order_id
     data_tests:
     - not_null
   - name: _op
@@ -40,13 +40,13 @@ models:
   - name: _source_order
     data_tests:
     - not_null
-- name: stg_claims
+- name: stg_order_items
   columns:
   - name: _event_id
     data_tests:
     - unique
     - not_null
-  - name: claim_id
+  - name: order_item_key
     data_tests:
     - not_null
   - name: _op
@@ -60,13 +60,13 @@ models:
   - name: _source_order
     data_tests:
     - not_null
-- name: stg_claim_transactions
+- name: stg_order_payments
   columns:
   - name: _event_id
     data_tests:
     - unique
     - not_null
-  - name: transaction_id
+  - name: payment_key
     data_tests:
     - not_null
   - name: _op
@@ -80,67 +80,54 @@ models:
   - name: _source_order
     data_tests:
     - not_null
-- name: dim_patients
+- name: dim_customers
   columns:
-  - name: patient_id
+  - name: customer_id
     data_tests:
     - unique
     - not_null
-- name: dim_patient_history
+- name: dim_customer_history
   columns:
-  - name: patient_version_id
+  - name: customer_version_id
     data_tests:
     - unique
     - not_null
-- name: fct_encounters
+- name: fct_orders
   columns:
-  - name: encounter_id
+  - name: order_id
     data_tests:
     - unique
     - not_null
-  - name: patient_id
+  - name: customer_id
     data_tests:
     - not_null
     - relationships:
         arguments:
-          to: ref('dim_patients')
-          field: patient_id
-- name: fct_claims
+          to: ref('dim_customers')
+          field: customer_id
+- name: fct_order_items
   columns:
-  - name: claim_id
+  - name: order_item_key
     data_tests:
     - unique
     - not_null
-  - name: patient_id
+  - name: order_id
     data_tests:
     - not_null
     - relationships:
         arguments:
-          to: ref('dim_patients')
-          field: patient_id
-  - name: encounter_id
-    data_tests:
-    - relationships:
-        arguments:
-          to: ref('fct_encounters')
-          field: encounter_id
-- name: fct_claim_transactions
+          to: ref('fct_orders')
+          field: order_id
+- name: fct_order_payments
   columns:
-  - name: transaction_id
+  - name: payment_key
     data_tests:
     - unique
     - not_null
-  - name: patient_id
+  - name: order_id
     data_tests:
     - not_null
     - relationships:
         arguments:
-          to: ref('dim_patients')
-          field: patient_id
-  - name: claim_id
-    data_tests:
-    - not_null
-    - relationships:
-        arguments:
-          to: ref('fct_claims')
-          field: claim_id
+          to: ref('fct_orders')
+          field: order_id

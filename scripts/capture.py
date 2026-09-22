@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env.cloud", override=True)
 import os
-from synthea_cdc.cloud_load import aws_session
+from olist_cdc.cloud_load import aws_session
 
 parser = argparse.ArgumentParser()
 parser.add_argument("command", choices=["status", "start", "stop", "resume"])
