@@ -7,7 +7,7 @@ import io
 from synthea_cdc.seed import TABLES
 
 # DMS transformations append these columns after the original source columns.
-# Confirm this layout on the first real DMS file before enabling scheduled loads.
+# Verified against the project's DMS 3.6.1 full-load and CDC output on 2026-09-22.
 DMS_METADATA = ("_source_lsn", "_source_order", "_commit_at")
 RAW_METADATA = ("_event_id", "_op", "_source_lsn", "_source_order", "_commit_at", "_is_snapshot", "_source_file")
 NULL = "__SYNTHEA_NULL__"

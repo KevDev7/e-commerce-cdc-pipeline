@@ -9,6 +9,7 @@ import os
 
 import boto3
 import redshift_connector
+from psycopg import sql
 
 from synthea_cdc.events import NULL, parse_csv
 from synthea_cdc.seed import TABLES
@@ -68,8 +69,8 @@ def load_file(connection, s3, bucket, key, role):
     source = f"s3://{bucket}/{key}"
     cursor = connection.cursor()
     try:
-        cursor.execute("LOCK TABLE raw.loaded_files")
-        cursor.execute("SELECT content_sha256 FROM raw.loaded_files WHERE source_file=%s", (source,))
+        cursor.execute('LOCK TABLE "raw".loaded_files')
+        cursor.execute('SELECT content_sha256 FROM "raw".loaded_files WHERE source_file=%s', (source,))
         previous = cursor.fetchone()
         if previous:
             if previous[0] != digest:
@@ -84,15 +85,17 @@ def load_file(connection, s3, bucket, key, role):
             # COPY input is derived; the original DMS file remains untouched.
             staging_key = f"copy-ready/{digest}/{table}.csv.gz"
             s3.put_object(Bucket=bucket, Key=staging_key, Body=normalized_csv(batch), ServerSideEncryption="AES256")
-            cursor.execute(f"CREATE TEMP TABLE incoming_{table} (LIKE raw.{table})")
-            cursor.execute(f"COPY incoming_{table} FROM %s IAM_ROLE %s CSV GZIP NULL AS '{NULL}' TIMEFORMAT 'auto' DATEFORMAT 'auto'",
-                           (f"s3://{bucket}/{staging_key}", role))
-            cursor.execute(f"INSERT INTO raw.{table} SELECT i.* FROM incoming_{table} i WHERE NOT EXISTS "
-                           f"(SELECT 1 FROM raw.{table} r WHERE r._event_id=i._event_id)")
+            cursor.execute(f'CREATE TEMP TABLE incoming_{table} (LIKE "raw".{table})')
+            copy_sql = sql.SQL("COPY {} FROM {} IAM_ROLE {} CSV GZIP NULL AS {} TIMEFORMAT 'auto' DATEFORMAT 'auto'").format(
+                sql.Identifier("incoming_" + table), sql.Literal(f"s3://{bucket}/{staging_key}"),
+                sql.Literal(role), sql.Literal(NULL)).as_string()
+            cursor.execute(copy_sql)
+            cursor.execute(f'INSERT INTO "raw".{table} SELECT i.* FROM incoming_{table} i WHERE NOT EXISTS '
+                           f'(SELECT 1 FROM "raw".{table} r WHERE r._event_id=i._event_id)')
             cursor.execute(f"DROP TABLE incoming_{table}")
-        cursor.execute("INSERT INTO raw.loaded_files (source_file,content_sha256,row_count) VALUES (%s,%s,%s)", (source, digest, len(events)))
+        cursor.execute('INSERT INTO "raw".loaded_files (source_file,content_sha256,row_count) VALUES (%s,%s,%s)', (source, digest, len(events)))
         connection.commit()
-        log.info("Loaded %s: %s events", key, len(events))
+        log.info("Processed %s: %s incoming events (existing event identities are skipped)", key, len(events))
         return len(events)
     except Exception:
         connection.rollback()
@@ -117,7 +120,7 @@ def load_pending():
             cursor.execute(statement)
         connection.commit()
         total = sum(load_file(connection, s3, bucket, key, os.environ["REDSHIFT_COPY_ROLE"]) for key in keys)
-        log.info("Inspected %s files; loaded %s new events", len(keys), total)
+        log.info("Inspected %s files; processed %s incoming events from previously unseen files", len(keys), total)
     finally:
         connection.close()
 

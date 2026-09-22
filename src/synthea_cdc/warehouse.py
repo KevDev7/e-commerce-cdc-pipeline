@@ -14,7 +14,7 @@ TYPES = {
 
 
 def raw_ddl():
-    statements = ["CREATE SCHEMA IF NOT EXISTS raw", """CREATE TABLE IF NOT EXISTS raw.loaded_files
+    statements = ['CREATE SCHEMA IF NOT EXISTS "raw"', """CREATE TABLE IF NOT EXISTS "raw".loaded_files
         (source_file varchar(2048) NOT NULL, content_sha256 varchar(64) NOT NULL,
          loaded_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP, row_count bigint NOT NULL)"""]
     for table in TABLES:
@@ -22,7 +22,7 @@ def raw_ddl():
         fields += ["_event_id varchar(64) NOT NULL", "_op varchar(1) NOT NULL", "_source_lsn varchar(128)",
                    "_source_order numeric(35,0) NOT NULL", "_commit_at timestamptz NOT NULL",
                    "_is_snapshot boolean NOT NULL", "_source_file varchar(2048) NOT NULL"]
-        statements.append(f"CREATE TABLE IF NOT EXISTS raw.{table} (" + ",".join(fields) + ")")
+        statements.append(f'CREATE TABLE IF NOT EXISTS "raw".{table} (' + ",".join(fields) + ")")
     return statements
 
 

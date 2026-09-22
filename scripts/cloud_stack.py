@@ -87,6 +87,8 @@ def create():
 
 def sync_env():
     result = outputs()
+    if not {"SourceHost", "TaskArn", "S3Bucket", "CopyRoleArn"}.issubset(result):
+        raise RuntimeError("Stack outputs are not ready; wait for CREATE_COMPLETE or UPDATE_COMPLETE")
     values = dict(dotenv_values(ENV))
     for key, output in {"POSTGRES_HOST": "SourceHost", "DMS_TASK_ARN": "TaskArn", "S3_BUCKET": "S3Bucket",
                         "REDSHIFT_COPY_ROLE": "CopyRoleArn", "REDSHIFT_HOST": "WarehouseHost"}.items():
@@ -100,7 +102,7 @@ def enable_warehouse():
     current = stack()
     parameters = [{"ParameterKey": p["ParameterKey"], **({"ParameterValue": "true"} if p["ParameterKey"] == "EnableWarehouse" else {"UsePreviousValue": True})} for p in current["Parameters"]]
     CF.update_stack(StackName=current["StackId"], TemplateBody=template(), Parameters=parameters, Capabilities=["CAPABILITY_NAMED_IAM"])
-    print("Warehouse creation started; set usage-limit before running queries")
+    print("Stack update started with warehouse enabled; set usage-limit before running queries")
 
 
 def usage_limit():
@@ -144,6 +146,10 @@ def delete():
             return
         if task and task[0]["Status"] in ("starting", "stopping"):
             raise RuntimeError("Wait until capture stops before archiving and deleting")
+        if task:
+            state = json.loads(STATE.read_text())
+            state["log_group"] = json.loads(task[0]["ReplicationTaskSettings"])["Logging"].get("CloudWatchLogGroup")
+            STATE.write_text(json.dumps(state, indent=2))
     if "S3Bucket" in result:
         s3 = SESSION.client("s3")
         bucket = result["S3Bucket"]
@@ -164,13 +170,26 @@ def delete():
     print("Stack deletion started; captured files preserved in ignored data/aws-capture. Verify DELETE_COMPLETE.")
 
 
+def cleanup_logs():
+    if stack()["StackStatus"] != "DELETE_COMPLETE":
+        raise RuntimeError("Finish stack deletion before removing its DMS logs")
+    group = json.loads(STATE.read_text()).get("log_group")
+    if group and group.startswith("dms-tasks-synthea-cdc-"):
+        logs = SESSION.client("logs")
+        try:
+            logs.delete_log_group(logGroupName=group)
+        except logs.exceptions.ResourceNotFoundException:
+            pass
+    print("Project DMS log cleanup complete")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=["validate", "create", "status", "env", "warehouse", "usage-limit", "connections", "delete"])
+    parser.add_argument("command", choices=["validate", "create", "status", "env", "warehouse", "usage-limit", "connections", "delete", "cleanup-logs"])
     args = parser.parse_args()
     if args.command == "validate":
         CF.validate_template(TemplateBody=template())
         print("CloudFormation template valid")
     else:
         {"create": create, "status": status, "env": sync_env, "warehouse": enable_warehouse,
-         "usage-limit": usage_limit, "connections": connections, "delete": delete}[args.command]()
+         "usage-limit": usage_limit, "connections": connections, "delete": delete, "cleanup-logs": cleanup_logs}[args.command]()

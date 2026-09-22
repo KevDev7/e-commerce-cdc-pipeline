@@ -26,7 +26,7 @@ def template():
         {"Effect": "Allow", "Action": ["s3:ListBucket", "s3:GetBucketLocation"], "Resource": att("Bucket", "Arn")},
         {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:PutObjectTagging"], "Resource": sub("${Bucket.Arn}/capture-v1/*")},
     ]))
-    add("CopyRole", "IAM::Role", role("redshift.amazonaws.com", [
+    add("CopyRole", "IAM::Role", role(["redshift.amazonaws.com", "redshift-serverless.amazonaws.com"], [
         {"Effect": "Allow", "Action": ["s3:ListBucket", "s3:GetBucketLocation"], "Resource": att("Bucket", "Arn")},
         {"Effect": "Allow", "Action": ["s3:GetObject"], "Resource": sub("${Bucket.Arn}/copy-ready/*")},
     ]))
@@ -67,7 +67,7 @@ def template():
         "EndpointIdentifier": "synthea-cdc-source", "EndpointType": "source", "EngineName": "postgres",
         "ServerName": att("Source", "Endpoint.Address"), "Port": 5432, "DatabaseName": "synthea",
         "Username": "dms_reader", "Password": ref("DmsPassword"), "SslMode": "require", "Tags": TAGS,
-        "PostgreSqlSettings": {"PluginName": "test_decoding"},
+        "PostgreSqlSettings": {"PluginName": "test_decoding", "CaptureDdls": False},
     })
     settings = json.loads((HERE / "dms-s3-settings.example.json").read_text())
     settings.update(ServiceAccessRoleArn=att("DmsRole", "Arn"), BucketName=ref("Bucket"))

@@ -11,6 +11,7 @@ from synthea_cdc.simulate import PHASES, run_phase
 def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     parser = argparse.ArgumentParser(description="Synthea CDC project commands")
+    parser.add_argument("--cloud", action="store_true", help="Use the ignored .env.cloud connection instead of local PostgreSQL")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("init", help="Create the four source tables and project metadata")
     seed = sub.add_parser("seed", help="Download and load the pinned Synthea sample once")
@@ -19,6 +20,11 @@ def main():
     simulate.add_argument("--scenario", default="demo-001")
     simulate.add_argument("--phase", choices=["all", *PHASES], default="all")
     args = parser.parse_args()
+    if args.cloud:
+        from dotenv import load_dotenv
+        from synthea_cdc.db import ROOT
+        if not load_dotenv(ROOT / ".env.cloud", override=True):
+            parser.error("Missing .env.cloud; synchronize the project stack first")
     if args.command == "seed":
         download(args.archive)
     with connect() as connection:
