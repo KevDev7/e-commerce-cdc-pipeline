@@ -35,7 +35,9 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     later += [row('orders',{**order,'status':'delivered','approved_at':'2017-01-01'},13,'U',time1),
               row('orders',{**order,'order_id':'o3'},14,'I',time0),
               row('orders',{**order,'order_id':'o3'},15,'D',time1),
-              row('orders',{**order,'order_id':'o3'},16,'I',time1)]
+              row('orders',{**order,'order_id':'o3'},16,'I',time1),
+              row('orders',{**order,'order_id':'o5'},17,'I','2026-03-08T01:30:00-05:00'),
+              row('orders',{**order,'order_id':'o5','status':'delivered'},18,'U','2026-03-08T03:30:00-04:00')]
     for name,rows in [('later.csv',later),('earlier.csv',earlier),('replayed.csv',earlier)]:
         text=csv_text(rows);load_local(database,parse_csv(text,name),name,hashlib.sha256(text.encode()).hexdigest())
     profiles=tmp_path/'profiles';profiles.mkdir();shutil.copyfile(ROOT/'dbt/profiles.yml.example',profiles/'profiles.yml')
@@ -72,3 +74,5 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     assert history[1][2]==86400 and history[2][2] is None
     assert database.execute("SELECT is_deleted,is_current FROM analytics_marts.fct_order_status_history WHERE order_id='o3' ORDER BY source_order_from").fetchall()==[(False,False),(True,False),(False,True)]
     assert database.execute("SELECT status,is_initial_snapshot,observed_duration_seconds FROM analytics_marts.fct_order_status_history WHERE order_id='o4'").fetchall()==[('delivered',True,None)]
+
+    assert database.execute("SELECT observed_duration_seconds FROM analytics_marts.fct_order_status_history WHERE order_id='o5' ORDER BY source_order_from").fetchall()==[(3600,),(None,)]
