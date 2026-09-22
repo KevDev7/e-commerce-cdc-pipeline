@@ -11,3 +11,4 @@ This is a student data engineering portfolio project. Optimize for learning, cla
 - Add services, frameworks, abstractions, and production features only when they support a concrete project requirement or learning objective. Avoid enterprise-scale infrastructure for hypothetical future needs.
 - Keep AWS resources and credentials separate from other projects. Use the synthea-cdc AWS profile explicitly. Establish a spending limit before provisioning paid infrastructure.
 - Commit and push small, coherent, verified milestones with descriptive messages. Do not postpone all pushes until the entire pipeline is finished. Never commit credentials or downloaded datasets.
+- Keep datasets in S3 between demonstrations; delete paid compute afterward. Do not keep a full source or warehouse database on the user's Mac. Temporary seed files, small fixtures and sanitized reports are acceptable.

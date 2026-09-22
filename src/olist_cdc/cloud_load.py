@@ -1,8 +1,5 @@
 """Load immutable DMS S3 files through Redshift COPY, with an atomic file ledger."""
-import csv
-import gzip
 import hashlib
-import io
 import json
 import logging
 import os
@@ -11,7 +8,8 @@ import boto3
 import redshift_connector
 from psycopg import sql
 
-from olist_cdc.events import NULL, parse_csv
+from olist_cdc.events import parse_csv
+from olist_cdc.parquet import normalized_parquet
 from olist_cdc.seed import TABLES
 from olist_cdc.warehouse import raw_ddl
 
@@ -29,16 +27,6 @@ def warehouse_connection():
         user=os.environ["REDSHIFT_USER"], password=os.environ["REDSHIFT_PASSWORD"],
         ssl=True, sslmode="verify-full", timeout=30,
     )
-
-
-def normalized_csv(events):
-    buffer = io.StringIO(newline="")
-    writer = csv.writer(buffer, lineterminator="\n")
-    for event in events:
-        writer.writerow([NULL if value is None else
-                         ("true" if value else "false") if isinstance(value, bool)
-                         else value for value in event.values])
-    return gzip.compress(buffer.getvalue().encode(), mtime=0)
 
 
 def snapshot_table(key, prefix):
@@ -85,12 +73,13 @@ def load_file(connection, s3, bucket, key, role, *, metrics=None):
             if not batch:
                 continue
             # COPY input is derived; the original DMS file remains untouched.
-            staging_key = f"copy-ready/{digest}/{table}.csv.gz"
-            s3.put_object(Bucket=bucket, Key=staging_key, Body=normalized_csv(batch), ServerSideEncryption="AES256")
+            source_identity = hashlib.sha256(source.encode()).hexdigest()
+            staging_key = f"copy-ready/parquet-v1/{source_identity}/{digest}/{table}.parquet"
+            s3.put_object(Bucket=bucket, Key=staging_key, Body=normalized_parquet(batch, table), ServerSideEncryption="AES256")
             cursor.execute(f'CREATE TEMP TABLE incoming_{table} (LIKE "raw".{table})')
-            copy_sql = sql.SQL("COPY {} FROM {} IAM_ROLE {} CSV GZIP NULL AS {} TIMEFORMAT 'auto' DATEFORMAT 'auto'").format(
+            copy_sql = sql.SQL("COPY {} FROM {} IAM_ROLE {} FORMAT AS PARQUET").format(
                 sql.Identifier("incoming_" + table), sql.Literal(f"s3://{bucket}/{staging_key}"),
-                sql.Literal(role), sql.Literal(NULL)).as_string()
+                sql.Literal(role)).as_string()
             cursor.execute(copy_sql)
             cursor.execute(f'INSERT INTO "raw".{table} SELECT i.* FROM incoming_{table} i WHERE NOT EXISTS '
                            f'(SELECT 1 FROM "raw".{table} r WHERE r._event_id=i._event_id)')

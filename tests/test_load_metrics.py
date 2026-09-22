@@ -1,6 +1,8 @@
 """Exercise metric commit boundaries with explicit S3/SQL fixtures, not AWS."""
 import io
 import pytest
+import pyarrow as pa
+import pyarrow.parquet as pq
 from olist_cdc.cloud_load import load_file
 from test_events import csv_text, customer_row
 
@@ -11,7 +13,10 @@ def test_file_metrics_only_count_committed_files(monkeypatch,fail):
     class Connection:
         loaded=False
         def cursor(self):return self
-        def execute(self,query,*args):pass
+        def execute(self,query,*args):
+            if query.startswith("COPY "):
+                assert "FORMAT AS PARQUET" in query
+                assert "CSV" not in query and "GZIP" not in query and "NULL AS" not in query
         def fetchone(self):return None
         def commit(self):
             if fail:raise RuntimeError('injected commit failure')
@@ -20,7 +25,11 @@ def test_file_metrics_only_count_committed_files(monkeypatch,fail):
     class S3:
         def get_object(self,**kwargs):
             return {'Body':io.BytesIO(csv_text([customer_row(),customer_row(sequence='2',operation='U'),customer_row(sequence='3',operation='D')]).encode())}
-        def put_object(self,**kwargs):pass
+        def put_object(self,**kwargs):
+            assert kwargs["Key"].endswith("customers.parquet")
+            rows = pq.read_table(pa.BufferReader(kwargs["Body"])).to_pylist()
+            assert [r["_op"] for r in rows] == ["I", "U", "D"]
+            assert all(r["_source_file"] == "s3://bucket/olist-v1/cdc/test.csv" for r in rows)
     metrics={}
     if fail:
         with pytest.raises(RuntimeError):

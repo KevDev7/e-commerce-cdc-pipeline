@@ -18,6 +18,8 @@ From the repository root, with `.venv` installed:
 
 The stack creates DMS's standard service roles only when absent; existing roles are left alone. All other resources belong to this stack. The source is a reproducible copy of historical Olist data plus disposable simulated activity, so deletion intentionally does not retain a paid database snapshot.
 
+The S3 bucket has CloudFormation `Retain` policies. It survives stack deletion, while RDS and Redshift do not retain database snapshots. Each new demo creates a fresh capture lineage in a new bucket; do not merge unrelated source sequences.
+
 After CREATE_COMPLETE:
 
 ```sh
@@ -25,6 +27,8 @@ After CREATE_COMPLETE:
 .venv/bin/python scripts/prepare_cloud_source.py
 .venv/bin/python scripts/cloud_stack.py connections
 ```
+
+`prepare_cloud_source.py` downloads the pinned ZIP into a temporary directory, uploads a copy under `source/olist-v2/`, loads RDS and removes the temporary directory on exit. It never creates a local source database.
 
 Repeat `connections` until both endpoints report `successful`, then start the task. Starting is deliberate: the source must be seeded first. Wait for all four tables to complete their full load; inspect real files before accepting the CSV contract.
 
@@ -111,7 +115,7 @@ marts and runs all data tests. Original project SQL is not modified by the check
 
 ## Replay and cleanup
 
-The loader stores original DMS files unchanged, derives compressed COPY inputs under `copy-ready/`, and commits the raw records with the file ledger in one transaction. A replay skips identical files; events redelivered under another file name are deduplicated by source identity. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
+The loader stores original DMS files unchanged, derives explicitly typed Zstandard Parquet COPY inputs under `copy-ready/parquet-v1/`, and commits the raw records with the file ledger in one transaction. A replay skips identical files; events redelivered under another file name are deduplicated by source identity. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
 
 ```sh
 .venv/bin/python scripts/cloud_stack.py delete
@@ -121,9 +125,11 @@ The loader stores original DMS files unchanged, derives compressed COPY inputs u
 docker compose -f compose.airflow.yaml stop
 ```
 
-Deletion empties the project bucket and deletes the stack without downloading datasets to the Mac. Local capture archiving is opt-in with `delete --archive-local`; it is not used for this project's normal cleanup. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS-generated log group. Verify no project RDS/DMS/Redshift resources remain. The local state file records the stack ID and test start time; creation refuses another session while that record exists. Keep it as evidence until reviewing costs and approving any additional session. Remove `.aws/credentials` after the test. Do not delete or modify resources belonging to other projects.
+Deletion retains the bucket and all objects, removes the compute stack, and does not download datasets. It refuses to delete a legacy stack whose deployed bucket lacks `DeletionPolicy=Retain`; update that policy first. The small `data/cloud-state.json` records `retained_bucket`, region and capture prefix before deletion. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS log group. Verify no project RDS/DMS/Redshift compute or database snapshots remain, and verify the retained bucket is private and readable with the project profile. Remove `.env.cloud` and `.aws/credentials` afterward. Keep deployment metadata before approving another session. Never modify other projects' resources.
 
-With the source quiescent and the latest DMS batch loaded, `.venv/bin/python scripts/reconcile_cloud.py` compares every current field with Redshift. `.venv/bin/python scripts/verify_replay.py` redelivers a real CDC file and retries the batch, asserting unchanged raw counts and unique event identities. These tools were adapted for Olist; their previous AWS executions used Synthea and do not validate this new schema. Reconciliation against an actively changing source would require coordinating a common checkpoint, which this small demo does not automate.
+The retained bucket incurs S3 storage/request charges until deliberately removed. It remains accessible through the project AWS profile after its stack-managed DMS/COPY roles are removed. Rebuilding a warehouse later requires a new COPY role scoped to that retained bucket, the matching capture prefix and a fresh raw database/ledger; then load the original CSV captures to regenerate Parquet and rebuild dbt. Retention is not an automated cross-session restore service.
+
+With the source quiescent and the latest DMS batch loaded, `.venv/bin/python scripts/reconcile_cloud.py` compares every current field with Redshift. `.venv/bin/python scripts/verify_replay.py` redelivers a real CDC file and retries the batch, asserting unchanged raw counts and unique event identities. See the Olist validation evidence for completed executions. Reconciliation against an actively changing source would require coordinating a common checkpoint, which this small demo does not automate.
 
 ## Verify a completed simulated lifecycle
 
@@ -160,7 +166,7 @@ one full refresh to add the new fact columns before returning to incremental run
 
 ## Local data retention
 
-Keep code and small sanitized validation reports, not local datasets after demos.
+Use cloud databases for normal demonstrations. Keep code and small sanitized validation reports, not local datasets after demos. No local PostgreSQL container is required for the cloud commands.
 Remove the downloaded `data/olist` seed and any explicitly requested
 `data/aws-capture` archive when finished. The local PostgreSQL volume contains both
 source and warehouse rows; remove the stopped project containers and their

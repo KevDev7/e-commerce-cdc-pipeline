@@ -14,7 +14,12 @@ import time
 from dotenv import load_dotenv
 import pyarrow as pa
 import pyarrow.parquet as pq
-from olist_cdc.cloud_load import aws_session, normalized_csv, snapshot_table
+from olist_cdc.cloud_load import aws_session, snapshot_table
+from olist_cdc.parquet import field_type, value_for
+import csv
+import gzip
+import io
+from olist_cdc.events import NULL
 from olist_cdc.events import RAW_METADATA, parse_csv, source_columns
 from olist_cdc.seed import TABLES
 from olist_cdc.warehouse import TYPES
@@ -22,28 +27,15 @@ from olist_cdc.warehouse import TYPES
 ROOT=Path(__file__).resolve().parents[1]
 
 
-def field_type(name):
-    kind=TYPES.get(name)
-    if name=='_source_order': return pa.decimal128(35,0)
-    if kind=='numeric(14,2)': return pa.decimal128(14,2)
-    if kind=='integer': return pa.int32()
-    if kind=='timestamp': return pa.timestamp('us')
-    if kind=='timestamptz' or name=='_commit_at': return pa.timestamp('us',tz='UTC')
-    if name=='_is_snapshot': return pa.bool_()
-    return pa.string()
-
-
-def value_for(value, kind):
-    if value is None: return None
-    if pa.types.is_decimal(kind): return Decimal(value)
-    if pa.types.is_integer(kind): return int(value)
-    if pa.types.is_timestamp(kind):
-        value=datetime.fromisoformat(value)
-        if kind.tz:
-            return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
-        assert value.tzinfo is None
-        return value
-    return value
+def normalized_csv(events):
+    """Historical gzip CSV baseline, used only for format comparisons."""
+    buffer = io.StringIO(newline="")
+    writer = csv.writer(buffer, lineterminator="\n")
+    for event in events:
+        writer.writerow([NULL if value is None else
+                         ("true" if value else "false") if isinstance(value, bool)
+                         else value for value in event.values])
+    return gzip.compress(buffer.getvalue().encode(), mtime=0)
 
 
 def measure(events, table):
