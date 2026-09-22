@@ -38,6 +38,14 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
               row('orders',{**order,'order_id':'o3'},16,'I',time1)]
     for name,rows in [('later.csv',later),('earlier.csv',earlier),('replayed.csv',earlier)]:
         text=csv_text(rows);load_local(database,parse_csv(text,name),name,hashlib.sha256(text.encode()).hexdigest())
+    profiles=tmp_path/'profiles';profiles.mkdir();shutil.copyfile(ROOT/'dbt/profiles.yml.example',profiles/'profiles.yml')
+    def build():
+        database.commit()
+        result=subprocess.run([str(ROOT/'.venv/bin/dbt'),'build','--project-dir',str(ROOT/'dbt'),'--profiles-dir',str(profiles),'--target','local'],capture_output=True,text=True,
+            env={**os.environ,'WAREHOUSE_DATABASE':database.info.dbname,'DBT_SEND_ANONYMOUS_USAGE_STATS':'false',
+                 'DBT_TARGET_PATH':str(tmp_path/'target'),'DBT_LOG_PATH':str(tmp_path/'logs')},timeout=120)
+        assert result.returncode==0,result.stdout[-8000:]+result.stderr[-2000:]
+    build()
     snapshots=[[r[0],*r[3:]] for r in earlier[:2]]
     if overlap_snapshot:snapshots[0][4]='campinas'
     for snapshot in snapshots:snapshot[-1]='2026-01-03T00:00:00Z' if overlap_snapshot else '2025-12-31T00:00:00Z'
@@ -51,11 +59,7 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     baseline = [baseline[0],*baseline[3:]]
     text=csv_text([order_snapshot,baseline])
     load_local(database,parse_csv(text,'orders/LOAD.csv',snapshot_table='orders'),'orders/LOAD.csv',hashlib.sha256(text.encode()).hexdigest())
-    profiles=tmp_path/'profiles';profiles.mkdir();shutil.copyfile(ROOT/'dbt/profiles.yml.example',profiles/'profiles.yml')
-    result=subprocess.run([str(ROOT/'.venv/bin/dbt'),'build','--project-dir',str(ROOT/'dbt'),'--profiles-dir',str(profiles),'--target','local'],capture_output=True,text=True,
-        env={**os.environ,'WAREHOUSE_DATABASE':database.info.dbname,'DBT_SEND_ANONYMOUS_USAGE_STATS':'false',
-             'DBT_TARGET_PATH':str(tmp_path/'target'),'DBT_LOG_PATH':str(tmp_path/'logs')},timeout=120)
-    assert result.returncode==0,result.stdout[-8000:]+result.stderr[-2000:]
+    build()
     assert database.execute("SELECT status,item_total,freight_total,order_total,payment_total,item_count,payment_count FROM analytics_marts.fct_orders WHERE order_id='o1'").fetchone()==('delivered',100,10,110,110,2,2)
     assert database.execute("SELECT item_count,payment_count,has_items,has_payments FROM analytics_marts.fct_orders WHERE order_id='o2'").fetchone()==(0,0,False,False)
     assert database.execute('SELECT customer_id,city FROM analytics_marts.dim_customers').fetchall()==[('c1','campinas')]

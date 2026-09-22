@@ -15,5 +15,7 @@ models:
       +materialized: view
     marts:
       +schema: marts
-      +materialized: table
+      +materialized: incremental
+      +incremental_strategy: delete+insert
+      +on_schema_change: fail
 
