@@ -10,17 +10,17 @@ The warehouse contains an append-only raw event history, staging views, intermed
 | intermediate | Latest state, delete handling, patient history and claim-level payment aggregates |
 | marts | Current patients, observed patient history, encounters, claims and financial entries |
 
-dbt's default schema naming yields `analytics_staging`, `analytics_intermediate`, and `analytics_marts`. Raw data uses `raw`. There is one staging layer. The same SQL is exercised on PostgreSQL for inexpensive local validation; this is not a substitute for running the Redshift adapter against Redshift before declaring cloud completion.
+dbt's default schema naming yields `analytics_staging`, `analytics_intermediate`, and `analytics_marts`. Raw data uses `raw`. There is one staging layer. The same SQL is exercised on PostgreSQL for inexpensive local validation and was also executed successfully with the Redshift adapter against real Redshift.
 
 ## Event ordering and replay
 
-DMS will use a single task for the four `healthcare` tables. The intended S3 contract is transaction-ordered CSV with `PreserveTransactions=true`, all I/U/D operations, an explicit null marker, and added source-position, change-sequence and commit-timestamp fields. The parser follows the [documented DMS CSV layout](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html): operation, table, schema, original columns, then configured metadata. The actual transformed column order must be confirmed on the first real DMS output before scheduling loads.
+DMS uses a single task for the four `healthcare` tables. The validated S3 contract is transaction-ordered CSV with `PreserveTransactions=true`, all I/U/D operations, an explicit null marker, and added source-position, change-sequence and commit-timestamp fields. The parser follows the [documented DMS CSV layout](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html): operation, table, schema, original columns, then configured metadata. The transformed column order and metadata were confirmed against real DMS 3.6.1 full-load and CDC files.
 
 The [DMS change sequence](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.SelectionTransformation.Expressions.html) provides a task-level ordering value. An event identity combines table and sequence. Snapshot rows have sequence zero and identity based on table and primary key. Current state selects the greatest sequence, then excludes tombstones; filtering deletes before ranking would resurrect deleted records. Re-delivery is deduplicated and arrival order does not determine current state.
 
 One warehouse corresponds to one baseline and one DMS task lineage. An intentional full reload or replacement task must use a fresh landing prefix and fresh raw tables; do not mix independent sequence histories. This simple project does not automate task-lineage migration or source failover.
 
-The processed-file ledger and each file's raw writes commit together. File retries are skipped only after a successful transaction, and changing already-loaded file content is an error. Raw values remain available for rebuilding models. A changed source schema or missing sequence stops loading rather than silently guessing.
+The processed-file ledger and each file's raw writes commit together. File retries are skipped only after a successful transaction, and changing already-loaded file content is an error. Raw values remain available for rebuilding models. An unexpected CSV layout or missing sequence stops loading rather than silently guessing. The source schema is fixed; automatic DDL propagation and schema evolution are not implemented.
 
 ## Marts and grain
 
@@ -41,4 +41,4 @@ uv run python scripts/build_local_warehouse.py
 uv run pytest --integration -q
 ```
 
-The first command creates a separate local `synthea_warehouse` database, loads an explicitly labeled snapshot fixture from the source and runs dbt. It is **not** a CDC extractor. Repeating it retains the existing fixture and rebuilds models. Integration tests separately exercise DMS-format change fixtures in temporary databases, including out-of-order arrival, replay, hard deletes, multiple payments per claim, and patient history. The source WAL test independently confirms actual PostgreSQL log behavior. End-to-end DMS → S3 → Redshift validation remains a cloud-deployment milestone.
+The first command creates a separate local `synthea_warehouse` database, loads an explicitly labeled snapshot fixture from the source and runs dbt. It is **not** a CDC extractor. Repeating it retains the existing fixture and rebuilds models. Integration tests separately exercise DMS-format change fixtures in temporary databases, including out-of-order arrival, replay, hard deletes, multiple payments per claim, and patient history. The source WAL test independently confirms actual PostgreSQL log behavior. The real end-to-end DMS → S3 → Redshift and Airflow results are recorded in [validation results](validation.md).

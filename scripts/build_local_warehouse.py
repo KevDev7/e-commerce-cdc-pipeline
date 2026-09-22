@@ -1,6 +1,6 @@
 """Exercise dbt on real seed records using an explicitly labeled snapshot fixture.
 
-This is not CDC extraction. Actual cloud capture is AWS DMS and awaits deployment.
+This is not CDC extraction. Actual cloud capture is AWS DMS; see docs/validation.md for the AWS results.
 Existing warehouse state is retained; a changed fixture must use a fresh test DB.
 """
 import csv

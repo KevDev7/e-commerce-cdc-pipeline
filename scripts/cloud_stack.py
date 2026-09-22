@@ -129,9 +129,15 @@ def status():
 def connections():
     result = outputs()
     dms = SESSION.client("dms")
-    for key in ("SourceEndpointArn", "TargetEndpointArn"):
-        dms.test_connection(ReplicationInstanceArn=result["ReplicationArn"], EndpointArn=result[key])
-    print("Endpoint tests started")
+    existing = {c["EndpointArn"]: c for c in dms.describe_connections(
+        Filters=[{"Name": "replication-instance-arn", "Values": [result["ReplicationArn"]]}])["Connections"]}
+    for key, label in (("SourceEndpointArn", "PostgreSQL"), ("TargetEndpointArn", "S3")):
+        connection = existing.get(result[key], {})
+        state = connection.get("Status")
+        if state not in ("successful", "testing"):
+            dms.test_connection(ReplicationInstanceArn=result["ReplicationArn"], EndpointArn=result[key])
+            state = "testing"
+        print(label, state, connection.get("LastFailureMessage", ""))
 
 
 def delete():

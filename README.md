@@ -4,13 +4,23 @@ A healthcare billing data engineering project using synthetic Synthea data to si
 
 **Scope:** patients, encounters, claims, and claim transactions.
 
-**Planned stack:** PostgreSQL WAL-based CDC → AWS S3 → Amazon Redshift, with dbt transformations and Airflow orchestration; Docker for local development.
+**Stack:** RDS PostgreSQL → AWS DMS (WAL-based CDC) → S3 → Redshift → dbt staging/intermediate/marts. Airflow and Docker run locally.
 
 **Focus:** initial loads, inserts/updates/deletes, reliable recovery and replay, and historical analytics.
 
 **Deliverable:** populated, tested Redshift marts, using raw → staging → intermediate → marts layers. Dashboards and data visualizations are out of scope.
 
-**Status:** local source and simulator implemented; change-file parsing and 15 dbt models validated locally. The five marts are populated in a local test warehouse. AWS DMS/S3/Redshift integration and Airflow orchestration are not deployed yet.
+**Status:** validated end to end on AWS on 2026-09-22. All 15 dbt models, 42 data tests and four Airflow tasks passed. Every current source field reconciled with Redshift. Temporary cloud resources were deleted after validation to avoid ongoing charges.
+
+## What the demonstration proves
+
+- A real 100,147-row initial load followed by 26 WAL-derived change events.
+- Capture resumes after downtime and recovers transactions committed while DMS was stopped.
+- Change files can arrive before snapshot files; latest source sequence determines current state.
+- Redelivering a CDC file and retrying the batch preserve all 100,173 distinct raw events.
+- Patient city history, hard deletes, rollback exclusion and claim/payment totals behave as expected.
+
+The business workload is simulated using synthetic data. PostgreSQL generates the actual WAL and AWS DMS captures it. This is a small portfolio demonstration, not a production workload benchmark. See [measured results and limits](docs/validation.md).
 
 ## Local source
 
@@ -38,6 +48,6 @@ Run a single business phase with `--phase open`, `--phase bill`, etc. Repeating 
 uv run python scripts/build_local_warehouse.py
 ```
 
-This loads a snapshot fixture into a separate local PostgreSQL warehouse and runs dbt. It is a development check, not a replacement for the planned DMS capture or a claim of Redshift deployment. The project includes Redshift and local PostgreSQL dbt profiles; credentials come from environment variables.
+This loads a snapshot fixture into a separate local PostgreSQL warehouse and runs dbt. It is an inexpensive development check; the actual AWS demonstration uses DMS change files. The project includes Redshift and local PostgreSQL dbt profiles; credentials come from environment variables.
 
-See [source design and simulation](docs/source.md), [warehouse design](docs/warehouse.md), and [validation results](docs/validation.md). Cloud resource provisioning awaits an agreed spending limit.
+See [source design](docs/source.md), [warehouse design](docs/warehouse.md), [AWS runbook](docs/run-cloud.md), and [validation evidence](docs/evidence/cloud-validation.json). The initial AWS test allowance was $5; deployment is manual, with a small Redshift usage limit and an explicit teardown procedure.

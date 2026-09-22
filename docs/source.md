@@ -23,7 +23,7 @@ Source: [official Synthea sample downloads](https://synthetichealth.github.io/do
 
 The seed load is one database transaction in parent-before-child order. A completed archive hash is recorded in `project_meta.seed_runs`. Repeating the load leaves subsequent application changes intact. A different seed requires an intentional fresh database rather than an implicit truncate.
 
-Docker Compose uses an isolated `synthea-cdc` project and volume, binds PostgreSQL only to localhost port 55432, and enables logical WAL. The local owner is a development superuser; cloud deployment will use separate application and replication roles. The Docker image digest and Python lockfile pin the tested environment.
+Docker Compose uses an isolated `synthea-cdc` project and volume, binds PostgreSQL only to localhost port 55432, and enables logical WAL. The local owner is a development superuser; the cloud demonstration uses the source owner for setup/simulation and a separate DMS reader with SELECT and replication grants. The Docker image digest and Python lockfile pin the tested environment.
 
 ## Business simulation
 
@@ -41,4 +41,4 @@ The first four phases are a simplified learning workflow, not a recreation of an
 
 To observe each transition separately, execute one phase at a time. The default `all` option still commits separate transactions, but does not simulate realistic elapsed time.
 
-The local integration test uses PostgreSQL's `test_decoding` output plugin to inspect actual WAL. This is a verification tool; AWS DMS remains the planned cloud capture service.
+The local integration test uses PostgreSQL's `test_decoding` output plugin to inspect actual WAL. This is a verification tool; the cloud demonstration uses AWS DMS with the same PostgreSQL logical decoding plugin.

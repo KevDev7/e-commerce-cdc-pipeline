@@ -24,7 +24,22 @@ After CREATE_COMPLETE:
 .venv/bin/python scripts/cloud_stack.py connections
 ```
 
-Verify both DMS endpoint tests succeed, then start the task with `start-replication`. Starting is deliberate: the source must be seeded first. Wait for all four tables to complete their full load; inspect real files before accepting the CSV contract. Run the existing simulator with `.env.cloud` loaded to commit changes to RDS.
+Repeat `connections` until both endpoints report `successful`, then start the task. Starting is deliberate: the source must be seeded first. Wait for all four tables to complete their full load; inspect real files before accepting the CSV contract.
+
+```sh
+.venv/bin/python scripts/capture.py start
+.venv/bin/python scripts/capture.py status
+.venv/bin/synthea-cdc --cloud simulate --scenario aws-001
+```
+
+For recovery testing, stop capture, wait until stopped, commit a second scenario, then resume from the saved checkpoint:
+
+```sh
+.venv/bin/python scripts/capture.py stop
+.venv/bin/python scripts/capture.py status
+.venv/bin/synthea-cdc --cloud simulate --scenario aws-002
+.venv/bin/python scripts/capture.py resume
+```
 
 ## Warehouse and orchestration
 
@@ -56,4 +71,6 @@ The loader stores original DMS files unchanged, derives compressed COPY inputs u
 docker compose -f compose.airflow.yaml stop
 ```
 
-Deletion downloads captured files to ignored `data/aws-capture`, empties the project bucket, then deletes the stack. Confirm DELETE_COMPLETE and no project RDS/DMS/Redshift resources remain. The local state file records the stack ID and test start time; creation refuses another session while that record exists. Keep it as evidence until reviewing costs and approving any additional session. Remove expired `.aws/credentials` after the test. Do not delete or modify resources belonging to other projects.
+Deletion downloads captured files to ignored `data/aws-capture`, empties the project bucket, then deletes the stack. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS-generated log group. Verify no project RDS/DMS/Redshift resources remain. The local state file records the stack ID and test start time; creation refuses another session while that record exists. Keep it as evidence until reviewing costs and approving any additional session. Remove `.aws/credentials` after the test. Do not delete or modify resources belonging to other projects.
+
+With the source quiescent and the latest DMS batch loaded, `.venv/bin/python scripts/reconcile_cloud.py` compares every current field with Redshift. `.venv/bin/python scripts/verify_replay.py` redelivers a real CDC file and retries the batch, asserting unchanged raw counts and unique event identities. These checks were executed in the recorded demonstration. Reconciliation against an actively changing source would require coordinating a common checkpoint, which this small demo does not automate.

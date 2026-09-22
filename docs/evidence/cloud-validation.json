@@ -1,0 +1,212 @@
+{
+  "date": "2026-09-22",
+  "region": "us-east-1",
+  "initial_rows": {
+    "patients": 108,
+    "encounters": 5571,
+    "claims": 9421,
+    "claim_transactions": 85047
+  },
+  "cdc_events": {
+    "insert": 14,
+    "update": 8,
+    "delete": 4
+  },
+  "raw_events": 100173,
+  "dbt": {
+    "models": 15,
+    "data_tests": 42,
+    "failures": 0
+  },
+  "source_reconciliation": {
+    "verified_at": "2026-09-22T08:34:55.771139+00:00",
+    "tables": {
+      "patients": {
+        "count": 110,
+        "sha256": "1c9b338b96683b8336a490f864613bd5742abe1f2c0b700e69e64975bf130b77"
+      },
+      "encounters": {
+        "count": 5573,
+        "sha256": "66c5890b954996ba5d1ab639cc0f3017cf23b6c342f8dfd59b62180addb7dd2e"
+      },
+      "claims": {
+        "count": 9423,
+        "sha256": "49521774ed16e9f5a494c9b2604e8fc080d459b11a72de17c4b6a235d8503010"
+      },
+      "claim_transactions": {
+        "count": 85051,
+        "sha256": "d4fdac5a15629d9ce348cb3c661c4a1a4703db40429de66cdc0190082c4e6959"
+      }
+    }
+  },
+  "replay": {
+    "before": {
+      "patients": [
+        116,
+        116
+      ],
+      "encounters": [
+        5579,
+        5579
+      ],
+      "claims": [
+        9427,
+        9427
+      ],
+      "claim_transactions": [
+        85051,
+        85051
+      ]
+    },
+    "after_redelivery": {
+      "patients": [
+        116,
+        116
+      ],
+      "encounters": [
+        5579,
+        5579
+      ],
+      "claims": [
+        9427,
+        9427
+      ],
+      "claim_transactions": [
+        85051,
+        85051
+      ]
+    },
+    "after_retry": {
+      "patients": [
+        116,
+        116
+      ],
+      "encounters": [
+        5579,
+        5579
+      ],
+      "claims": [
+        9427,
+        9427
+      ],
+      "claim_transactions": [
+        85051,
+        85051
+      ]
+    },
+    "replayed_key": "capture-v1/cdc/replay-CDC_TXN-20260922082706412.csv"
+  },
+  "business_checks": {
+    "aws-001": {
+      "statuses": [
+        "OPEN",
+        "BILLED",
+        "CLOSED"
+      ],
+      "history": [
+        [
+          "Boston",
+          false
+        ],
+        [
+          "Cambridge",
+          true
+        ]
+      ],
+      "claim": [
+        "CLOSED",
+        "100.00",
+        "100.00",
+        "0.00",
+        2
+      ]
+    },
+    "aws-002": {
+      "statuses": [
+        "OPEN",
+        "BILLED",
+        "CLOSED"
+      ],
+      "history": [
+        [
+          "Boston",
+          false
+        ],
+        [
+          "Cambridge",
+          true
+        ]
+      ],
+      "claim": [
+        "CLOSED",
+        "100.00",
+        "100.00",
+        "0.00",
+        2
+      ]
+    },
+    "marts": {
+      "dim_patients": 110,
+      "dim_patient_history": 116,
+      "fct_encounters": 5573,
+      "fct_claims": 9423,
+      "fct_claim_transactions": 85051
+    }
+  },
+  "airflow": {
+    "run_id": "aws-validation-20260922",
+    "tasks": [
+      {
+        "dag_id": "synthea_cdc",
+        "execution_date": "2026-09-22T08:35:43+00:00",
+        "task_id": "check",
+        "state": "success",
+        "start_date": "2026-09-22T08:35:45.474421+00:00",
+        "end_date": "2026-09-22T08:35:46.759107+00:00"
+      },
+      {
+        "dag_id": "synthea_cdc",
+        "execution_date": "2026-09-22T08:35:43+00:00",
+        "task_id": "load",
+        "state": "success",
+        "start_date": "2026-09-22T08:35:48.123917+00:00",
+        "end_date": "2026-09-22T08:35:54.189048+00:00"
+      },
+      {
+        "dag_id": "synthea_cdc",
+        "execution_date": "2026-09-22T08:35:43+00:00",
+        "task_id": "build",
+        "state": "success",
+        "start_date": "2026-09-22T08:35:55.516212+00:00",
+        "end_date": "2026-09-22T08:37:11.507142+00:00"
+      },
+      {
+        "dag_id": "synthea_cdc",
+        "execution_date": "2026-09-22T08:35:43+00:00",
+        "task_id": "report",
+        "state": "success",
+        "start_date": "2026-09-22T08:37:13.077503+00:00",
+        "end_date": "2026-09-22T08:37:14.653462+00:00"
+      }
+    ]
+  },
+  "cleanup": {
+    "verified_at": "2026-09-22T08:52:33.839255+00:00",
+    "cloudformation": "DELETE_COMPLETE",
+    "rds_deleted": true,
+    "dms_instance_and_task_deleted": true,
+    "redshift_workgroup_and_namespace_deleted": true,
+    "s3_bucket_deleted": true,
+    "dms_log_group_deleted": true,
+    "local_containers_stopped": true
+  },
+  "cost_observation": {
+    "observed_at": "2026-09-22T08:39:16.731172+00:00",
+    "charged_rpu_seconds": 1680,
+    "extra_optimization_rpu_seconds": 0,
+    "max_rpus": 4.0,
+    "max_storage_mb": 17039,
+    "estimated_redshift_compute_usd": 0.175,
+    "note": "Usage snapshot before teardown; billing can lag. Excludes other AWS services, taxes and credits."
+  }
+}
