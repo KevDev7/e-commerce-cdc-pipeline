@@ -37,6 +37,12 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     for name, rows in [("later.csv",later),("earlier.csv",earlier),("replayed.csv",earlier)]:
         text=csv_text(rows)
         load_local(database,parse_csv(text,name),name,hashlib.sha256(text.encode()).hexdigest())
+    # An initial snapshot can arrive after CDC files. It must neither overwrite
+    # Cambridge nor resurrect the patient whose DELETE was already received.
+    snapshot_rows = [[r[0], *r[3:]] for r in earlier[:2]]
+    snapshot_text = csv_text(snapshot_rows)
+    load_local(database, parse_csv(snapshot_text, "patients/LOAD.csv", snapshot_table="patients"),
+               "patients/LOAD.csv", hashlib.sha256(snapshot_text.encode()).hexdigest())
     profiles = tmp_path/"profiles"; profiles.mkdir()
     shutil.copyfile(ROOT/"dbt/profiles.yml.example",profiles/"profiles.yml")
     result = subprocess.run([str(ROOT/".venv/bin/dbt"),"build","--project-dir",str(ROOT/"dbt"),
