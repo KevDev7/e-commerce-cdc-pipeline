@@ -1,0 +1,245 @@
+{
+  "date": "2026-09-22",
+  "implementation_commit": "6773510f8c12df4887d0a8416e55c49f7ebd77df",
+  "allowance_usd": 5,
+  "bootstrap": {
+    "status": "overlapping_events_verified",
+    "padding_patients": 100000,
+    "patients_load": {
+      "SchemaName": "healthcare",
+      "TableName": "patients",
+      "Inserts": 158,
+      "Deletes": 157,
+      "Updates": 157,
+      "Ddls": 0,
+      "AppliedInserts": 158,
+      "AppliedDeletes": 157,
+      "AppliedUpdates": 157,
+      "AppliedDdls": 0,
+      "FullLoadRows": 100110,
+      "FullLoadCondtnlChkFailedRows": 0,
+      "FullLoadErrorRows": 0,
+      "FullLoadStartTime": "2026-09-22 04:39:37.379000-05:00",
+      "FullLoadEndTime": "2026-09-22 04:39:40.033000-05:00",
+      "FullLoadReloaded": false,
+      "LastUpdateTime": "2026-09-22 04:41:12.039000-05:00",
+      "TableState": "Table completed",
+      "ValidationPendingRecords": 0,
+      "ValidationFailedRecords": 0,
+      "ValidationSuspendedRecords": 0,
+      "ValidationState": "Not enabled",
+      "ResyncState": "Not enabled",
+      "ResyncRowsAttempted": 0,
+      "ResyncRowsSucceeded": 0,
+      "ResyncRowsFailed": 0,
+      "ResyncProgress": 0.0
+    },
+    "overlapping_commits": [
+      {
+        "before_commit": "2026-09-22T09:39:37.929890+00:00",
+        "after_commit": "2026-09-22T09:39:38.028734+00:00",
+        "inserted": "c6fc78db-7c1b-5762-bb13-e1e7741012d9",
+        "updated": "c84c749f-a26d-5c3d-b38c-5d92b238f547",
+        "deleted": "55b54065-445c-5939-8182-4178b0965ccb",
+        "city": "Bootstrap change 27"
+      },
+      {
+        "before_commit": "2026-09-22T09:39:38.533736+00:00",
+        "after_commit": "2026-09-22T09:39:38.632196+00:00",
+        "inserted": "8971f761-4be2-5427-9203-4ce923503284",
+        "updated": "c84c749f-a26d-5c3d-b38c-5d92b238f547",
+        "deleted": "c6fc78db-7c1b-5762-bb13-e1e7741012d9",
+        "city": "Bootstrap change 28"
+      },
+      {
+        "before_commit": "2026-09-22T09:39:39.144794+00:00",
+        "after_commit": "2026-09-22T09:39:39.243137+00:00",
+        "inserted": "aa7107a3-2c02-56d3-95c4-74d0e97c15e4",
+        "updated": "c84c749f-a26d-5c3d-b38c-5d92b238f547",
+        "deleted": "8971f761-4be2-5427-9203-4ce923503284",
+        "city": "Bootstrap change 29"
+      },
+      {
+        "before_commit": "2026-09-22T09:39:39.748199+00:00",
+        "after_commit": "2026-09-22T09:39:39.846443+00:00",
+        "inserted": "1f13d855-3f9e-57b4-9f0a-9b7d6fd3301c",
+        "updated": "c84c749f-a26d-5c3d-b38c-5d92b238f547",
+        "deleted": "aa7107a3-2c02-56d3-95c4-74d0e97c15e4",
+        "city": "Bootstrap change 30"
+      }
+    ],
+    "verified_operations": 12,
+    "verified_at": "2026-09-22T09:47:15.078253+00:00",
+    "writer_commits": 197
+  },
+  "load_failure": {
+    "source_key": "capture-v1/cdc/CDC_TXN-20260922094116124.csv",
+    "inserted_tables_before_failure": [
+      "\"raw\".patients",
+      "\"raw\".encounters",
+      "\"raw\".claims",
+      "\"raw\".claim_transactions"
+    ],
+    "before": {
+      "patients": [
+        0,
+        0
+      ],
+      "encounters": [
+        0,
+        0
+      ],
+      "claims": [
+        0,
+        0
+      ],
+      "claim_transactions": [
+        0,
+        0
+      ],
+      "loaded_files": 0
+    },
+    "after_failure": {
+      "patients": [
+        0,
+        0
+      ],
+      "encounters": [
+        0,
+        0
+      ],
+      "claims": [
+        0,
+        0
+      ],
+      "claim_transactions": [
+        0,
+        0
+      ],
+      "loaded_files": 0
+    },
+    "after_retry": {
+      "patients": [
+        115,
+        115
+      ],
+      "encounters": [
+        4,
+        4
+      ],
+      "claims": [
+        3,
+        3
+      ],
+      "claim_transactions": [
+        2,
+        2
+      ],
+      "loaded_files": 1
+    },
+    "second_retry_unchanged": true
+  },
+  "freshness": {
+    "patient_id": "058a6ca2-5f1c-4b4f-b94e-75669c10a46d",
+    "threshold_seconds": 300,
+    "poll_seconds": 5,
+    "started_at": "2026-09-22T09:48:07.871490+00:00",
+    "status": "passed",
+    "observations": {
+      "s3_seconds": 61.806,
+      "raw_seconds": 72.445,
+      "marts_seconds": 148.877
+    },
+    "source_write_at": "2026-09-22T09:48:08.454049+00:00",
+    "commit_acknowledged_at": "2026-09-22T09:48:08.535645+00:00",
+    "source_key": "capture-v1/cdc/CDC_TXN-20260922094908505.csv",
+    "finished_at": "2026-09-22T09:50:37.413243+00:00"
+  },
+  "source_reconciliation": {
+    "verified_at": "2026-09-22T09:51:48.773164+00:00",
+    "tables": {
+      "patients": {
+        "count": 100112,
+        "sha256": "03f28b3b02fa56b70a065cb97f5755d30cab6dc90c934b883790cb45ec648add"
+      },
+      "encounters": {
+        "count": 5572,
+        "sha256": "dcc830d76390d2da6d41d24d3ce53cdd4528747639198dcc747d55512324f815"
+      },
+      "claims": {
+        "count": 9422,
+        "sha256": "259fa223c8df72df2fe78765e664e5184c094d8a8585d5b702e2d889a9af98e5"
+      },
+      "claim_transactions": {
+        "count": 85049,
+        "sha256": "0e5dfdc4f91dce78387f4b7a445847a52bf883ad41d0fc217f5491ba34e8e832"
+      }
+    }
+  },
+  "local_tests": 19,
+  "cleanup": {
+    "cloudformation": "DELETE_COMPLETE",
+    "rds_deleted": true,
+    "dms_instance_deleted": true,
+    "dms_task_deleted": true,
+    "redshift_workgroup_deleted": true,
+    "redshift_namespace_deleted": true,
+    "s3_bucket_deleted": true,
+    "dms_log_group_deleted": true,
+    "local_containers_stopped": true,
+    "verified_at": "2026-09-22T10:03:43.481593+00:00",
+    "temporary_credentials_removed": true
+  },
+  "dbt": {
+    "models": 15,
+    "data_tests": 42,
+    "failures": 0,
+    "elapsed_seconds": 73.98713207244873,
+    "generated_at": "2026-09-22T09:50:36.396823Z"
+  },
+  "raw": {
+    "patients": {
+      "total": 100628,
+      "distinct_events": 100628,
+      "snapshot_rows": 100110
+    },
+    "encounters": {
+      "total": 5575,
+      "distinct_events": 5575,
+      "snapshot_rows": 5571
+    },
+    "claims": {
+      "total": 9424,
+      "distinct_events": 9424,
+      "snapshot_rows": 9421
+    },
+    "claim_transactions": {
+      "total": 85049,
+      "distinct_events": 85049,
+      "snapshot_rows": 85047
+    }
+  },
+  "cdc_events": {
+    "D": 173,
+    "I": 179,
+    "U": 175
+  },
+  "rollback_sentinel_count": 0,
+  "overlapping_snapshots_excluded_from_history": 2,
+  "marts": {
+    "dim_patients": 100112,
+    "dim_patient_history": 100626,
+    "fct_encounters": 5572,
+    "fct_claims": 9422,
+    "fct_claim_transactions": 85049
+  },
+  "cost_observation": {
+    "observed_at": "2026-09-22T09:53:29.717224+00:00",
+    "charged_rpu_seconds": 1920,
+    "extra_optimization_rpu_seconds": 0,
+    "max_rpus": 4.0,
+    "max_storage_mb": 24798,
+    "estimated_redshift_compute_usd": 0.2,
+    "note": "Pre-teardown usage snapshot; billing can lag. Excludes later usage, RDS, DMS, storage, networking, taxes and credits."
+  }
+}

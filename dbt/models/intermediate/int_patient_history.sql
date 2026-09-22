@@ -1,13 +1,24 @@
 -- Track observed attribute changes, including tombstones. This cannot reconstruct
 -- patient attributes from before the initial snapshot.
-with fingerprints as (
+-- Snapshot timestamps are transfer times, not source commit times. If CDC has
+-- already begun for this patient, that snapshot cannot establish an earlier
+-- history version: it might already contain one of the later changes. Retain
+-- it in raw/current-state processing, but start history with the captured CDC.
+with timed_events as (
+    select *, min(case when not _is_snapshot then _commit_at end)
+        over (partition by patient_id) as first_cdc_at
+    from {{ ref('stg_patients') }}
+), history_events as (
+    select * from timed_events
+    where not _is_snapshot or first_cdc_at is null or _commit_at < first_cdc_at
+), fingerprints as (
     select *, md5(
         {% for column in ['birth_date', 'death_date', 'gender', 'city', 'state', 'postal_code'] %}
         coalesce(cast(length(cast({{ column }} as varchar)) as varchar) || ':' || cast({{ column }} as varchar), '-1:') ||
         {% endfor %}
         case when _op = 'D' then 'deleted' else 'present' end
     ) as attribute_hash
-    from {{ ref('stg_patients') }}
+    from history_events
 ), previous as (
     select *, lag(attribute_hash) over (partition by patient_id order by _source_order) as previous_hash
     from fingerprints
@@ -23,4 +34,3 @@ select md5(patient_id || ':' || cast(_source_order as varchar(35))) as patient_v
        _op = 'D' as is_deleted,
        _is_snapshot as is_initial_snapshot
 from changes
-

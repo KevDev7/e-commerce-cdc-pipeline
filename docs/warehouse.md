@@ -32,6 +32,8 @@ The processed-file ledger and each file's raw writes commit together. File retri
 
 Patient history begins when capture starts. It cannot reconstruct a patient's address at a historical 2016 encounter from a later static export. Facts therefore retain patient IDs; they do not claim an unknowable historical address match. Source-order bounds distinguish changes with identical timestamps. No-change patient updates do not create a new attribute version; deletions close the previous version and add a tombstone.
 
+DMS snapshot timestamps describe transfer time, whereas CDC timestamps describe source commit time. When a patient's first CDC commit is no later than its snapshot timestamp, the snapshot cannot establish a preceding history version: it may already reflect a later change. History then starts with captured CDC for that patient. The snapshot remains unchanged in raw and remains available for current-state reconstruction. Snapshots with no competing earlier CDC remain baseline observations. This avoids invented backwards history during an active initial load. See [AWS header semantics](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.SelectionTransformation.Expressions.html).
+
 Payment totals sum the PAYMENTS field, not generic AMOUNT. Charge totals sum AMOUNT only on CHARGE records. NULL contributions count as zero for those aggregate measures, while raw NULLs and the three original claim outstanding fields are preserved. TRANSFERIN/TRANSFEROUT are not added to revenue. These definitions describe the sample fields, not a complete insurance accounting system.
 
 ## Local verification
