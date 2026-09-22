@@ -4,6 +4,7 @@ This is a student data engineering portfolio project. Optimize for learning, cla
 
 - Prefer the simplest approach that demonstrates the intended skill. When several approaches work, favor the one that is easiest to understand, run, debug, and explain.
 - Keep the initial scope to Synthea patients, encounters, claims, and claim transactions.
+- The final deliverable ends at populated, tested Redshift marts. Dashboards, BI applications, and data visualizations are out of scope.
 - Demonstrate real PostgreSQL log-based CDC using a clearly labeled simulated business workload. Be accurate about what is simulated, implemented, and tested.
 - Use the agreed warehouse layers: raw, staging, intermediate, and marts. Put preparation for marts in intermediate; add models only when they do useful work.
 - Preserve essential correctness: ordered change application, delete handling, safe retries, replay, and source-to-target reconciliation. Use focused checks appropriate to the implementation.

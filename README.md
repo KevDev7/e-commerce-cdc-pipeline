@@ -8,4 +8,6 @@ A healthcare billing data engineering project using synthetic Synthea data to si
 
 **Focus:** initial loads, inserts/updates/deletes, reliable recovery and replay, and historical analytics.
 
+**Deliverable:** populated, tested Redshift marts, using raw → staging → intermediate → marts layers. Dashboards and data visualizations are out of scope.
+
 **Status:** initial repository setup; the pipeline is not yet implemented.
