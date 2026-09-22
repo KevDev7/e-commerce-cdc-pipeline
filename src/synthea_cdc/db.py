@@ -15,6 +15,7 @@ def connect(database=None, *, autocommit=False):
         user=os.environ.get("POSTGRES_USER", "cdc_owner"),
         password=os.environ["POSTGRES_PASSWORD"],
         dbname=database or os.environ.get("POSTGRES_DB", "synthea"),
+        sslmode=os.environ.get("POSTGRES_SSLMODE", "prefer"),
         autocommit=autocommit,
     )
 
@@ -22,4 +23,3 @@ def connect(database=None, *, autocommit=False):
 def initialize(connection):
     connection.execute((ROOT / "sql/source.sql").read_text())
     connection.commit()
-

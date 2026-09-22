@@ -1,6 +1,6 @@
 # Next milestone: AWS integration
 
-Cloud deployment has not started. An initial spending limit is required before creating billable resources.
+The user approved a **$5 initial AWS test allowance** on 2026-09-22. Aim to spend less, prepare locally, and delete temporary infrastructure after collecting evidence. This is an operational allowance, not an AWS-enforced total billing cap. Do not start another paid session beyond this allowance without agreement.
 
 The intended small demonstration uses RDS PostgreSQL, one AWS DMS full-load-and-CDC task, a project S3 bucket, and Redshift Serverless. Airflow and dbt can run locally in Docker; a managed Airflow environment is not needed for this portfolio. Resources use the `synthea-cdc` prefix and Project tag, and commands use the `synthea-cdc` profile explicitly.
 
@@ -31,7 +31,7 @@ Read from the AWS Pricing API on 2026-09-22 for us-east-1:
 | Candidate | Published compute price |
 |---|---:|
 | RDS PostgreSQL db.t4g.micro, Single-AZ | $0.016 per instance-hour |
-| DMS t3.micro, Single-AZ | $0.0186 per instance-hour |
+| DMS t3.small, Single-AZ | $0.0372 per instance-hour |
 | Redshift Serverless, on-demand | $0.375 per RPU-hour |
 
 At 4 RPUs, Redshift's base active-compute rate is $1.50/hour. AWS documents [4-RPU availability](https://aws.amazon.com/about-aws/whats-new/2025/06/amazon-redshift-serverless-4-rpu-capacity-option/). Availability and capacity limits must be confirmed during provisioning. These figures exclude storage, requests, network/public IPv4, any additional compute scaling, taxes and credits. Idle RDS/DMS instances can still incur charges; stopping a DMS task alone does not remove its replication-instance cost. The initial test should be short and followed by verified cleanup. This is not authorization to spend or a guaranteed dollar cap.

@@ -1160,6 +1160,7 @@ dependencies = [
     { name = "dbt-redshift" },
     { name = "psycopg", extra = ["binary"] },
     { name = "python-dotenv" },
+    { name = "redshift-connector" },
 ]
 
 [package.dev-dependencies]
@@ -1174,6 +1175,7 @@ requires-dist = [
     { name = "dbt-redshift", specifier = ">=1.9,<2" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
     { name = "python-dotenv", specifier = ">=1.0,<2" },
+    { name = "redshift-connector", specifier = ">=2.1,<3" },
 ]
 
 [package.metadata.requires-dev]

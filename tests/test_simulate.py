@@ -35,8 +35,8 @@ def test_wal_contains_committed_changes_in_order_but_not_rollback(database):
         assert not any("ROLLBACK_SENTINEL" in r for r in records)
         claim_changes = [r for r in changes if r.startswith("table healthcare.claims:")]
         assert "'OPEN'" in claim_changes[0]
-        assert "new-tuple:" in claim_changes[1] and "status[text]:'BILLED'" in claim_changes[1].split("new-tuple:")[1]
-        assert "status[text]:'CLOSED'" in claim_changes[2].split("new-tuple:")[1]
+        assert "new-tuple:" in claim_changes[1] and "status[character varying]:'BILLED'" in claim_changes[1].split("new-tuple:")[1]
+        assert "status[character varying]:'CLOSED'" in claim_changes[2].split("new-tuple:")[1]
         for phase in PHASES:
             run_phase(database, "wal-test", phase)
         assert not database.execute("SELECT data FROM pg_logical_slot_get_changes(%s,NULL,NULL)", (slot,)).fetchall()

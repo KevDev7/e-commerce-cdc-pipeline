@@ -1,0 +1,9 @@
+.git
+.env*
+.aws
+.venv
+data
+logs
+dbt/target
+dbt/logs
+**/__pycache__

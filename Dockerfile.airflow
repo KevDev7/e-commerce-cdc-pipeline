@@ -1,0 +1,9 @@
+FROM apache/airflow:2.11.2-python3.12@sha256:6e9b7079f0b2d9d4a3f08f0dcd418d9ec2eb1abcf429089f78f7874f558d1eeb
+USER root
+RUN mkdir -p /opt/pipeline /opt/project && chown -R airflow:0 /opt/pipeline /opt/project
+USER airflow
+RUN pip install --no-cache-dir uv==0.10.11
+COPY --chown=airflow:0 pyproject.toml uv.lock /opt/project/
+COPY --chown=airflow:0 src /opt/project/src
+WORKDIR /opt/project
+RUN UV_PROJECT_ENVIRONMENT=/opt/pipeline uv sync --locked --no-dev

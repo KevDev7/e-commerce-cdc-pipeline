@@ -5,10 +5,10 @@ CREATE TABLE IF NOT EXISTS healthcare.patients (
     patient_id uuid PRIMARY KEY,
     birth_date date NOT NULL,
     death_date date,
-    gender text NOT NULL,
-    city text,
-    state text,
-    postal_code text,
+    gender varchar(256) NOT NULL,
+    city varchar(256),
+    state varchar(256),
+    postal_code varchar(256),
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS healthcare.encounters (
     patient_id uuid NOT NULL REFERENCES healthcare.patients,
     started_at timestamptz NOT NULL,
     ended_at timestamptz,
-    encounter_class text NOT NULL,
+    encounter_class varchar(256) NOT NULL,
     total_claim_cost numeric(14,2) NOT NULL,
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CHECK (ended_at IS NULL OR ended_at >= started_at)
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS healthcare.claims (
     claim_id uuid PRIMARY KEY,
     patient_id uuid NOT NULL REFERENCES healthcare.patients,
     encounter_id uuid REFERENCES healthcare.encounters,
-    status text NOT NULL,
+    status varchar(256) NOT NULL,
     outstanding_primary numeric(14,2),
     outstanding_secondary numeric(14,2),
     outstanding_patient numeric(14,2),
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS healthcare.claim_transactions (
     transaction_id uuid PRIMARY KEY,
     claim_id uuid NOT NULL REFERENCES healthcare.claims,
     patient_id uuid NOT NULL REFERENCES healthcare.patients,
-    transaction_type text NOT NULL,
+    transaction_type varchar(256) NOT NULL,
     amount numeric(14,2),
     posted_at timestamptz NOT NULL,
     payments numeric(14,2),

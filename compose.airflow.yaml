@@ -1,0 +1,22 @@
+name: synthea-cdc
+services:
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    command: standalone
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/project/dags
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AWS_PROFILE: synthea-cdc
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_SHARED_CREDENTIALS_FILE: /opt/project/.aws/credentials
+      AWS_CONFIG_FILE: /opt/project/.aws/config
+    ports:
+      - "127.0.0.1:8085:8080"
+    volumes:
+      - .:/opt/project
+      - airflow-data:/opt/airflow
+volumes:
+  airflow-data:
