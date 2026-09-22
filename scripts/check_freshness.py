@@ -5,6 +5,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import time
@@ -23,6 +24,25 @@ def within_budget(started, timeout):
     if remaining <= 0:
         raise TimeoutError(f'Freshness probe exceeded {timeout}s; pipeline did not meet this run\'s threshold')
     return remaining
+
+
+def run_step(command, timeout):
+    """Stop the wrapper and its dbt descendants together on timeout/interruption.
+
+    This project runs on macOS or Linux (including the Airflow container).
+    """
+    with subprocess.Popen(command, start_new_session=True) as process:
+        try:
+            returncode = process.wait(timeout=timeout)
+        except BaseException:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass  # The process group already exited.
+            process.wait()
+            raise
+        if returncode:
+            raise subprocess.CalledProcessError(returncode, command)
 
 
 def find_probe(s3, bucket, prefix, patient_id, seen):
@@ -82,8 +102,8 @@ def main():
                 break
             time.sleep(min(args.poll, within_budget(started, args.timeout)))
         for step in ('load', 'build'):
-            subprocess.run([sys.executable, str(ROOT / 'scripts/run_cloud.py'), step],
-                           check=True, timeout=within_budget(started, args.timeout))
+            run_step([sys.executable, str(ROOT / 'scripts/run_cloud.py'), step],
+                     timeout=within_budget(started, args.timeout))
             with warehouse_connection() as target:
                 cursor = target.cursor()
                 if step == 'load':

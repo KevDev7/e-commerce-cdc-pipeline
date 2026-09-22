@@ -10,13 +10,14 @@ Local tests establish behavior for the local database or explicit fixtures only.
 
 ## Local results
 
-19 tests pass locally, including the 42 dbt data tests run by each model integration case. New coverage demonstrates:
+21 tests pass locally, including the 42 dbt data tests run by each model integration case. The AWS evidence below records the 19-test suite at the time of that run; two subsequent local regressions verify timeout cleanup and command failure propagation. Coverage demonstrates:
 
 - PostgreSQL exports a consistent snapshot while a separate connection commits an insert, update and delete; real logical decoding contains all three operations.
 - A late snapshot does not overwrite a newer update or resurrect a deleted patient in the marts (explicit DMS-format fixture).
 - A snapshot transferred after CDC begins does not introduce an invented earlier patient-history version. This regression test initially failed with two backwards history intervals; the model now retains the snapshot in raw while deriving that patient's history from captured CDC.
 - A failure loading the second table rolls back the first table and the file ledger; retry succeeds without duplication.
 - Bootstrap validation rejects missing/partial overlap, and freshness requires the specific probe event and fails when its deadline expires.
+- A freshness load/build timeout terminates the wrapper and its nested processes together, preventing an orphaned dbt process from continuing work. A real nested-process regression verifies that its heartbeat stops; normal command failures still propagate.
 
 The local snapshot test uses PostgreSQL's native snapshot export, not DMS. The separate AWS run below establishes end-to-end behavior with actual DMS output and Redshift.
 
