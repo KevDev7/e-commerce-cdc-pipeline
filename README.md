@@ -113,6 +113,14 @@ The local audit records task attempts, run outcomes, elapsed time, committed-fil
 
 On an active 4-RPU Redshift warehouse, a simulated 250-order workload produced **1,600 real captured changes** (1,000 inserts, 500 updates, 100 hard deletes). The final S3 object arrived 60 seconds after source writes finished. Loading took 32 seconds; incremental dbt plus all 49 tests took 102 seconds. All source fields reconciled, 225 orders remained, and totals/customer versions were correct. This was one manually invoked batch over existing Olist history, not sustained throughput or a five-minute latency guarantee. [Conditions and reproduction](docs/workload.md).
 
+## Demo cleanup
+
+The AWS stack, its database/warehouse/capture resources, bucket and snapshots have
+been removed. Downloaded datasets, local capture files and the project database
+volumes were also removed from the Mac at the user's request. Code and small
+validation reports remain. Teardown no longer downloads captures by default.
+[Cleanup and reported compute usage](docs/evidence/olist-session-cleanup.json).
+
 ## Remaining validation
 
 The live demo verifies correctness and scheduled execution, not sustained production throughput or a latency SLA. A [measured Parquet comparison](docs/parquet-evaluation.md) supports retaining gzip CSV for the current small batches. dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.

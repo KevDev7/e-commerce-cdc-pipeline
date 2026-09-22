@@ -245,5 +245,5 @@
       "snapshot_rows": 0
     }
   ],
-  "cleanup": "Session retained temporarily for the next authorized modeling and workload checks; see final session evidence."
+  "cleanup": "AWS stack deletion and resource absence verified; local datasets removed at user request. See olist-session-cleanup.json."
 }

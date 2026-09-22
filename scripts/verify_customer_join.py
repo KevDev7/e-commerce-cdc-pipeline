@@ -21,6 +21,8 @@ def main():
     parser.add_argument('command', choices=['write', 'verify'])
     parser.add_argument('--scenario', required=True)
     args = parser.parse_args()
+    if not (ROOT/'.env.cloud').exists():
+        raise RuntimeError('No active cloud environment; provision an authorized demo first')
     load_dotenv(ROOT/'.env.cloud', override=True)
     original = ids(args.scenario)
     followup = ids(args.scenario+'-repeat')['order']

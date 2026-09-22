@@ -47,5 +47,7 @@ This reads S3 and writes only an ignored metrics report; data buffers stay in
 memory. It does not upload Parquet, change DMS, or execute warehouse writes.
 PyArrow is an optional evaluation dependency, not part of the production runtime.
 [Detailed results and schemas](evidence/olist-parquet-evaluation.json) are committed
-without source records or credentials. Original captures are retained locally in
-the ignored archive during stack teardown.
+without source records or credentials. The user requested removal of local datasets after evaluation. Original captures
+and the seed archive were removed from the Mac; default teardown no longer
+downloads captures. Repeating the live-file comparison requires another explicitly
+authorized cloud session.

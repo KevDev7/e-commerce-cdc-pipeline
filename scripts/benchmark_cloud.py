@@ -132,6 +132,8 @@ def main():
     parser.add_argument('--orders',type=int,default=250)
     args=parser.parse_args();ids(args.scenario)
     if args.orders<1: parser.error('--orders must be positive')
+    if not (ROOT/'.env.cloud').exists():
+        raise RuntimeError('No active cloud environment; provision an authorized demo first')
     load_dotenv(ROOT/'.env.cloud',override=True)
     directory=ROOT/'data/workloads';directory.mkdir(exist_ok=True)
     path=directory/(args.scenario+'.json')

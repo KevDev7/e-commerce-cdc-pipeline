@@ -121,7 +121,7 @@ The loader stores original DMS files unchanged, derives compressed COPY inputs u
 docker compose -f compose.airflow.yaml stop
 ```
 
-Deletion downloads captured files to ignored `data/aws-capture`, empties the project bucket, then deletes the stack. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS-generated log group. Verify no project RDS/DMS/Redshift resources remain. The local state file records the stack ID and test start time; creation refuses another session while that record exists. Keep it as evidence until reviewing costs and approving any additional session. Remove `.aws/credentials` after the test. Do not delete or modify resources belonging to other projects.
+Deletion empties the project bucket and deletes the stack without downloading datasets to the Mac. Local capture archiving is opt-in with `delete --archive-local`; it is not used for this project's normal cleanup. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS-generated log group. Verify no project RDS/DMS/Redshift resources remain. The local state file records the stack ID and test start time; creation refuses another session while that record exists. Keep it as evidence until reviewing costs and approving any additional session. Remove `.aws/credentials` after the test. Do not delete or modify resources belonging to other projects.
 
 With the source quiescent and the latest DMS batch loaded, `.venv/bin/python scripts/reconcile_cloud.py` compares every current field with Redshift. `.venv/bin/python scripts/verify_replay.py` redelivers a real CDC file and retries the batch, asserting unchanged raw counts and unique event identities. These tools were adapted for Olist; their previous AWS executions used Synthea and do not validate this new schema. Reconciliation against an actively changing source would require coordinating a common checkpoint, which this small demo does not automate.
 
@@ -157,3 +157,14 @@ order retains sao paulo, the follow-up uses campinas, and all 99,441 original or
 retain unknown pre-capture customer history. This is a simulated repeat order on
 the reconstructed source, not an extra record from Olist. Existing warehouses need
 one full refresh to add the new fact columns before returning to incremental runs.
+
+## Local data retention
+
+Keep code and small sanitized validation reports, not local datasets after demos.
+Remove the downloaded `data/olist` seed and any explicitly requested
+`data/aws-capture` archive when finished. The local PostgreSQL volume contains both
+source and warehouse rows; remove the stopped project containers and their
+`olist-cdc_source-data` volume to remove those rows too. The
+`olist-cdc_airflow-data` volume holds local Airflow metadata/logs and can also be
+removed after saving the small validation summary. Do not remove other projects'
+containers or volumes. Future local tests recreate disposable databases.
