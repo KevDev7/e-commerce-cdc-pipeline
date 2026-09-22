@@ -38,7 +38,7 @@ def main():
             actual=fingerprint(target.execute(f'SELECT {columns} FROM analytics_intermediate.int_{table}_current ORDER BY 1'))
             assert actual == expected, (table,actual,expected)
             result['tables'][table]=actual
-        for table in ('dim_customers','dim_customer_history','fct_orders','fct_order_items','fct_order_payments'):
+        for table in ('dim_customers','dim_customer_history','fct_orders','fct_order_status_history','fct_order_items','fct_order_payments'):
             result['marts'][table]=target.execute(f'SELECT count(*) FROM analytics_marts.{table}').fetchone()[0]
         result['orders_without_items']=target.execute('SELECT count(*) FROM analytics_marts.fct_orders WHERE NOT has_items').fetchone()[0]
         result['orders_without_payments']=target.execute('SELECT count(*) FROM analytics_marts.fct_orders WHERE NOT has_payments').fetchone()[0]

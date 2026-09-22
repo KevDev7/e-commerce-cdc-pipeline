@@ -16,13 +16,14 @@ with DAG(
     tasks = {step: BashOperator(
         task_id=step,
         bash_command=f"/opt/pipeline/bin/python /opt/project/scripts/run_cloud.py {step}",
+        env={"BATCH_RUN_ID": "{{ run_id }}", "BATCH_ATTEMPT": "{{ ti.try_number }}"}, append_env=True,
         skip_on_exit_code=None,
         execution_timeout=timedelta(minutes=10),
     ) for step in ("check", "load", "build", "report")}
     batch_tasks = {step: BashOperator(
         task_id=step,
         bash_command=f"/opt/pipeline/bin/python /opt/project/scripts/run_microbatch.py {step}",
-        env={"BATCH_RUN_ID": "{{ run_id }}"}, append_env=True,
+        env={"BATCH_RUN_ID": "{{ run_id }}", "BATCH_ATTEMPT": "{{ ti.try_number }}"}, append_env=True,
         skip_on_exit_code=99 if step == "pending" else None,
         execution_timeout=timedelta(minutes=2),
     ) for step in ("pending", "complete")}

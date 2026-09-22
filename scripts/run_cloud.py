@@ -8,16 +8,28 @@ import sys
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
-load_dotenv(ROOT / ".env.cloud", override=True)
+load_dotenv(ROOT / '.env.cloud', override=True)
+from olist_cdc.audit import audit_step
 from olist_cdc.cloud_load import check_capture, load_pending, report
 
-parser = argparse.ArgumentParser()
-parser.add_argument("step", choices=["check", "load", "build", "report"])
-args = parser.parse_args()
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-if args.step == "build":
-    subprocess.run([str(Path(sys.executable).with_name("dbt")), "build", "--target", "redshift",
-                    "--project-dir", str(ROOT / "dbt"), "--profiles-dir", str(ROOT / "dbt"),
-                    "--no-send-anonymous-usage-stats"], check=True)
-else:
-    {"check": check_capture, "load": load_pending, "report": report}[args.step]()
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('step', choices=['check','load','build','report'])
+    args = parser.parse_args()
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+    with audit_step(args.step) as details:
+        if args.step == 'build':
+            subprocess.run([str(Path(sys.executable).with_name('dbt')), 'build', '--target', 'redshift',
+                            '--project-dir', str(ROOT/'dbt'), '--profiles-dir', str(ROOT/'dbt'),
+                            '--no-send-anonymous-usage-stats'], check=True)
+        elif args.step == 'load':
+            load_pending(metrics=details)
+        elif args.step == 'report':
+            details['mart_rows'] = report()
+        else:
+            check_capture()
+
+
+if __name__ == '__main__':
+    main()

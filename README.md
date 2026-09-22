@@ -6,9 +6,26 @@ A student data engineering portfolio project that loads **real, anonymized histo
 
 **What is real and what is simulated:** the starting records come from [Olist's Brazilian E-Commerce Public Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce). Subsequent new orders, payments, updates and disposable deletes are simulated by our Python application through SQL. PostgreSQL generates real WAL. This is not a connection to Olist's live production systems. Dataset attribution/license: Olist, CC BY-NC-SA 4.0; downloaded data is excluded from Git.
 
+## Reliability demonstrated
+
+| Scenario | Expected behavior | Evidence |
+|---|---|---|
+| SQL inserts, updates, deletes and rollback | Committed changes appear in PostgreSQL WAL; rolled-back changes do not | Local logical-decoding tests |
+| Source writes during an initial snapshot | Snapshot stays consistent; changes remain available in WAL | Local exported-snapshot test |
+| Load fails after writing one table | Raw rows and file checkpoint roll back together; retry succeeds | Multi-table failure test |
+| Same file retried or events redelivered under a new filename | Event identities prevent duplicate raw records | Replay tests |
+| Snapshot arrives after a newer update/delete | Source sequence wins; deleted rows stay deleted | dbt integration fixtures |
+| Two items and two payments for an order | Separate aggregation prevents multiplied totals | dbt integration fixtures and real Olist reconciliation |
+| Raw load succeeds but dbt fails | Batch is not acknowledged; next run still builds marts | Batch checkpoint and Airflow tests |
+| No new capture files | Skip warehouse work without waking Redshift | S3 metadata fixtures and Airflow tests |
+| Multiple status changes between warehouse batches | Retain observed transitions; suppress same-status updates without losing deletes/reinserts | Order-history integration fixtures |
+| Failed task followed by a successful retry | Preserve both attempts and report final batch outcome correctly | SQLite audit tests and real Airflow task-state checks |
+
+These are local results. The Olist AWS demonstration is still pending; the tests do not substitute for real DMS → S3 → Redshift validation.
+
 ## Current validation
 
-The Olist migration is **locally validated; its AWS end-to-end run is still pending**. All 415,418 selected source rows loaded successfully. All 16 dbt models and 39 data tests passed against the real seed using a local snapshot fixture; every current source field reconciled. The 27-test suite covers real local WAL, retries, rollback, deletes, history, late files and batch checkpoints. Separate Airflow container checks verify idle skips and failure propagation.
+The Olist migration is **locally validated; its AWS end-to-end run is still pending**. All 415,418 selected source rows loaded successfully. All 18 dbt models and 45 data tests passed against the real seed using a local snapshot fixture; every current source field reconciled. The 34-test suite covers real local WAL, retries, rollback, deletes, history, late files and batch checkpoints. Separate Airflow container checks verify idle skips and failure propagation.
 
 Previous AWS results belong to the [archived Synthea implementation](docs/archive/synthea/README.md). They do not validate the new Olist DMS layout or cloud marts. No AWS infrastructure was started for this migration.
 
@@ -17,7 +34,7 @@ Previous AWS results belong to the [archived Synthea implementation](docs/archiv
 | Source table | Historical rows | Mart |
 |---|---:|---|
 | customers | 99,441 | dim_customers; dim_customer_history |
-| orders | 99,441 | fct_orders |
+| orders | 99,441 | fct_orders; fct_order_status_history |
 | order_items | 112,650 | fct_order_items |
 | order_payments | 103,886 | fct_order_payments |
 
@@ -58,3 +75,22 @@ Use the [AWS runbook](docs/run-cloud.md) after agreeing a budget for a new paid 
 The GitHub repository and existing AWS profile/resource ownership names still use `synthea-cdc` for continuity. The active application/package, DAG, databases, source schema and capture prefix are Olist-specific. Keep using only that project's configured AWS profile, never another project's credentials.
 
 See [source semantics](docs/source.md), [warehouse schema](docs/warehouse.md), [Olist validation](docs/validation.md) and [migration inspection](docs/olist-migration.md).
+
+## Order-status history
+
+`fct_orders` answers “what is the order's current state?” `fct_order_status_history` answers “which states did we observe, and when did they change?” It retains transitions such as created → approved → shipped → delivered, even when multiple changes arrive in one batch. Repeated updates with the same status do not create extra versions; deletes and reinserts remain visible.
+
+Each version includes observation timestamps, source-sequence bounds, an initial-snapshot flag, deletion/current flags and observed_duration_seconds for closed, non-deleted intervals. Historical Olist orders begin with their observed snapshot state. We do not infer missing earlier statuses or measure capture-observation time as the original purchase-to-delivery duration.
+
+## Inspect batch operations
+
+```sh
+uv run python scripts/report_batches.py
+uv run python scripts/report_batches.py --run-id 'your-airflow-run-id'
+```
+
+The local audit records task attempts, run outcomes, elapsed time, committed-file input counts by operation, snapshot rows, dbt outcome and the last successful completion. Quiet batches remain distinguishable from failures. SQLite runs locally alongside Airflow, so reporting does not wake Redshift. Input counts are not claims about new warehouse rows after deduplication. See [audit schema and retry semantics](docs/batch-audit.md).
+
+## Remaining validation
+
+A separately budgeted Olist AWS run is still needed to verify live DMS files, Redshift loading, scheduled latency, recovery and cost. Parquet and incremental mart optimization are deferred. Current marts rebuild from retained raw events; dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.

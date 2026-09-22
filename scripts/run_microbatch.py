@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from olist_cdc.audit import audit_step
 from olist_cdc.microbatch import complete_batch, prepare_batch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,8 +18,12 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
     directory = ROOT / 'data' / 'olist-microbatch'
     run_id = os.environ['BATCH_RUN_ID']
-    if args.step == 'pending':
-        if not prepare_batch(directory, run_id):
-            raise SystemExit(99)  # BashOperator skips all dependent tasks.
-    else:
-        complete_batch(directory, run_id)
+    skip = False
+    with audit_step(args.step) as details:
+        if args.step == 'pending':
+            skip = not prepare_batch(directory, run_id)
+            details['_skip'] = skip
+        else:
+            complete_batch(directory, run_id)
+    if skip:
+        raise SystemExit(99)  # Audited as quiet, not failed; downstream tasks skip.

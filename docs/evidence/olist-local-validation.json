@@ -1,7 +1,7 @@
 {
   "source_url": "https://www.kaggle.com/api/v1/datasets/download/olistbr/brazilian-ecommerce?datasetVersionNumber=2",
   "archive_sha256": "967e41e04fc306fe604e2a693f488995a8b41e5047418f8a5c8e4abd6deca784",
-  "verified_at": "2026-09-22T14:12:00.498337+00:00",
+  "verified_at": "2026-09-22T14:40:20.626728+00:00",
   "validation": "Local PostgreSQL snapshot fixture; not AWS CDC",
   "tables": {
     "customers": {
@@ -25,6 +25,7 @@
     "dim_customers": 99441,
     "dim_customer_history": 99441,
     "fct_orders": 99441,
+    "fct_order_status_history": 99441,
     "fct_order_items": 112650,
     "fct_order_payments": 103886
   },
@@ -35,6 +36,6 @@
     "freight": "2251909.54",
     "payments": "16008872.12"
   },
-  "dbt_models": 16,
-  "dbt_tests": 39
+  "dbt_models": 18,
+  "dbt_tests": 45
 }

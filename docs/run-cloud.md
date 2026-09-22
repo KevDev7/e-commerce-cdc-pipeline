@@ -71,6 +71,8 @@ The pending-file task compares S3 CSV keys, ETags and sizes with the last comple
 
 The local checkpoint is under ignored `data/olist-microbatch/` in the bind-mounted project directory. It advances only after loading, dbt tests and reporting succeed. If loading succeeds but dbt fails, the next run still builds the marts even though the raw file ledger already contains those files. Files arriving after the pending check are picked up again next run if necessary. Missing checkpoint state causes a safe extra load/build. Keep one scheduler for this checkout, do not run manual warehouse commands concurrently, and clear this checkpoint directory while paused if resetting the warehouse, restoring a baseline, or changing transformation code that needs a rebuild without new source files. Per-run manifests are small local demo artifacts and may also be cleared while paused.
 
+Inspect batches without querying Redshift using `.venv/bin/python scripts/report_batches.py`; add `--run-id` to see task attempts and load counts. [The local audit](batch-audit.md) lives in `data/olist-microbatch/audit.sqlite`. When resetting only replay-control state, remove `completed.json` and per-run JSON manifests while paused; keep the SQLite file if retaining monitoring history.
+
 Before cleanup, pause future runs, let the active run finish, and stop local Airflow. Pausing alone does not cancel a running batch:
 
 ```sh
