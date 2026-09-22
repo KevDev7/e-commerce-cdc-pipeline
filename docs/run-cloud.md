@@ -55,7 +55,29 @@ docker compose -f compose.airflow.yaml up -d --build
 
 Run `usage-limit` before queries. It checks base/max capacity are both 4 RPUs and creates a monthly 6-RPU-hour limit with the deactivate action. At the checked regional rate, that is $2.25 in compute; enforcement/billing delay and other services mean this is not a guaranteed $5 account cap.
 
-Airflow runs locally at http://localhost:8085 using its standalone development setup. Its generated login is stored in the container's `/opt/airflow/standalone_admin_password.txt`. The four tasks are **check capture → load raw → dbt build (including tests) → report marts**. `schedule=None` means each demonstration is manually triggered, avoiding unattended cloud queries. DMS itself stays running during the demonstration. For regular operation, a downstream batch schedule can be set without restarting DMS.
+Airflow runs locally at http://localhost:8085 using its standalone development setup. Its generated login is stored in the container's `/opt/airflow/standalone_admin_password.txt`. The six tasks are **check capture → check pending files → load raw → dbt build (including tests) → report marts → acknowledge batch**.
+
+The DAG schedules every five minutes (`*/5 * * * *`), with `catchup=False` and one active run at a time. It starts paused on first installation. Airflow preserves pause state on existing installations, so explicitly pause it before preparing another demo. Once capture and the warehouse are ready, enable the schedule for the demonstration:
+
+```sh
+docker compose -f compose.airflow.yaml exec airflow airflow dags unpause synthea_cdc
+```
+
+DMS captures continuously while the stack exists. The Airflow schedule processes available S3 files; it does not restrict ingestion to events from a particular five-minute window. A newly committed change can wait for DMS delivery, the next scheduled run, and warehouse processing. Five minutes is the trigger interval, not a guaranteed end-to-end latency. If a run takes longer, subsequent runs wait rather than overlap; keep the demo small and inspect Airflow run durations.
+
+The pending-file task compares S3 CSV keys, ETags and sizes with the last completed batch. When unchanged, it exits with Airflow's skip code and **load, build, report and acknowledgement are skipped without connecting to Redshift**. Capture health is still checked. Empty or inaccessible capture fails visibly rather than being treated as a quiet batch.
+
+The local checkpoint is under ignored `data/microbatch/` in the bind-mounted project directory. It advances only after loading, dbt tests and reporting succeed. If loading succeeds but dbt fails, the next run still builds the marts even though the raw file ledger already contains those files. Files arriving after the pending check are picked up again next run if necessary. Missing checkpoint state causes a safe extra load/build. Keep one scheduler for this checkout, do not run manual warehouse commands concurrently, and clear this checkpoint directory while paused if resetting the warehouse, restoring a baseline, or changing transformation code that needs a rebuild without new source files. Per-run manifests are small local demo artifacts and may also be cleared while paused.
+
+Before cleanup, pause future runs, let the active run finish, and stop local Airflow. Pausing alone does not cancel a running batch:
+
+```sh
+docker compose -f compose.airflow.yaml exec airflow airflow dags pause synthea_cdc
+# After the active run finishes:
+docker compose -f compose.airflow.yaml stop
+```
+
+Skipping idle warehouse work reduces query activity, but RDS and DMS still cost money while provisioned. Delete the stack after each demo using the cleanup steps below.
 
 `scripts/run_cloud.py check|load|build|report` runs the exact same commands manually. The project virtual environment is separate from Airflow's dependencies inside the image. Only a temporary session for the project AWS profile is made available to the container; other AWS profiles are not mounted. It inherits the developer user's permissions for this portfolio test, not a production runtime role. Refresh that session after one hour if a later authorized demo needs it.
 

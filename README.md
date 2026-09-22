@@ -10,7 +10,7 @@ A healthcare billing data engineering project using synthetic Synthea data to si
 
 **Deliverable:** populated, tested Redshift marts, using raw → staging → intermediate → marts layers. Dashboards and data visualizations are out of scope.
 
-**Status:** validated end to end on AWS on 2026-09-22. All 15 dbt models, 42 data tests and four Airflow tasks passed. Every current source field reconciled with Redshift. Temporary cloud resources were deleted after validation to avoid ongoing charges.
+**Status:** the original manual workflow was validated end to end on AWS on 2026-09-22. All 15 dbt models, 42 data tests and four Airflow tasks passed. Every current source field reconciled with Redshift. Temporary cloud resources were deleted after validation to avoid ongoing charges.
 
 ## What the demonstration proves
 
@@ -25,6 +25,12 @@ The business workload is simulated using synthetic data. PostgreSQL generates th
 ## Reliability validation
 
 A second AWS run tested writes during the initial load, rollback after partial warehouse writes, and measured freshness. All 12 changes committed during the patients load reached Redshift exactly once. A failed four-table load rolled back and retried safely. A new source record reached the tested mart in 148.9 seconds, and all current source fields reconciled. This run also exposed and fixed an overlapping-snapshot history bug. See [the experiment, results and limits](docs/reliability.md).
+
+## Five-minute demo batches
+
+Airflow now schedules downstream work every five minutes, with one active run and no historical catch-up. The DAG starts paused; enable it only during a provisioned demo. Quiet runs check DMS/S3 and skip all Redshift work. A local batch checkpoint advances only after loading, dbt tests and reporting succeed, so failed builds are retried even when raw loading already committed.
+
+This scheduling update has **27 passing local tests** plus real Airflow task-state checks for new files, idle skips, failed builds and recovery. Cloud commands are replaced with shell fixtures in those Airflow checks; the new schedule has **not yet been exercised against AWS**. Earlier AWS evidence remains unchanged. See the [demo controls and cleanup instructions](docs/run-cloud.md).
 
 ## Local source
 

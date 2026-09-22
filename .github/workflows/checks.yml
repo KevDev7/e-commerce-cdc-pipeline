@@ -28,6 +28,14 @@ jobs:
         run: docker compose up -d --wait postgres
       - name: Test source, WAL, replay and marts
         run: uv run pytest --integration -q
+      - name: Check Airflow scheduling, skips and failure propagation
+        run: |
+          AIRFLOW_TEST_IMAGE=$(awk 'NR==1 {print $2}' Dockerfile.airflow)
+          docker run --rm -v "$PWD:/opt/project:ro" \
+            -e AIRFLOW_HOME=/tmp/airflow-test \
+            -e AIRFLOW__CORE__LOAD_EXAMPLES=false \
+            --entrypoint bash "$AIRFLOW_TEST_IMAGE" \
+            -c 'airflow db migrate && python /opt/project/tests/airflow_smoke.py'
       - name: Stop disposable services
         if: always()
         run: docker compose down -v

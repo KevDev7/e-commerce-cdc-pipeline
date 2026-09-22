@@ -8,7 +8,7 @@ The user approved a **$5 initial AWS test allowance** on 2026-09-22. The complet
 - DMS `dms.t3.small`, version 3.6.1, 5 GB allocated storage. The pricing catalog still listed micro, but the actual orderable-instance API did not offer it; small was the smallest available option.
 - One private S3 bucket with original DMS CSV files and separate compressed COPY inputs.
 - Redshift Serverless with base and maximum capacity both set to 4 RPUs. A monthly 6-RPU-hour deactivate limit reserves headroom for other services within the test allowance.
-- Local Docker/Airflow/dbt. No managed Airflow, Spark, NAT gateway or continuously scheduled warehouse queries.
+- Local Docker/Airflow/dbt. No managed Airflow, Spark or NAT gateway. Five-minute downstream batches are enabled only during demos and skip warehouse work when capture files are unchanged.
 
 One CloudFormation stack owns the temporary resources. It uses existing default public subnets but creates its own security groups, database, IAM access roles, bucket and warehouse. Access to database ports is restricted to the developer's current IPv4 address and the project DMS group where needed. The dedicated AWS CLI profile is always `synthea-cdc`. DMS standard service roles are created only if missing; existing roles are left alone.
 

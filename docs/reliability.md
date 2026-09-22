@@ -10,7 +10,7 @@ Local tests establish behavior for the local database or explicit fixtures only.
 
 ## Local results
 
-21 tests pass locally, including the 42 dbt data tests run by each model integration case. The AWS evidence below records the 19-test suite at the time of that run; two subsequent local regressions verify timeout cleanup and command failure propagation. Coverage demonstrates:
+27 tests pass locally, including the 42 dbt data tests run by each model integration case. The AWS evidence below records the 19-test suite at the time of that run. Two subsequent local regressions verify timeout cleanup and command failure propagation, and six verify microbatch checkpoints and retries. Separate Airflow container checks verify scheduling configuration, idle skips, failed-build propagation and recovery using shell fixtures; they do not invoke AWS. Coverage demonstrates:
 
 - PostgreSQL exports a consistent snapshot while a separate connection commits an insert, update and delete; real logical decoding contains all three operations.
 - A late snapshot does not overwrite a newer update or resurrect a deleted patient in the marts (explicit DMS-format fixture).
