@@ -1,0 +1,35 @@
+name: Local integration checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      POSTGRES_USER: cdc_owner
+      POSTGRES_PASSWORD: ci-only-disposable-password
+      POSTGRES_DB: synthea
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: '55432'
+      DBT_SEND_ANONYMOUS_USAGE_STATS: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install locked project dependencies
+        run: |
+          python -m pip install uv==0.10.11
+          uv sync --locked
+      - name: Start disposable PostgreSQL
+        run: docker compose up -d --wait postgres
+      - name: Test source, WAL, replay and marts
+        run: uv run pytest --integration -q
+      - name: Stop disposable services
+        if: always()
+        run: docker compose down -v
+

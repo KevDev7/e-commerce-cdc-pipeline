@@ -1,0 +1,95 @@
+{
+  "rules": [
+    {
+      "rule-type": "selection",
+      "rule-id": "1",
+      "rule-name": "include-patients",
+      "object-locator": {
+        "schema-name": "healthcare",
+        "table-name": "patients"
+      },
+      "rule-action": "include"
+    },
+    {
+      "rule-type": "selection",
+      "rule-id": "2",
+      "rule-name": "include-encounters",
+      "object-locator": {
+        "schema-name": "healthcare",
+        "table-name": "encounters"
+      },
+      "rule-action": "include"
+    },
+    {
+      "rule-type": "selection",
+      "rule-id": "3",
+      "rule-name": "include-claims",
+      "object-locator": {
+        "schema-name": "healthcare",
+        "table-name": "claims"
+      },
+      "rule-action": "include"
+    },
+    {
+      "rule-type": "selection",
+      "rule-id": "4",
+      "rule-name": "include-claim_transactions",
+      "object-locator": {
+        "schema-name": "healthcare",
+        "table-name": "claim_transactions"
+      },
+      "rule-action": "include"
+    },
+    {
+      "rule-type": "transformation",
+      "rule-id": "10",
+      "rule-name": "add-_source_lsn",
+      "rule-target": "column",
+      "object-locator": {
+        "schema-name": "healthcare",
+        "table-name": "%"
+      },
+      "rule-action": "add-column",
+      "value": "_source_lsn",
+      "expression": "$AR_H_STREAM_POSITION",
+      "data-type": {
+        "type": "string",
+        "length": 128
+      }
+    },
+    {
+      "rule-type": "transformation",
+      "rule-id": "11",
+      "rule-name": "add-_source_order",
+      "rule-target": "column",
+      "object-locator": {
+        "schema-name": "healthcare",
+        "table-name": "%"
+      },
+      "rule-action": "add-column",
+      "value": "_source_order",
+      "expression": "$AR_H_CHANGE_SEQ",
+      "data-type": {
+        "type": "string",
+        "length": 35
+      }
+    },
+    {
+      "rule-type": "transformation",
+      "rule-id": "12",
+      "rule-name": "add-_commit_at",
+      "rule-target": "column",
+      "object-locator": {
+        "schema-name": "healthcare",
+        "table-name": "%"
+      },
+      "rule-action": "add-column",
+      "value": "_commit_at",
+      "expression": "$AR_H_COMMIT_TIMESTAMP",
+      "data-type": {
+        "type": "string",
+        "length": 50
+      }
+    }
+  ]
+}

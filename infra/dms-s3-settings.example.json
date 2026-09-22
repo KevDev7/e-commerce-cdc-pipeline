@@ -1,0 +1,18 @@
+{
+  "ServiceAccessRoleArn": "REPLACE_WITH_PROJECT_DMS_S3_ROLE_ARN",
+  "BucketName": "REPLACE_WITH_PROJECT_BUCKET",
+  "BucketFolder": "capture-v1",
+  "DataFormat": "csv",
+  "IncludeOpForFullLoad": true,
+  "CdcInsertsOnly": false,
+  "CdcInsertsAndUpdates": false,
+  "PreserveTransactions": true,
+  "CdcPath": "cdc",
+  "CsvNullValue": "__SYNTHEA_NULL__",
+  "AddColumnName": false,
+  "DatePartitionEnabled": false,
+  "CdcMaxBatchInterval": 60,
+  "CdcMinFileSize": 32,
+  "EncryptionMode": "SSE_S3"
+}
+
