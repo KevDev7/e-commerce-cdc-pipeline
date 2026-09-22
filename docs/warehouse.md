@@ -31,7 +31,7 @@ The same raw/staging/intermediate/marts structure targets local PostgreSQL for d
 
 `int_order_status_history` applies the same overlapping-snapshot safeguard to orders, retains status transitions and deletion markers, and suppresses repeated same-status updates. It uses source sequence to order versions even when commit timestamps match.
 
-## Marts: six tables
+## Marts: six incremental tables
 
 - **dim_customers:** one current customer record, with customer_id, customer_unique_id, postal_code, city, state.
 - **dim_customer_history:** those attributes plus customer_version_id, observed_from/to, source_order_from/to, is_deleted, is_initial_snapshot and is_current.
@@ -44,4 +44,4 @@ Items and payments are aggregated separately before joining orders. Two items an
 
 Customer history begins at capture observation, years after most historical purchases. Facts reference customer_id; we do not invent a transaction-time version key for historical orders that predate capture. `customer_unique_id` remains available for repeat-customer analysis.
 
-All 18 models rebuild the small current views/marts from retained raw events. Raw ingestion is incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
+The 12 staging/intermediate models remain views. The six marts incrementally replace affected entities, using newly loaded files to identify work. Six `<mart>__files` metadata tables in `analytics_marts` each store `source_file varchar(2048)`; they are processing checkpoints, not additional business models. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.

@@ -53,6 +53,11 @@ def main():
     assert all(r['status'] in ('success','pass') for r in built)
     result['dbt_models']=sum(r['unique_id'].startswith('model.') for r in built)
     result['dbt_tests']=sum(r['unique_id'].startswith('test.') for r in built)
+    manifest=json.loads((ROOT/'dbt/target/manifest.json').read_text())
+    result['dbt_incremental_models']=sorted(
+        manifest['nodes'][r['unique_id']]['name'] for r in built
+        if r['unique_id'].startswith('model.')
+        and manifest['nodes'][r['unique_id']]['config']['materialized']=='incremental')
     destination=ROOT/'docs/evidence/olist-local-validation.json'
     destination.parent.mkdir(parents=True,exist_ok=True)
     destination.write_text(json.dumps(result,indent=2)+'\n')

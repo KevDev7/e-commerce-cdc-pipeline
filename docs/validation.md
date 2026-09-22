@@ -8,10 +8,18 @@ Executed locally on 2026-09-22. [Machine-readable results](evidence/olist-local-
 - Reconciled every current source column with the intermediate current-state views using ordered row fingerprints.
 - Verified 775 orders without items and one without payment remain in the marts.
 - Order-grain totals match independent source totals: items 13,591,643.70; freight 2,251,909.54; payments 16,008,872.12. Payments are not forced to equal item plus freight totals.
-- **34 local tests pass**, including real PostgreSQL logical decoding, exported snapshot plus concurrent writes, rollback exclusion, atomic multi-table raw loads, replay, late files, observed address history and microbatch retries.
+- **35 local tests pass**, including real PostgreSQL logical decoding, exported snapshot plus concurrent writes, rollback exclusion, atomic multi-table raw loads, replay, late files, observed address history and microbatch retries.
 - Order-status history tests cover repeated statuses, multiple changes within a batch, overlapping snapshots, delete/reinsert cycles and snapshot-only historical orders. The full real seed produces 99,441 initial order-status observations, not reconstructed lifecycle histories.
 - Batch audit tests preserve failed/retried attempts, partial committed-input metrics, quiet skips and incomplete work. Load metric fixtures distinguish committed from rolled-back files.
 - Real Airflow task-state checks with shell fixtures pass for new files, quiet skips, failed dbt builds and recovery. The checks run the actual SQLite audit wrapper around shell fixtures and verify its outcome agrees with Airflow. Schedule is five minutes, no catch-up, one active run, paused on creation.
+
+## Incremental dbt validation
+
+The six marts now use dbt incremental materialization. The existing real Olist warehouse upgraded without dropping raw data or requesting a full refresh: missing per-model file checkpoints caused the first build to process all retained files. All 18 models and 45 data tests passed and the real-seed reconciliation still matched.
+
+Successive DMS-format fixture batches verify updates, hard deletes, reinserts, detail-only changes, late lower-sequence files, changed history boundaries, and snapshots arriving after an earlier build. A duplicate delivery and a no-input build preserve PostgreSQL row identities. A forced SQL failure after the mart and checkpoint writes rolls back both. A selected model advances only its own checkpoint. Final results in all six marts equal a full rebuild, and the following incremental run leaves those rows untouched.
+
+These are local PostgreSQL results; Redshift execution and performance remain unverified.
 
 ## What remains unverified
 
