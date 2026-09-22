@@ -41,7 +41,7 @@ The history regression was first reproduced locally: snapshot transfer timestamp
 
 An initial Redshift connection timed out before SQL work began. Subsequent network checks showed the endpoint reachable and retry succeeded without changing network permissions. The injected warehouse test covers a handled exception before commit, not a killed process or lost commit acknowledgment. Concurrent initial-load writes were tested on patients, not every possible cross-table transaction or schema change. The writer was stopped before final reconciliation.
 
-The pre-teardown usage snapshot showed 1,920 charged RPU-seconds, approximately **$0.20 in Redshift compute** at the checked rate. This excludes later/billing-lag usage and other AWS services, taxes and credits. Teardown has been requested; final absence checks are pending.
+The pre-teardown usage snapshot showed 1,920 charged RPU-seconds, approximately **$0.20 in Redshift compute** at the checked rate. This excludes later/billing-lag usage and other AWS services, taxes and credits. Cleanup was verified at **10:03 UTC**: CloudFormation DELETE_COMPLETE, with the project RDS instance, DMS instance/task, Redshift workgroup/namespace, S3 bucket and generated DMS log group all absent. Local project containers are stopped and temporary credentials removed. Captured files and detailed logs remain in ignored local data folders; the original run's files are preserved separately under `data/runs/baseline-20260922`.
 
 ## Bounded cloud experiment
 

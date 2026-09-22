@@ -178,7 +178,17 @@
   },
   "local_tests": 19,
   "cleanup": {
-    "status": "pending"
+    "cloudformation": "DELETE_COMPLETE",
+    "rds_deleted": true,
+    "dms_instance_deleted": true,
+    "dms_task_deleted": true,
+    "redshift_workgroup_deleted": true,
+    "redshift_namespace_deleted": true,
+    "s3_bucket_deleted": true,
+    "dms_log_group_deleted": true,
+    "local_containers_stopped": true,
+    "verified_at": "2026-09-22T10:03:43.481593+00:00",
+    "temporary_credentials_removed": true
   },
   "dbt": {
     "models": 15,
