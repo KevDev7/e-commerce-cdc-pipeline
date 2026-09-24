@@ -14,7 +14,7 @@ For recovery testing, stop capture, wait until stopped, commit a second scenario
 ```sh
 .venv/bin/python scripts/capture.py stop
 .venv/bin/python scripts/capture.py status
-.venv/bin/olist-cdc --cloud simulate --scenario aws-002
+.venv/bin/olist-cdc --scenario aws-002
 .venv/bin/python scripts/capture.py resume
 ```
 

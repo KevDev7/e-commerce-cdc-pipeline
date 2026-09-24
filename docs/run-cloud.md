@@ -28,14 +28,14 @@ After CREATE_COMPLETE:
 .venv/bin/python scripts/cloud_stack.py connections
 ```
 
-`prepare_cloud_source.py` downloads the pinned ZIP into a temporary directory, uploads a copy as `source/original-olist-brazilian-ecommerce.zip`, loads RDS and removes the temporary directory on exit. It never creates a local source database.
+`prepare_cloud_source.py` downloads the pinned ZIP into a temporary directory, uploads a copy as `source/original-olist-brazilian-ecommerce.zip`, loads RDS and removes the temporary directory on exit. It never creates a local source database. This is the only full-dataset setup command; `olist-cdc` only simulates business changes against the prepared RDS source.
 
 Repeat `connections` until both endpoints report `successful`, then start the task. Starting is deliberate: the source must be seeded first. Wait for all four tables to complete their full load; inspect real files before accepting the CSV contract.
 
 ```sh
 .venv/bin/python scripts/capture.py start
 .venv/bin/python scripts/capture.py status
-.venv/bin/olist-cdc --cloud simulate --scenario aws-001
+.venv/bin/olist-cdc --scenario aws-001
 ```
 
 ## Warehouse and orchestration
@@ -125,10 +125,9 @@ The retained bucket incurs S3 storage/request charges until deliberately removed
 ## Local data retention
 
 Use cloud databases for normal demonstrations. Keep code and small sanitized validation reports, not local datasets after demos. No local PostgreSQL container is required for the cloud commands.
-Remove the downloaded `data/olist` seed and any explicitly requested
-`data/aws-capture` archive when finished. The local PostgreSQL volume contains both
-source and warehouse rows; remove the stopped project containers and their
-`olist-cdc_source-data` volume to remove those rows too. The
+If running local fixture tests, remove the stopped project PostgreSQL container
+and its `olist-cdc_source-data` volume afterward. The retired local download and
+seed commands are no longer exposed by the CLI. The
 `olist-cdc_airflow-data` volume holds local Airflow metadata/logs and can also be
 removed after saving the small validation summary. Do not remove other projects'
 containers or volumes. Future local tests recreate disposable databases.
