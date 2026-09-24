@@ -59,7 +59,7 @@ def create():
     if len(selected) != 3:
         raise RuntimeError("Expected three default public subnets; inspect network before deployment")
     ip = str(ipaddress.IPv4Address(urllib.request.urlopen("https://checkip.amazonaws.com", timeout=10).read().decode().strip()))
-    env = {"AWS_PROFILE": "synthea-cdc", "AWS_DEFAULT_REGION": "us-east-1", "CAPTURE_PREFIX": "raw/dms/olist",
+    env = {"AWS_PROFILE": "synthea-cdc", "AWS_DEFAULT_REGION": "us-east-1", "CAPTURE_PREFIX": "raw",
            "POSTGRES_DB": "olist", "POSTGRES_PORT": "5432", "POSTGRES_USER": "cdc_owner", "POSTGRES_SSLMODE": "require",
            "POSTGRES_PASSWORD": "Aa1" + secrets.token_hex(16), "DMS_PASSWORD": "Bb2" + secrets.token_hex(16),
            "REDSHIFT_USER": "warehouse_owner", "REDSHIFT_DATABASE": "olist", "REDSHIFT_PASSWORD": "Cc3" + secrets.token_hex(16)}
@@ -166,7 +166,7 @@ def delete():
         state = json.loads(STATE.read_text())
         state["retained_bucket"] = bucket
         state["retained_region"] = "us-east-1"
-        state["capture_prefix"] = "raw/dms/olist"
+        state["capture_prefix"] = "raw"
         STATE.write_text(json.dumps(state, indent=2))
         print(f"Retaining s3://{bucket}/ (source archive, original captures and derived Parquet)")
     CF.delete_stack(StackName=current["StackId"])

@@ -91,7 +91,7 @@ def main():
         s3 = aws_session().client('s3')
         seen = set()
         bucket = os.environ['S3_BUCKET']
-        prefix = os.environ.get('CAPTURE_PREFIX', 'raw/dms/olist') + '/cdc/'
+        prefix = os.environ.get('CAPTURE_PREFIX', 'raw') + '/cdc/'
         while True:
             within_budget(started, args.timeout)
             key = find_probe(s3, bucket, prefix, customer_id, seen)

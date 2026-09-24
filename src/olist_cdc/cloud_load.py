@@ -63,13 +63,13 @@ def load_file(connection, s3, bucket, key, role, *, metrics=None):
                 metrics["files_already_loaded"] = metrics.get("files_already_loaded", 0) + 1
             return 0
         body = s3.get_object(Bucket=bucket, Key=key)["Body"].read()
-        events = parse_csv(body.decode(), source, snapshot_table=snapshot_table(key, os.environ.get("CAPTURE_PREFIX", "raw/dms/olist")))
+        events = parse_csv(body.decode(), source, snapshot_table=snapshot_table(key, os.environ.get("CAPTURE_PREFIX", "raw")))
         for table in TABLES:
             batch = [e for e in events if e.table == table]
             if not batch:
                 continue
             # COPY input is derived; the original DMS file remains untouched.
-            relative_key = key.removeprefix(os.environ.get("CAPTURE_PREFIX", "raw/dms/olist").rstrip("/") + "/")
+            relative_key = key.removeprefix(os.environ.get("CAPTURE_PREFIX", "raw").rstrip("/") + "/")
             staging_key = f"copy-ready/{relative_key.removesuffix('.csv')}/{table}.parquet"
             s3.put_object(Bucket=bucket, Key=staging_key, Body=normalized_parquet(batch, table), ServerSideEncryption="AES256")
             cursor.execute(f'CREATE TEMP TABLE incoming_{table} (LIKE "raw".{table})')
@@ -102,7 +102,7 @@ def load_pending(*, metrics=None):
     session = aws_session()
     s3 = session.client("s3")
     bucket = os.environ["S3_BUCKET"]
-    prefix = os.environ.get("CAPTURE_PREFIX", "raw/dms/olist").rstrip("/") + "/"
+    prefix = os.environ.get("CAPTURE_PREFIX", "raw").rstrip("/") + "/"
     keys = sorted(obj["Key"] for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix)
                   for obj in page.get("Contents", []) if obj["Key"].endswith(".csv"))
     if not keys:

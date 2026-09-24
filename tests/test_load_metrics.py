@@ -9,7 +9,7 @@ from test_events import csv_text, customer_row
 
 @pytest.mark.parametrize('fail',[False,True])
 def test_file_metrics_only_count_committed_files(monkeypatch,fail):
-    monkeypatch.setenv('CAPTURE_PREFIX','raw/dms/olist')
+    monkeypatch.setenv('CAPTURE_PREFIX','raw')
     class Connection:
         loaded=False
         def cursor(self):return self
@@ -29,14 +29,14 @@ def test_file_metrics_only_count_committed_files(monkeypatch,fail):
             assert kwargs["Key"] == "copy-ready/cdc/test/customers.parquet"
             rows = pq.read_table(pa.BufferReader(kwargs["Body"])).to_pylist()
             assert [r["_op"] for r in rows] == ["I", "U", "D"]
-            assert all(r["_source_file"] == "s3://bucket/raw/dms/olist/cdc/test.csv" for r in rows)
+            assert all(r["_source_file"] == "s3://bucket/raw/cdc/test.csv" for r in rows)
     metrics={}
     if fail:
         with pytest.raises(RuntimeError):
-            load_file(Connection(),S3(),'bucket','raw/dms/olist/cdc/test.csv','role',metrics=metrics)
+            load_file(Connection(),S3(),'bucket','raw/cdc/test.csv','role',metrics=metrics)
         assert metrics=={}
     else:
-        assert load_file(Connection(),S3(),'bucket','raw/dms/olist/cdc/test.csv','role',metrics=metrics)==3
+        assert load_file(Connection(),S3(),'bucket','raw/cdc/test.csv','role',metrics=metrics)==3
         assert metrics==dict(files_committed=1,input_I=1,input_U=1,input_D=1)
 
 
@@ -52,5 +52,5 @@ def test_previously_loaded_file_is_skipped_without_downloading():
         def get_object(self, **kwargs):
             raise AssertionError("Previously loaded files must not be downloaded")
     metrics = {}
-    assert load_file(Connection(), S3(), 'bucket', 'raw/dms/olist/cdc/test.csv', 'role', metrics=metrics) == 0
+    assert load_file(Connection(), S3(), 'bucket', 'raw/cdc/test.csv', 'role', metrics=metrics) == 0
     assert metrics == {'files_already_loaded': 1}

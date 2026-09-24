@@ -28,7 +28,7 @@ def counts():
 before = counts()
 s3 = aws_session().client("s3")
 bucket = os.environ["S3_BUCKET"]
-prefix = os.environ.get("CAPTURE_PREFIX", "raw/dms/olist") + "/cdc/"
+prefix = os.environ.get("CAPTURE_PREFIX", "raw") + "/cdc/"
 originals = sorted(x["Key"] for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix)
                    for x in page.get("Contents", []) if x["Key"].split("/")[-1].startswith("CDC_TXN-"))
 if not originals:

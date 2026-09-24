@@ -6,7 +6,7 @@ from olist_cdc import microbatch
 
 @pytest.fixture
 def capture(monkeypatch):
-    objects = [{'Key': 'raw/dms/olist/cdc/001.csv', 'ETag': 'first', 'Size': 100}]
+    objects = [{'Key': 'raw/cdc/001.csv', 'ETag': 'first', 'Size': 100}]
 
     class S3:
         def client(self, name):
@@ -18,13 +18,13 @@ def capture(monkeypatch):
             return self
 
         def paginate(self, **kwargs):
-            assert kwargs == dict(Bucket='demo', Prefix='raw/dms/olist/')
+            assert kwargs == dict(Bucket='demo', Prefix='raw/')
             return [{'Contents': objects[:1]}, {'Contents': objects[1:]}]
 
     monkeypatch.setattr(microbatch, 'aws_session', S3)
     monkeypatch.setenv('S3_BUCKET', 'demo')
     monkeypatch.setenv('REDSHIFT_HOST', 'warehouse')
-    monkeypatch.setenv('CAPTURE_PREFIX', 'raw/dms/olist')
+    monkeypatch.setenv('CAPTURE_PREFIX', 'raw')
     return objects
 
 
@@ -33,7 +33,7 @@ def test_completed_batch_skips_until_capture_changes(tmp_path, capture):
     microbatch.complete_batch(tmp_path, 'first')
     microbatch.complete_batch(tmp_path, 'first')  # Airflow may retry after acknowledgement.
     assert not microbatch.prepare_batch(tmp_path, 'quiet')
-    capture.append({'Key': 'raw/dms/olist/cdc/002.csv', 'ETag': 'second', 'Size': 80})
+    capture.append({'Key': 'raw/cdc/002.csv', 'ETag': 'second', 'Size': 80})
     assert microbatch.prepare_batch(tmp_path, 'next')
 
 
@@ -50,7 +50,7 @@ def test_failed_build_is_retried_even_when_raw_was_already_loaded(tmp_path, capt
 
 def test_files_arriving_during_build_are_not_acknowledged_early(tmp_path, capture):
     assert microbatch.prepare_batch(tmp_path, 'first')
-    capture.append({'Key': 'raw/dms/olist/cdc/002.csv', 'ETag': 'second', 'Size': 80})
+    capture.append({'Key': 'raw/cdc/002.csv', 'ETag': 'second', 'Size': 80})
     microbatch.complete_batch(tmp_path, 'first')
     assert microbatch.prepare_batch(tmp_path, 'next')
 

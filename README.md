@@ -67,8 +67,8 @@ from the cloud demonstration.
 
 ```text
 source/original-olist-brazilian-ecommerce.zip
-raw/dms/olist/ecommerce/<table>/LOAD*.csv
-raw/dms/olist/cdc/*.csv
+raw/ecommerce/<table>/LOAD*.csv
+raw/cdc/*.csv
 copy-ready/<capture-relative-path-without-.csv>/<table>.parquet
 ```
 

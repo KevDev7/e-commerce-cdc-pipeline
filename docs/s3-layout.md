@@ -2,8 +2,8 @@
 
 ```text
 source/original-olist-brazilian-ecommerce.zip
-raw/dms/olist/ecommerce/<table>/LOAD*.csv
-raw/dms/olist/cdc/*.csv
+raw/ecommerce/<table>/LOAD*.csv
+raw/cdc/*.csv
 copy-ready/ecommerce/<table>/LOAD00000001/<table>.parquet
 copy-ready/cdc/<original-cdc-filename-without-.csv>/<table>.parquet
 ```
@@ -14,7 +14,7 @@ and derived Parquet.
 
 The ZIP is the complete Kaggle version 2 download. DMS snapshots and CDC files
 remain unchanged in `raw/`. Derived Parquet paths mirror each CSV's path relative
-to `raw/dms/olist/`. The full relative path distinguishes snapshots with identical
+to `raw/`. The full relative path distinguishes snapshots with identical
 filenames in different tables. A CDC file may contain several tables, so each
 gets its own Parquet file. The extension identifies the format; no format-version
 folder or hash folder is needed.
@@ -44,3 +44,13 @@ Earlier path changes are documented in the [original layout report](evidence/oli
 and [format-folder removal report](evidence/olist-copy-ready-layout-migration.json).
 The legacy `synthea-cdc` bucket/profile/resource labels still identify this project's
 resources; the current dataset is Olist.
+
+The capture prefix is now `raw/`: the optional `dms/olist/` nesting was removed
+while project compute was inactive. All six CSV copies were verified before old
+keys were removed. The 12 Parquet files kept their paths and every value except
+`_source_file`, which now points to the shorter CSV path. The bucket still has
+19 files. Original ZIP and CSV contents are unchanged.
+
+Older reports retain the paths used during those runs. Rebuild a fresh warehouse
+from the moved captures; do not reuse file ledgers or batch checkpoints from an
+older path layout against a running warehouse.

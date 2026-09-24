@@ -25,7 +25,7 @@ def template():
         DeletionPolicy="Retain", UpdateReplacePolicy="Retain")
     add("DmsRole", "IAM::Role", role("dms.amazonaws.com", [
         {"Effect": "Allow", "Action": ["s3:ListBucket", "s3:GetBucketLocation"], "Resource": att("Bucket", "Arn")},
-        {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:PutObjectTagging"], "Resource": sub("${Bucket.Arn}/raw/dms/olist/*")},
+        {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:PutObjectTagging"], "Resource": sub("${Bucket.Arn}/raw/*")},
     ]))
     add("CopyRole", "IAM::Role", role(["redshift.amazonaws.com", "redshift-serverless.amazonaws.com"], [
         {"Effect": "Allow", "Action": ["s3:ListBucket", "s3:GetBucketLocation"], "Resource": att("Bucket", "Arn")},
