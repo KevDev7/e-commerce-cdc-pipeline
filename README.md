@@ -89,7 +89,7 @@ See [source semantics](docs/source.md), [warehouse schema](docs/warehouse.md), [
 ## S3 layout and file formats
 
 ```text
-source/olist/kaggle-v2/<archive-sha256>.zip  # Original Kaggle dataset, version 2
+source/original-olist-brazilian-ecommerce.zip  # Original Kaggle dataset, version 2
 raw/dms/olist/ecommerce/<table>/LOAD*.csv   # Initial table snapshots
 raw/dms/olist/cdc/*.csv                    # Captured inserts, updates and deletes
 copy-ready/<source-hash>/<content-hash>/<table>.parquet
@@ -97,7 +97,8 @@ validation/                               # Results from completed checks
 reference/                                # Small source examples and schema reference
 ```
 
-`kaggle-v2` identifies the downloaded dataset release. Prepared files are
+The original ZIP is Kaggle dataset version 2; its download URL and SHA-256
+remain pinned in `src/olist_cdc/seed.py`. Prepared files are
 identified by their `.parquet` extension; no extra format-version folder is needed.
 The raw capture path has no dataset version number.
 S3 holds source and ingestion files; dbt staging, intermediate and marts live

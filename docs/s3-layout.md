@@ -3,9 +3,9 @@
 The paths identify what the files do, without mixing dataset versions with
 pipeline layout versions.
 
-| Purpose | Current prefix | Previous prefix |
+| Purpose | Current path or prefix | Previous path or prefix |
 | --- | --- | --- |
-| Original Kaggle dataset, release 2 | `source/olist/kaggle-v2/` | `source/olist-v2/` |
+| Original Kaggle dataset, release 2 | `source/original-olist-brazilian-ecommerce.zip` | `source/olist-v2/<sha256>.zip`, then `source/olist/kaggle-v2/<sha256>.zip` |
 | Original DMS snapshots and changes | `raw/dms/olist/` | `olist-v1/` |
 | Derived, typed Redshift COPY files | `copy-ready/` | `copy-ready/parquet-v1/` |
 
@@ -49,3 +49,10 @@ The loader now writes and loads the shorter paths. The existing COPY role alread
 allows `copy-ready/*`, so it needs no policy change. This move does not change
 the raw file ledger or event identities and does not require a warehouse rebuild.
 Historical reports retain the paths used during their original runs.
+
+## Readable original archive name
+
+The original ZIP now lives at `source/original-olist-brazilian-ecommerce.zip`.
+Only its S3 object key changed; its bytes are unchanged. The pinned Kaggle
+version and SHA-256 verification remain in `src/olist_cdc/seed.py`. The renamed
+object was verified against that SHA-256 before the previous object was removed.

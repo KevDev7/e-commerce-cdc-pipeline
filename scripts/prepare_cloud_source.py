@@ -9,7 +9,7 @@ from psycopg import sql
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env.cloud", override=True)
 from olist_cdc.db import connect, initialize
-from olist_cdc.seed import SHA256, download, load
+from olist_cdc.seed import download, load
 from olist_cdc.cloud_load import aws_session
 
 # Only a temporary seed ZIP touches disk; both databases run in AWS.
@@ -17,7 +17,7 @@ with TemporaryDirectory(prefix="olist-seed-") as temporary:
     archive = Path(temporary) / "source.zip"
     download(archive)
     aws_session().client("s3").upload_file(str(archive), os.environ["S3_BUCKET"],
-        f"source/olist/kaggle-v2/{SHA256}.zip", ExtraArgs={"ServerSideEncryption": "AES256"})
+        "source/original-olist-brazilian-ecommerce.zip", ExtraArgs={"ServerSideEncryption": "AES256"})
     with connect() as connection:
         initialize(connection)
         print(load(connection, archive))

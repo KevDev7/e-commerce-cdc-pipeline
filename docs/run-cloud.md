@@ -28,7 +28,7 @@ After CREATE_COMPLETE:
 .venv/bin/python scripts/cloud_stack.py connections
 ```
 
-`prepare_cloud_source.py` downloads the pinned ZIP into a temporary directory, uploads a copy under `source/olist/kaggle-v2/`, loads RDS and removes the temporary directory on exit. It never creates a local source database.
+`prepare_cloud_source.py` downloads the pinned ZIP into a temporary directory, uploads a copy as `source/original-olist-brazilian-ecommerce.zip`, loads RDS and removes the temporary directory on exit. It never creates a local source database.
 
 Repeat `connections` until both endpoints report `successful`, then start the task. Starting is deliberate: the source must be seeded first. Wait for all four tables to complete their full load; inspect real files before accepting the CSV contract.
 
