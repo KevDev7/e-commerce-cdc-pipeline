@@ -56,6 +56,7 @@ scheduling, validation and teardown. It is the main operating guide. Agree a
 spending allowance before provisioning a new session, use only the project's
 `synthea-cdc` AWS profile, and remove paid compute after the demonstration.
 That legacy resource/profile name identifies this project's resources; the data is Olist.
+[Optional verification scenarios](docs/verification.md) are separate from the normal run.
 
 No full database is needed on your Mac. The cloud seed download is temporary.
 GitHub CI uses small disposable PostgreSQL fixtures and checks actual Airflow task

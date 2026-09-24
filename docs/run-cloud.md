@@ -38,15 +38,6 @@ Repeat `connections` until both endpoints report `successful`, then start the ta
 .venv/bin/olist-cdc --cloud simulate --scenario aws-001
 ```
 
-For recovery testing, stop capture, wait until stopped, commit a second scenario, then resume from the saved checkpoint:
-
-```sh
-.venv/bin/python scripts/capture.py stop
-.venv/bin/python scripts/capture.py status
-.venv/bin/olist-cdc --cloud simulate --scenario aws-002
-.venv/bin/python scripts/capture.py resume
-```
-
 ## Warehouse and orchestration
 
 ```sh
@@ -99,23 +90,21 @@ After changing transformation logic that must apply to existing rows, pause sche
 
 This rebuilds marts from retained raw events and resets each model's file checkpoint in its transaction. It runs tests and uses Redshift compute within the agreed session budget. Normal scheduled builds remain incremental. See [incremental recovery](incremental-dbt.md).
 
-## Incremental mart rollback check
+## Check the result
 
-With Airflow paused and the initial marts already built, simulate another order
-scenario and load its capture files without building marts. Then run:
+After a successful scheduled batch, pause the DAG and wait for active work to finish.
+With the source quiet, verify the scenario and reconcile source fields:
 
 ```sh
-.venv/bin/python scripts/verify_mart_failure.py
-.venv/bin/python scripts/run_cloud.py build
+uv run python scripts/verify_cloud_scenario.py aws-001
+uv run python scripts/reconcile_cloud.py
 ```
 
-The check injects a SQL error after the `fct_orders` checkpoint write using a
-temporary copy of the dbt project. It compares actual Redshift rows and checkpoint
-state before and after failure, retries the model, and records the result under
-ignored `data/mart-failure.json`. The normal build afterward updates the remaining
-marts and runs all data tests. Original project SQL is not modified by the check.
+Replay, failure injection, bootstrap timing, historical joins and measured workloads
+are [optional verification scenarios](verification.md). They are separate from the
+normal setup → simulate → process → verify → cleanup flow.
 
-## Replay and cleanup
+## Cleanup
 
 The loader stores original DMS files unchanged, derives explicitly typed Zstandard Parquet COPY inputs under `copy-ready/`, and commits the raw records with the file ledger in one transaction. A replay skips identical files; events redelivered under another file name are deduplicated by source identity. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
 
@@ -132,41 +121,6 @@ and removes the compute stack. It does not export sample rows or download data
 to the workstation. It refuses to delete a legacy stack whose deployed bucket lacks `DeletionPolicy=Retain`; update that policy first. The small `data/cloud-state.json` records `retained_bucket`, region and capture prefix before deletion. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS log group. Verify no project RDS/DMS/Redshift compute or database snapshots remain, and verify the retained bucket is private and readable with the project profile. Remove `.env.cloud` and `.aws/credentials` afterward. Keep deployment metadata before approving another session. Never modify other projects' resources.
 
 The retained bucket incurs S3 storage/request charges until deliberately removed. It remains accessible through the project AWS profile after its stack-managed DMS/COPY roles are removed. Rebuilding a warehouse later requires a new COPY role scoped to that retained bucket, the matching capture prefix and a fresh raw database/ledger; then load the original CSV captures to regenerate Parquet and rebuild dbt. Retention is not an automated cross-session restore service.
-
-With the source quiescent and the latest DMS batch loaded, `.venv/bin/python scripts/reconcile_cloud.py` compares every current field with Redshift. `.venv/bin/python scripts/verify_replay.py` redelivers a real CDC file and retries the batch, asserting unchanged raw counts and unique event identities. See the Olist validation evidence for completed executions. Reconciliation against an actively changing source would require coordinating a common checkpoint, which this small demo does not automate.
-
-## Verify a completed simulated lifecycle
-
-After dbt succeeds, check named scenarios against real raw events and marts:
-
-```sh
-uv run python scripts/verify_cloud_scenario.py demo-001
-uv run python scripts/reconcile_cloud.py
-```
-
-The scenario check requires all eight simulation phases. It verifies 8 inserts,
-4 updates and 2 deletes, unique event identities, the four observed order statuses,
-independent item/payment totals, customer address history, hard-delete application
-and exclusion of the rolled-back update. Reconciliation compares every current
-source field after the source is quiet. Saved reports remain in ignored `data/`.
-
-## Verify customer versions for new orders
-
-With Airflow paused, after a full simulated lifecycle corrected the customer's city:
-
-```sh
-uv run python scripts/verify_customer_join.py write --scenario demo-001
-# Wait for DMS to deliver the new INSERT, then load and build.
-uv run python scripts/run_cloud.py load
-uv run python scripts/run_cloud.py build
-uv run python scripts/verify_customer_join.py verify --scenario demo-001
-```
-
-The added order intentionally has no items/payments. The check proves the original
-order retains sao paulo, the follow-up uses campinas, and all 99,441 original orders
-retain unknown pre-capture customer history. This is a simulated repeat order on
-the reconstructed source, not an extra record from Olist. Existing warehouses need
-one full refresh to add the new fact columns before returning to incremental runs.
 
 ## Local data retention
 

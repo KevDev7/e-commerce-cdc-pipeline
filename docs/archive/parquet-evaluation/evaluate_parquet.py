@@ -1,6 +1,6 @@
 """Read-only size/round-trip comparison; does not change capture or COPY behavior.
 
-Run with locked dependencies: uv run --frozen scripts/evaluate_parquet.py
+Archived comparison from September 22, 2026; not part of the demo pipeline.
 Requires the completed workload report and active cloud environment. Data stays
 in memory; the saved report contains sizes/types, not source rows or credentials.
 """
@@ -24,7 +24,7 @@ from olist_cdc.events import RAW_METADATA, parse_csv, source_columns
 from olist_cdc.seed import TABLES
 from olist_cdc.warehouse import TYPES
 
-ROOT=Path(__file__).resolve().parents[1]
+ROOT=Path(__file__).resolve().parents[3]
 
 
 def normalized_csv(events):

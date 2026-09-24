@@ -1,4 +1,10 @@
-# Derived Parquet evaluation
+# Archived Parquet evaluation — September 22, 2026
+
+This completed experiment is retained for inspection, alongside its
+[original comparison script](evaluate_parquet.py) and [results](results.json).
+It depends on the original session reports and capture keys, which may no longer
+exist. It is not a setup step or a check required for a normal demonstration.
+See the [current runbook](../../run-cloud.md) for operating instructions.
 
 **Decision: use explicitly typed Zstandard Parquet for derived Redshift COPY inputs;
 retain the original Olist archive and DMS CSV captures.** The main benefits are an
@@ -45,7 +51,7 @@ and [Arrow's Parquet documentation](https://arrow.apache.org/docs/python/parquet
 Actual Parquet COPY loaded all 415,418 historical rows. Both initial and
 incremental dbt builds passed 19 models and 49 tests. Exact source-to-warehouse
 reconciliation, four-table rollback/retry, replay, deletes and customer-version
-joins passed after 15 simulated changes. [Evidence](evidence/olist-parquet-validation.json).
+joins passed after 15 simulated changes. [Evidence](../../evidence/olist-parquet-validation.json).
 
 The four new snapshot Parquet files total 36,244,702 bytes. Their original
 **uncompressed DMS CSV** captures total 83,870,962 bytes; this is a different
@@ -53,19 +59,19 @@ baseline from the gzip comparison above. Retention keeps both representations,
 so total S3 storage includes both, plus the pinned source ZIP. The in-memory
 conversion does not persist derived datasets on the workstation.
 
-## Reproduce
+## Historical reproduction prerequisites
 
 During an authorized active AWS session, after the lifecycle/load-failure and
 `aws-measured-250` checks have produced their ignored reports:
 
 ```sh
-uv run --frozen scripts/evaluate_parquet.py
+uv run --frozen docs/archive/parquet-evaluation/evaluate_parquet.py
 ```
 
 This reads S3 and writes only an ignored metrics report; data buffers stay in
 memory. It does not upload Parquet, change DMS, or execute warehouse writes.
 PyArrow is now a locked production dependency.
-[Detailed results and schemas](evidence/olist-parquet-evaluation.json) are committed
+[Detailed results and schemas](results.json) are committed
 without source records or credentials. The user requested removal of local datasets after evaluation. Original captures
 and the seed archive were removed from the Mac; default teardown no longer
 downloads captures. Current teardown retains S3 data, so future read-only comparisons need no running databases. The script still expects the matching workload and lifecycle report keys from the measured session.
