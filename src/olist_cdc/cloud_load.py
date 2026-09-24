@@ -63,14 +63,18 @@ def load_file(connection, s3, bucket, key, role, *, metrics=None):
                 metrics["files_already_loaded"] = metrics.get("files_already_loaded", 0) + 1
             return 0
         body = s3.get_object(Bucket=bucket, Key=key)["Body"].read()
-        events = parse_csv(body.decode(), source, snapshot_table=snapshot_table(key, os.environ.get("CAPTURE_PREFIX", "raw")))
+        snapshot = snapshot_table(key, os.environ.get("CAPTURE_PREFIX", "raw"))
+        events = parse_csv(body.decode(), source, snapshot_table=snapshot)
         for table in TABLES:
             batch = [e for e in events if e.table == table]
             if not batch:
                 continue
             # COPY input is derived; the original DMS file remains untouched.
             relative_key = key.removeprefix(os.environ.get("CAPTURE_PREFIX", "raw").rstrip("/") + "/")
-            staging_key = f"copy-ready/{relative_key.removesuffix('.csv')}/{table}.parquet"
+            if snapshot:
+                staging_key = f"copy-ready/{relative_key.removesuffix('.csv')}.parquet"
+            else:
+                staging_key = f"copy-ready/{relative_key.removesuffix('.csv')}/{table}.parquet"
             s3.put_object(Bucket=bucket, Key=staging_key, Body=normalized_parquet(batch, table), ServerSideEncryption="AES256")
             cursor.execute(f'CREATE TEMP TABLE incoming_{table} (LIKE "raw".{table})')
             copy_sql = sql.SQL("COPY {} FROM {} IAM_ROLE {} FORMAT AS PARQUET").format(

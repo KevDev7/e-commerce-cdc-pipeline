@@ -69,7 +69,8 @@ from the cloud demonstration.
 dataset/original-olist-brazilian-ecommerce.zip
 raw/initial-load/<table>/LOAD*.csv
 raw/cdc/*.csv
-copy-ready/<capture-relative-path-without-.csv>/<table>.parquet
+copy-ready/initial-load/<table>/LOAD*.parquet
+copy-ready/cdc/<original-cdc-filename-without-.csv>/<table>.parquet
 ```
 
 Original CSV captures are replayable evidence. Derived Parquet files use explicit
