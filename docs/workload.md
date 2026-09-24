@@ -20,7 +20,7 @@ for each measurement. Previously committed phases are rejected, not replayed as
 new changes. If a write is interrupted between phases, use a new scenario and do
 not present the incomplete run as a successful measurement.
 
-Run the same steps as the DAG, with a distinct audit run ID:
+Run the same steps as the DAG, with a distinct run ID:
 
 ```sh
 export BATCH_RUN_ID=benchmark__measured-250
@@ -32,7 +32,6 @@ uv run python scripts/run_cloud.py build
 uv run python scripts/run_cloud.py report
 uv run python scripts/run_microbatch.py complete
 uv run python scripts/benchmark_cloud.py verify --scenario measured-250
-uv run python scripts/report_batches.py --run-id benchmark__measured-250
 uv run python scripts/reconcile_cloud.py
 ```
 
@@ -43,7 +42,7 @@ deleted orders disappear from current marts. All surviving orders keep their
 original sao paulo version, while current customers have moved to campinas.
 
 The capture report records S3 object delivery time separately from when a manual
-poll observed completion. The task audit measures loader and dbt durations. This
+poll observed completion. Task summaries log loader and dbt durations. This
 manual batch does not include waiting for a five-minute schedule. Results depend
 on source transaction size, file layout, existing raw history, warehouse warmth
 and the full test graph; one run must not be extrapolated to sustained throughput.

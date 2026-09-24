@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / '.env.cloud', override=True)
-from olist_cdc.audit import audit_step
+from olist_cdc.task_logging import log_step
 from olist_cdc.cloud_load import check_capture, load_pending, report
 
 
@@ -21,7 +21,7 @@ def main():
     if args.full_refresh and args.step != 'build':
         parser.error('--full-refresh is only valid with build')
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
-    with audit_step(args.step) as details:
+    with log_step(args.step) as details:
         if args.step == 'build':
             details['full_refresh'] = args.full_refresh
             subprocess.run([str(Path(sys.executable).with_name('dbt')), 'build', '--target', 'redshift',
