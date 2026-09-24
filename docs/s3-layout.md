@@ -1,6 +1,11 @@
 # S3 layout
 
-Current retained bucket: `olist-cdc-ezajhtylhk8v`.
+Current retained bucket: `olist-cdc-ezajhtylhk8v` (14 files).
+
+The duplicate replay CSV and its four derived Parquet files have been removed.
+The original CDC batch remains. Retry and event-deduplication logic, automated
+tests, and historical validation evidence are unchanged. Migration counts below
+describe the bucket before this cleanup.
 
 ```text
 dataset/original-olist-brazilian-ecommerce.zip
