@@ -29,13 +29,12 @@ uv run python scripts/run_cloud.py check
 uv run python scripts/run_cloud.py pending
 uv run python scripts/run_cloud.py load
 uv run python scripts/run_cloud.py build
-uv run python scripts/run_cloud.py report
 uv run python scripts/run_cloud.py complete
 uv run python scripts/benchmark_cloud.py verify --scenario measured-250
 uv run python scripts/reconcile_cloud.py
 ```
 
-Stop if any step fails. Completion is only appropriate after build/tests/report
+Stop if any step fails. Completion is only appropriate after build/tests
 succeed. `verify` checks operation counts, unique event IDs, 225 current rows per
 table, order/payment totals and customer versions at order creation. The 25
 deleted orders disappear from current marts. All surviving orders keep their

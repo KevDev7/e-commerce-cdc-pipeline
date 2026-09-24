@@ -41,7 +41,7 @@ def prepare_batch(directory, run_id):
 
 
 def complete_batch(directory, run_id):
-    """Advance only after loading, dbt tests, and reporting have succeeded."""
+    """Advance only after loading and dbt build/tests have succeeded."""
     directory = Path(directory)
     # Atomic replacement leaves the old checkpoint intact if acknowledgement fails.
     pending = pending_path(directory, run_id)

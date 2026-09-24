@@ -1,7 +1,7 @@
 """A small, labeled SQL workload and measured CDC check; never a throughput SLA.
 
 With scheduling paused: write, wait until capture succeeds, run one normal
-load/build/report batch, then verify. Use a fresh scenario per measurement; previously committed phases are rejected.
+load/build batch, then verify. Use a fresh scenario per measurement; previously committed phases are rejected.
 """
 import argparse
 from datetime import datetime, timezone

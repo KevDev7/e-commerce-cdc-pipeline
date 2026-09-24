@@ -15,7 +15,7 @@ assert not bag.import_errors, bag.import_errors
 dag = bag.get_dag('olist_cdc')
 assert dag.schedule_interval == '*/5 * * * *'
 assert not dag.catchup and dag.max_active_runs == 1 and dag.is_paused_upon_creation
-expected = ['check', 'pending', 'load', 'build', 'report', 'complete']
+expected = ['check', 'pending', 'load', 'build', 'complete']
 assert [task.task_id for task in dag.topological_sort()] == expected
 for step in expected:
     task = dag.get_task(step)

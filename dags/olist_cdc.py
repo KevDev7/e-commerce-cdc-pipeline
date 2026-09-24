@@ -13,7 +13,7 @@ with DAG(
     description="Every five minutes: check capture, process new files, build and test marts",
     tags=["olist", "cdc", "portfolio"],
 ) as dag:
-    steps = ("check", "pending", "load", "build", "report", "complete")
+    steps = ("check", "pending", "load", "build", "complete")
     tasks = {step: BashOperator(
         task_id=step,
         bash_command=f"/opt/pipeline/bin/python /opt/project/scripts/run_cloud.py {step}",

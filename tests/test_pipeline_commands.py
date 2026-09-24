@@ -11,7 +11,6 @@ def test_shared_runner_retries_failed_build_and_skips_completed_batch(monkeypatc
     calls = []
     monkeypatch.setattr(run_cloud, 'check_capture', lambda: calls.append('check'))
     monkeypatch.setattr(run_cloud, 'load_pending', lambda **kw: calls.append('load'))
-    monkeypatch.setattr(run_cloud, 'report', lambda: calls.append('report') or {'fct_orders': 1})
     def fail(*args, **kwargs):
         raise subprocess.CalledProcessError(7, 'dbt')
     monkeypatch.setattr(run_cloud.subprocess, 'run', fail)
@@ -23,9 +22,9 @@ def test_shared_runner_retries_failed_build_and_skips_completed_batch(monkeypatc
     assert not checkpoint.exists()
     assert run_cloud.main(['pending']) is None
     monkeypatch.setattr(run_cloud.subprocess, 'run', lambda *a, **kw: calls.append('build'))
-    for step in ('build', 'report', 'complete'):
+    for step in ('build', 'complete'):
         assert run_cloud.main([step]) is None
-    assert checkpoint.exists() and calls == ['check', 'load', 'build', 'report']
+    assert checkpoint.exists() and calls == ['check', 'load', 'build']
     assert run_cloud.main(['pending']) == 99
 
 

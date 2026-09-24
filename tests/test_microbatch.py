@@ -42,7 +42,7 @@ def test_failed_build_is_retried_even_when_raw_was_already_loaded(tmp_path, capt
     microbatch.complete_batch(tmp_path, 'first')
     capture[0]['ETag'] = 'changed'
     assert microbatch.prepare_batch(tmp_path, 'failed-build')
-    # Loading raw does not acknowledge a batch. Only complete after successful dbt/report.
+    # Loading raw does not acknowledge a batch. Only complete after successful dbt build/tests.
     assert microbatch.prepare_batch(tmp_path, 'retry')
     microbatch.complete_batch(tmp_path, 'retry')
     assert not microbatch.prepare_batch(tmp_path, 'quiet')
