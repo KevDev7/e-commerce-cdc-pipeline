@@ -6,8 +6,11 @@ raw/dms/olist/ecommerce/<table>/LOAD*.csv
 raw/dms/olist/cdc/*.csv
 copy-ready/ecommerce/<table>/LOAD00000001/<table>.parquet
 copy-ready/cdc/<original-cdc-filename-without-.csv>/<table>.parquet
-validation/
 ```
+
+Validation reports are kept in Git under `docs/evidence/`; duplicate S3 copies
+have been removed. The bucket contains only the source archive, original captures
+and derived Parquet.
 
 The ZIP is the complete Kaggle version 2 download. DMS snapshots and CDC files
 remain unchanged in `raw/`. Derived Parquet paths mirror each CSV's path relative

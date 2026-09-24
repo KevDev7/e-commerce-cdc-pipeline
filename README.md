@@ -70,7 +70,6 @@ source/original-olist-brazilian-ecommerce.zip
 raw/dms/olist/ecommerce/<table>/LOAD*.csv
 raw/dms/olist/cdc/*.csv
 copy-ready/<capture-relative-path-without-.csv>/<table>.parquet
-validation/
 ```
 
 Original CSV captures are replayable evidence. Derived Parquet files use explicit
