@@ -1,4 +1,4 @@
-"""Small CloudFormation template; temporary compute and a retained private S3 dataset bucket."""
+"""Small CloudFormation template; temporary compute with retained S3, Redshift data and an RDS snapshot."""
 import json
 from pathlib import Path
 
@@ -31,7 +31,7 @@ def template():
     add("CopyRole", "IAM::Role", role(["redshift.amazonaws.com", "redshift-serverless.amazonaws.com"], [
         {"Effect": "Allow", "Action": ["s3:ListBucket", "s3:GetBucketLocation"], "Resource": att("Bucket", "Arn")},
         {"Effect": "Allow", "Action": ["s3:GetObject"], "Resource": sub("${Bucket.Arn}/copy-ready/*")},
-    ]))
+    ]), DeletionPolicy="Retain", UpdateReplacePolicy="Retain")
     for name, role_name, policy in (("DmsVpcRole", "dms-vpc-role", "AmazonDMSVPCManagementRole"),
                                     ("DmsLogRole", "dms-cloudwatch-logs-role", "AmazonDMSCloudWatchLogsRole")):
         properties = role("dms.amazonaws.com", [])
@@ -59,7 +59,7 @@ def template():
         "VPCSecurityGroups": [ref("SourceSecurityGroup")], "MultiAZ": False, "PubliclyAccessible": True,
         "BackupRetentionPeriod": 0, "DeleteAutomatedBackups": True, "DeletionProtection": False,
         "EnablePerformanceInsights": False, "Tags": TAGS,
-    }, DeletionPolicy="Delete", UpdateReplacePolicy="Delete")
+    }, DeletionPolicy="Snapshot", UpdateReplacePolicy="Snapshot")
     add("Replication", "DMS::ReplicationInstance", {
         "ReplicationInstanceIdentifier": "synthea-cdc-replication", "ReplicationInstanceClass": "dms.t3.small",
         "EngineVersion": "3.6.1", "AllocatedStorage": 5, "MultiAZ": False, "PubliclyAccessible": True,
@@ -88,7 +88,7 @@ def template():
     add("Namespace", "RedshiftServerless::Namespace", {
         "NamespaceName": "synthea-cdc", "DbName": "olist", "AdminUsername": "warehouse_owner", "AdminUserPassword": ref("WarehousePassword"),
         "IamRoles": [att("CopyRole", "Arn")], "DefaultIamRoleArn": att("CopyRole", "Arn"), "Tags": TAGS,
-    }, Condition="WarehouseEnabled", DeletionPolicy="Delete", UpdateReplacePolicy="Delete")
+    }, Condition="WarehouseEnabled", DeletionPolicy="Retain", UpdateReplacePolicy="Retain")
     add("Workgroup", "RedshiftServerless::Workgroup", {
         "WorkgroupName": "synthea-cdc", "NamespaceName": ref("Namespace"), "BaseCapacity": 4, "MaxCapacity": 4,
         "PricePerformanceTarget": {"Status": "DISABLED"},

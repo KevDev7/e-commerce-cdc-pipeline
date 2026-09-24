@@ -48,7 +48,7 @@ def outputs():
     return {x["OutputKey"]: x["OutputValue"] for x in stack().get("Outputs", [])}
 
 
-def create():
+def create(allowance_usd):
     if STATE.exists():
         raise RuntimeError("A deployment record already exists; inspect it before another paid run")
     account = SESSION.client("sts").get_caller_identity()["Account"]
@@ -81,7 +81,7 @@ def create():
         OnFailure="DELETE", TimeoutInMinutes=40)
     STATE.parent.mkdir(exist_ok=True)
     STATE.write_text(json.dumps({"stack_id": response["StackId"], "account": account,
-                                 "created_at": datetime.now(timezone.utc).isoformat(), "allowance_usd": 5}, indent=2))
+                                 "created_at": datetime.now(timezone.utc).isoformat(), "allowance_usd": allowance_usd}, indent=2))
     print("Creation started. Use status; no capture or Redshift queries start automatically.")
 
 
@@ -160,17 +160,21 @@ def delete():
         deployed = CF.get_template(StackName=current["StackId"])["TemplateBody"]
         if isinstance(deployed, str):
             deployed = json.loads(deployed)
-        if deployed["Resources"]["Bucket"].get("DeletionPolicy") != "Retain":
-            raise RuntimeError("Update the deployed bucket to DeletionPolicy=Retain before teardown; cloud data must survive")
+        for logical_id, policy in (("Bucket", "Retain"), ("Source", "Snapshot"), ("Namespace", "Retain"), ("CopyRole", "Retain")):
+            if deployed["Resources"][logical_id].get("DeletionPolicy") != policy:
+                raise RuntimeError(f"Update {logical_id} to DeletionPolicy={policy} before teardown; retained data must survive")
         bucket = result["S3Bucket"]
         state = json.loads(STATE.read_text())
         state["retained_bucket"] = bucket
         state["retained_region"] = "us-east-1"
         state["capture_prefix"] = "raw"
+        state["retained_copy_role"] = result.get("CopyRoleArn")
+        state["retained_namespace"] = "synthea-cdc" if "WarehouseHost" in result else None
+        state["source_snapshot_instance"] = "synthea-cdc-source"
         STATE.write_text(json.dumps(state, indent=2))
         print(f"Retaining s3://{bucket}/ (source archive, original captures and derived Parquet)")
     CF.delete_stack(StackName=current["StackId"])
-    print("Compute deletion started; S3 data retained, no datasets downloaded. Verify DELETE_COMPLETE.")
+    print("Compute deletion started; retaining S3, the Redshift namespace and an RDS snapshot. Verify DELETE_COMPLETE and the snapshot before declaring retention complete.")
 
 
 
@@ -190,10 +194,13 @@ def cleanup_logs():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["validate", "create", "status", "env", "warehouse", "usage-limit", "connections", "delete", "cleanup-logs"])
+    parser.add_argument("--allowance-usd", type=float, help="User-approved allowance for this one-time run (create only)")
     args = parser.parse_args()
+    if args.command == "create" and (args.allowance_usd is None or args.allowance_usd <= 0):
+        parser.error("create requires a positive --allowance-usd agreed with the user")
     if args.command == "validate":
         CF.validate_template(TemplateBody=template())
         print("CloudFormation template valid")
     else:
-        {"create": create, "status": status, "env": sync_env, "warehouse": enable_warehouse,
+        {"create": lambda: create(args.allowance_usd), "status": status, "env": sync_env, "warehouse": enable_warehouse,
          "usage-limit": usage_limit, "connections": connections, "delete": delete, "cleanup-logs": cleanup_logs}[args.command]()

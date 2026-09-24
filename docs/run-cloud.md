@@ -10,15 +10,15 @@ From the repository root, with `.venv` installed:
 
 ```sh
 .venv/bin/python scripts/cloud_stack.py validate
-.venv/bin/python scripts/cloud_stack.py create
+.venv/bin/python scripts/cloud_stack.py create --allowance-usd 5
 .venv/bin/python scripts/cloud_stack.py status
 ```
 
 `create` makes one CloudFormation stack. It uses three existing default public subnets, new project security groups, no NAT gateway, one RDS PostgreSQL micro instance, one DMS small instance, and one private S3 bucket named `olist-cdc-<unique suffix>`. Database access is restricted to your current public IPv4 address and the DMS security group. RDS/DMS use encrypted connections. A changed home IP requires updating the stack's ClientCidr parameter. Do not open database ports to everyone.
 
-The stack creates DMS's standard service roles only when absent; existing roles are left alone. All other resources belong to this stack. The source is a reproducible copy of historical Olist data plus disposable simulated activity, so deletion intentionally does not retain a paid database snapshot.
+The stack creates DMS's standard service roles only when absent; existing roles are left alone. All other resources belong to this stack. The source is a reproducible copy of historical Olist data plus simulated activity. Cleanup now takes a final RDS snapshot and retains the Redshift namespace and COPY role.
 
-The S3 bucket has CloudFormation `Retain` policies. It survives stack deletion, while RDS and Redshift do not retain database snapshots. Each new demo creates a fresh capture lineage in a new bucket; do not merge unrelated source sequences.
+The S3 bucket and Redshift namespace have CloudFormation `Retain` policies. RDS has `Snapshot` policies. They preserve cloud data after stack deletion; the DMS instance, RDS instance and Redshift workgroup are deleted. Each new demo creates a fresh capture lineage in a new bucket; do not merge unrelated source sequences.
 
 After CREATE_COMPLETE:
 
@@ -124,9 +124,9 @@ docker compose -f compose.airflow.yaml stop
 
 Before deletion, stop simulated writes. Deletion retains the bucket and its data
 and removes the compute stack. It does not export sample rows or download data
-to the workstation. It refuses to delete a legacy stack whose deployed bucket lacks `DeletionPolicy=Retain`; update that policy first. The small `data/cloud-state.json` records `retained_bucket`, region and capture prefix before deletion. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS log group. Verify no project RDS/DMS/Redshift compute or database snapshots remain, and verify the retained bucket is private and readable with the project profile. Remove `.env.cloud` and `.aws/credentials` afterward. Keep deployment metadata before approving another session. Never modify other projects' resources.
+to the workstation. It refuses to delete a legacy stack whose deployed bucket lacks `DeletionPolicy=Retain`; update that policy first. The small `data/cloud-state.json` records `retained_bucket`, region and capture prefix before deletion. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS log group. Verify no project RDS/DMS instances or Redshift workgroups remain. Verify the final RDS snapshot is available, the Redshift namespace remains, and the retained bucket is private and readable. Record the snapshot identifier and retained namespace in `data/cloud-state.json`. Remove expired `.aws/credentials`; keep any necessary warehouse credentials only in the ignored, permission-restricted `.env.cloud`. Keep deployment metadata before approving another session. Never modify other projects' resources.
 
-The retained bucket incurs S3 storage/request charges until deliberately removed. It remains accessible through the project AWS profile after its stack-managed DMS/COPY roles are removed. Rebuilding a warehouse later requires a new COPY role scoped to that retained bucket, the matching capture prefix and a fresh raw database/ledger; then load the original CSV captures to regenerate Parquet and rebuild dbt. Retention is not an automated cross-session restore service.
+The retained bucket incurs S3 storage/request charges until deliberately removed. It remains accessible through the project AWS profile; the COPY role is retained for future warehouse access. Rebuilding a warehouse later requires a new COPY role scoped to that retained bucket, the matching capture prefix and a fresh raw database/ledger; then load the original CSV captures to regenerate Parquet and rebuild dbt. Retention is not an automated cross-session restore service.
 
 ## Local data retention
 
@@ -137,3 +137,17 @@ seed commands are no longer exposed by the CLI. The
 `olist-cdc_airflow-data` volume holds local Airflow metadata/logs and can also be
 removed after saving the small validation summary. Do not remove other projects'
 containers or volumes. Future local tests recreate disposable databases.
+
+## Retained databases after this run
+
+The RDS snapshot preserves source data without a running source instance. Restore
+it to a new instance before querying it; restoration incurs compute charges.
+Redshift tables and views stay in the retained `synthea-cdc` namespace. Cleanup
+removes its workgroup, so no SQL endpoint remains until a workgroup is recreated
+and associated with that namespace. Reapply the 4-RPU capacity and usage limit
+before querying. Do not delete the namespace to recreate a compute endpoint.
+
+Retained data incurs ongoing storage charges; the approved one-time run allowance
+is separate. Existing namespace names must be inspected before another stack
+creation; the normal fresh-demo command is not a retained-warehouse restore tool.
+The old S3 lineage is preserved separately from new captures.
