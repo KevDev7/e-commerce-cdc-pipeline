@@ -15,7 +15,9 @@ Olist ZIP → PostgreSQL on RDS → DMS reads WAL → S3 CSV captures
 
 Airflow runs locally in Docker and processes available files every five minutes
 during demonstrations. Quiet batches skip warehouse work. RDS, DMS and Redshift
-are temporary; the source archive and captured data stay in S3 between demos.
+compute is temporary. Between demos, data stays in S3, an RDS snapshot and the
+Redshift namespace; restoring source access or recreating a warehouse workgroup
+is required before querying again.
 
 ## What is real and what is simulated
 
@@ -79,11 +81,12 @@ and marts are warehouse layers, not S3 folders. [Path details](docs/s3-layout.md
 
 ## Verification and limits
 
-The September 22, 2026 AWS Parquet demonstration loaded all 415,418 historical
-rows and verified a 15-change simulated batch, raw rollback/retry, replay,
-hard deletes, customer-version joins and source-to-target reconciliation.
-[Saved results](docs/evidence/olist-parquet-validation.json) describe that tested
-revision, not a new cloud run after every repository change.
+The September 24, 2026 AWS run loaded all 415,418 historical rows and verified
+30 simulated changes across two successful scheduled batches. Both builds passed
+17 models and 49 tests. The shared checkpoint rollback/retry, hard deletes,
+customer-version joins and every current source field passed cloud validation.
+[Saved results](docs/evidence/olist-retained-cloud-validation.json) include the
+initial endpoint timeout and subsequent recovery, without claiming a latency SLA.
 
 Current changes are checked in [GitHub CI](https://github.com/KevDev7/synthea-cdc/actions).
 The [validation history](docs/validation.md) distinguishes cloud runs, local fixtures

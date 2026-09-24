@@ -1,0 +1,475 @@
+{
+  "verified_at": "2026-09-24T20:54:31.825813+00:00",
+  "revision": "8517bb4",
+  "baseline_source_rows": 415418,
+  "simulated_events": 30,
+  "first_build": {
+    "generated_at": "2026-09-24T20:47:36.626222Z",
+    "elapsed_time": 84.90474963188171,
+    "counts": {
+      "operation": 1,
+      "model": 17,
+      "test": 49
+    },
+    "statuses": {
+      "success": 18,
+      "pass": 49
+    }
+  },
+  "incremental_build": {
+    "generated_at": "2026-09-24T20:51:32.477175Z",
+    "elapsed_time": 75.12663149833679,
+    "counts": {
+      "operation": 1,
+      "model": 17,
+      "test": 49
+    },
+    "statuses": {
+      "success": 18,
+      "pass": 49
+    }
+  },
+  "airflow": [
+    {
+      "run_id": "scheduled__2026-09-24T20:35:00+00:00",
+      "state": "failed",
+      "start": "2026-09-24 20:41:53.976276+00:00",
+      "end": "2026-09-24 20:44:04.878421+00:00",
+      "tasks": [
+        {
+          "task": "check",
+          "state": "success",
+          "try_number": 1
+        },
+        {
+          "task": "pending",
+          "state": "success",
+          "try_number": 1
+        },
+        {
+          "task": "load",
+          "state": "failed",
+          "try_number": 2
+        },
+        {
+          "task": "build",
+          "state": "upstream_failed",
+          "try_number": 0
+        },
+        {
+          "task": "complete",
+          "state": "upstream_failed",
+          "try_number": 0
+        }
+      ]
+    },
+    {
+      "run_id": "scheduled__2026-09-24T20:40:00+00:00",
+      "state": "success",
+      "start": "2026-09-24 20:45:01.424764+00:00",
+      "end": "2026-09-24 20:48:19.398598+00:00",
+      "tasks": [
+        {
+          "task": "check",
+          "state": "success",
+          "try_number": 1
+        },
+        {
+          "task": "pending",
+          "state": "success",
+          "try_number": 1
+        },
+        {
+          "task": "load",
+          "state": "success",
+          "try_number": 1
+        },
+        {
+          "task": "build",
+          "state": "success",
+          "try_number": 1
+        },
+        {
+          "task": "complete",
+          "state": "success",
+          "try_number": 1
+        }
+      ]
+    },
+    {
+      "run_id": "scheduled__2026-09-24T20:45:00+00:00",
+      "state": "success",
+      "start": "2026-09-24 20:50:01.351815+00:00",
+      "end": "2026-09-24 20:51:34.740023+00:00",
+      "tasks": [
+        {
+          "task": "check",
+          "state": "success",
+          "try_number": 1
+        },
+        {
+          "task": "pending",
+          "state": "success",
+          "try_number": 1
+        },
+        {
+          "task": "load",
+          "state": "success",
+          "try_number": 1
+        },
+        {
+          "task": "build",
+          "state": "success",
+          "try_number": 1
+        },
+        {
+          "task": "complete",
+          "state": "success",
+          "try_number": 1
+        }
+      ]
+    }
+  ],
+  "scenario_checks": {
+    "verified_at": "2026-09-24T20:52:20.477356+00:00",
+    "scenarios": [
+      {
+        "scenario": "aws-retained-20260924",
+        "operations": {
+          "U": 4,
+          "I": 9,
+          "D": 2
+        },
+        "lifecycle_and_totals": true,
+        "hard_deletes": true,
+        "rollback_excluded": true,
+        "unique_event_ids": true,
+        "original_order_city": "sao paulo",
+        "followup_order_city": "campinas",
+        "distinct_observed_versions": true
+      },
+      {
+        "scenario": "aws-retained-incremental-20260924",
+        "operations": {
+          "U": 4,
+          "D": 2,
+          "I": 9
+        },
+        "lifecycle_and_totals": true,
+        "hard_deletes": true,
+        "rollback_excluded": true,
+        "unique_event_ids": true,
+        "original_order_city": "sao paulo",
+        "followup_order_city": "campinas",
+        "distinct_observed_versions": true
+      }
+    ]
+  },
+  "reconciliation": {
+    "verified_at": "2026-09-24T20:52:36.005411+00:00",
+    "tables": {
+      "customers": {
+        "count": 99443,
+        "all_fields_match": true
+      },
+      "orders": {
+        "count": 99445,
+        "all_fields_match": true
+      },
+      "order_items": {
+        "count": 112654,
+        "all_fields_match": true
+      },
+      "order_payments": {
+        "count": 103890,
+        "all_fields_match": true
+      }
+    }
+  },
+  "mart_failure_recovery": {
+    "verified_at": "2026-09-24T20:49:38.419910+00:00",
+    "target": "Redshift",
+    "model": "fct_orders",
+    "rollback_preserved_rows_and_checkpoint": true,
+    "retry_applied_changes": true,
+    "pending_order_events": 7,
+    "before_rows": 99443,
+    "after_retry_rows": 99445
+  },
+  "warehouse": {
+    "tables": [
+      [
+        "intermediate",
+        "int_customer_history",
+        "VIEW"
+      ],
+      [
+        "intermediate",
+        "int_customers_current",
+        "VIEW"
+      ],
+      [
+        "intermediate",
+        "int_order_creations",
+        "VIEW"
+      ],
+      [
+        "intermediate",
+        "int_order_items_current",
+        "VIEW"
+      ],
+      [
+        "intermediate",
+        "int_order_payments_current",
+        "VIEW"
+      ],
+      [
+        "intermediate",
+        "int_order_status_history",
+        "VIEW"
+      ],
+      [
+        "intermediate",
+        "int_orders_current",
+        "VIEW"
+      ],
+      [
+        "marts",
+        "dim_customer_history",
+        "BASE TABLE"
+      ],
+      [
+        "marts",
+        "dim_customers",
+        "BASE TABLE"
+      ],
+      [
+        "marts",
+        "fct_order_items",
+        "BASE TABLE"
+      ],
+      [
+        "marts",
+        "fct_order_payments",
+        "BASE TABLE"
+      ],
+      [
+        "marts",
+        "fct_order_status_history",
+        "BASE TABLE"
+      ],
+      [
+        "marts",
+        "fct_orders",
+        "BASE TABLE"
+      ],
+      [
+        "marts",
+        "processed_files",
+        "BASE TABLE"
+      ],
+      [
+        "raw",
+        "customers",
+        "BASE TABLE"
+      ],
+      [
+        "raw",
+        "loaded_files",
+        "BASE TABLE"
+      ],
+      [
+        "raw",
+        "order_items",
+        "BASE TABLE"
+      ],
+      [
+        "raw",
+        "order_payments",
+        "BASE TABLE"
+      ],
+      [
+        "raw",
+        "orders",
+        "BASE TABLE"
+      ],
+      [
+        "staging",
+        "stg_customers",
+        "VIEW"
+      ],
+      [
+        "staging",
+        "stg_order_items",
+        "VIEW"
+      ],
+      [
+        "staging",
+        "stg_order_payments",
+        "VIEW"
+      ],
+      [
+        "staging",
+        "stg_orders",
+        "VIEW"
+      ]
+    ],
+    "checkpoints": [
+      [
+        "dim_customer_history",
+        6,
+        6
+      ],
+      [
+        "dim_customers",
+        6,
+        6
+      ],
+      [
+        "fct_order_items",
+        6,
+        6
+      ],
+      [
+        "fct_order_payments",
+        6,
+        6
+      ],
+      [
+        "fct_order_status_history",
+        6,
+        6
+      ],
+      [
+        "fct_orders",
+        6,
+        6
+      ]
+    ],
+    "raw": {
+      "customers": [
+        99449,
+        99449
+      ],
+      "orders": [
+        99455,
+        99455
+      ],
+      "order_items": [
+        112654,
+        112654
+      ],
+      "order_payments": [
+        103890,
+        103890
+      ]
+    },
+    "raw_ledger": [
+      6,
+      415448
+    ],
+    "charged_rpu_seconds_at_validation": 1920.0
+  },
+  "raw_load_retry": {
+    "previously_loaded_files_skipped": 6,
+    "new_files_committed": 0
+  },
+  "idle_check": {
+    "exit_code": 99,
+    "warehouse_work_skipped": true
+  },
+  "s3": {
+    "observed_at": "2026-09-24T20:50:39.606069+00:00",
+    "bucket": "olist-cdc-efe3cff0a88c",
+    "objects": [
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204131111/customers.parquet",
+        "bytes": 4553
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204131111/order_items.parquet",
+        "bytes": 5693
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204131111/order_payments.parquet",
+        "bytes": 4890
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204131111/orders.parquet",
+        "bytes": 5867
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204835628/customers.parquet",
+        "bytes": 4548
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204835628/order_items.parquet",
+        "bytes": 5694
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204835628/order_payments.parquet",
+        "bytes": 4893
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204835628/orders.parquet",
+        "bytes": 5872
+      },
+      {
+        "key": "copy-ready/initial-load/customers/LOAD00000001.parquet",
+        "bytes": 6016620
+      },
+      {
+        "key": "copy-ready/initial-load/order_items/LOAD00000001.parquet",
+        "bytes": 7804898
+      },
+      {
+        "key": "copy-ready/initial-load/order_payments/LOAD00000001.parquet",
+        "bytes": 6170474
+      },
+      {
+        "key": "copy-ready/initial-load/orders/LOAD00000001.parquet",
+        "bytes": 8947149
+      },
+      {
+        "key": "dataset/original-olist-brazilian-ecommerce.zip",
+        "bytes": 44717580
+      },
+      {
+        "key": "raw/cdc/CDC_TXN-20260924204131111.csv",
+        "bytes": 4484
+      },
+      {
+        "key": "raw/cdc/CDC_TXN-20260924204835628.csv",
+        "bytes": 4484
+      },
+      {
+        "key": "raw/initial-load/customers/LOAD00000001.csv",
+        "bytes": 14652081
+      },
+      {
+        "key": "raw/initial-load/order_items/LOAD00000001.csv",
+        "bytes": 26610550
+      },
+      {
+        "key": "raw/initial-load/order_payments/LOAD00000001.csv",
+        "bytes": 15620921
+      },
+      {
+        "key": "raw/initial-load/orders/LOAD00000001.csv",
+        "bytes": 26987410
+      }
+    ],
+    "total_bytes": 157578661,
+    "public_access_block": {
+      "BlockPublicAcls": true,
+      "IgnorePublicAcls": true,
+      "BlockPublicPolicy": true,
+      "RestrictPublicBuckets": true
+    }
+  },
+  "limits": [
+    "The first scheduled run and its retry timed out while the new Redshift endpoint initialized. The next two scheduled runs succeeded.",
+    "Initial-load overlap and DMS restart recovery were not repeated in this session; their earlier evidence remains separately dated.",
+    "No throughput or end-to-end latency SLA is established."
+  ]
+}

@@ -1,5 +1,27 @@
 # Olist validation history
 
+## September 24, 2026: current cloud run and data retention
+
+[Cloud evidence](evidence/olist-retained-cloud-validation.json) verifies revision
+`8517bb4` against fresh RDS, DMS, S3 and Redshift resources:
+
+- Loaded all 415,418 baseline rows and two 15-event simulated scenarios.
+- Two actual scheduled Airflow batches succeeded. Each dbt build passed 17 models
+  and 49 tests, including the current plain schema names and shared checkpoint table.
+- The first scheduled attempt and retry hit a new-workgroup connection timeout;
+  the next scheduled batch succeeded after the endpoint became reachable.
+- DMS emitted the configured `initial-load` paths and renamed CDC schema label.
+- Injected SQL failure preserved both order mart rows and its shared-table
+  checkpoint; retry applied the pending changes.
+- All four current tables matched every RDS source field. Hard deletes, rollback
+  exclusion and historical customer-version joins passed for both scenarios.
+- Six loaded files contained 415,448 unique events. A repeated load skipped all
+  six files; the idle pending check exited 99 without warehouse work.
+
+This run retains cloud data after removing compute, unlike earlier teardown
+policies. Final resource verification is recorded separately after cleanup.
+
+
 ## September 24, 2026: second simplification pass
 
 Seven separately tested changes simplify immutable-file tracking/readable COPY paths,
