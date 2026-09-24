@@ -60,7 +60,9 @@ def main(prefix):
     load_dotenv(ROOT/'.env.cloud',override=True)
     path=ROOT/'data/five-cycles.json'
     if path.exists():raise RuntimeError('Existing measurement; inspect before another run')
-    if runs():raise RuntimeError('Use a fresh paused Airflow metadata volume for this measurement')
+    previous_runs=runs()
+    if any(r['state'] in ('running','queued') for r in previous_runs):
+        raise RuntimeError('Finish active Airflow work and pause before measurement')
     reconcile()
     baseline=raw_state();baseline_count=sum(x['rows'] for x in baseline.values())
     baseline_max=max(int(x['max_order']) for x in baseline.values())
@@ -69,9 +71,10 @@ def main(prefix):
         return {x['Key']:x['Size'] for p in s3.get_paginator('list_objects_v2').paginate(Bucket=bucket,Prefix='raw/') for x in p.get('Contents',[])}
     original=inventory();evidence={'started_at':now(),'prefix':prefix,'baseline':baseline,
         'baseline_reconciliation':json.loads((ROOT/'data/cloud-reconciliation.json').read_text()),
-        'original_raw_files':original,'cycles':[],'manual_warehouse_loads':0,'full_refreshes':0}
+        'original_raw_files':original,'previous_run_ids':[r['run_id'] for r in previous_runs],
+        'cycles':[],'manual_warehouse_loads':0,'full_refreshes':0}
     def save():path.write_text(json.dumps(evidence,indent=2)+'\n')
-    save();progress=prefix+'-progress';observed=set();cumulative=0;deadline=time.monotonic()+2400
+    save();progress=prefix+'-progress';observed={r['run_id'] for r in previous_runs};cumulative=0;deadline=time.monotonic()+2400
     try:
         for index,phases in enumerate(PHASE_GROUPS,1):
             scenario=f'{prefix}-c{index}';started=now()
@@ -92,6 +95,12 @@ def main(prefix):
                     assert len(events)<EXPECTED_EVENTS[0]
                     if time.monotonic()>deadline:raise TimeoutError('CDC delivery deadline')
                     time.sleep(15)
+                # Start near a boundary, leaving a full interval for verification,
+                # the next source workload, and DMS file delivery. A mid-interval
+                # start can legitimately produce an idle scheduled cycle.
+                boundary=(int(time.time())//300+1)*300+2
+                print(f'First batch captured; waiting until {datetime.fromtimestamp(boundary,timezone.utc).isoformat()} to enable scheduling',flush=True)
+                while time.time()<boundary:time.sleep(min(15,boundary-time.time()))
                 pause(False)
             while True:
                 current_runs=runs();new_runs=[r for r in current_runs if r['run_id'] not in observed]

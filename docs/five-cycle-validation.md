@@ -44,7 +44,13 @@ remove all temporary compute, and save the cleanup result. The original snapshot
 remains available unless its removal is separately authorized.
 
 The measurement command is `scripts/verify_five_cycles.py --prefix <unique-name>`.
-It expects available SQL endpoints, a running CDC-only task, a fresh paused
-Airflow instance, and temporary project AWS credentials valid for the run. It
+It expects available SQL endpoints, a running CDC-only task, a paused
+Airflow instance with no active run, and temporary project AWS credentials valid for the run. It
 pauses the DAG on success or failure and saves a small report in
 `data/five-cycles.json`. It does not provision or clean up cloud resources.
+
+The driver waits for a five-minute boundary before enabling the first measured
+run. This leaves time for verification and the next DMS file before the following
+trigger. Existing Airflow history is preserved and excluded from the new sequence.
+An initial mid-interval attempt produced a correct idle skip while the generator
+was still checking the prior batch; this is retained separately from the clean run.
