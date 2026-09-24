@@ -71,3 +71,15 @@ def test_readable_snapshot_identity_fits_long_composite_key(database):
     assert events[0].values[-7] == identity and len(identity) > 64
     load_local(database, events, 'payments/LOAD.csv')
     assert database.execute('SELECT _event_id FROM raw.order_payments').fetchone() == (identity,)
+
+
+def test_target_schema_alias_preserves_cdc_identity_and_operation():
+    row = customer_row(sequence='123', operation='U')
+    original = parse_csv(csv_text([row]), 'raw/cdc/test.csv')[0]
+    row[2] = 'initial-load'
+    renamed = parse_csv(csv_text([row]), 'raw/cdc/test.csv')[0]
+    assert renamed == original
+    assert renamed.values[-2] is False  # The schema label does not make this a snapshot.
+    row[2] = 'unrelated-schema'
+    with pytest.raises(ValueError, match='Unexpected schema'):
+        parse_csv(csv_text([row]), 'raw/cdc/test.csv')

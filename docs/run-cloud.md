@@ -2,7 +2,7 @@
 
 Use only the `synthea-cdc` AWS profile. Agree a new session allowance before provisioning Olist. Finish local preparation first. This stack creates billable resources. A Redshift usage limit covers compute only, not the total AWS bill.
 
-The existing AWS profile, stack and ownership labels retain `synthea-cdc`; active database names are `olist`, the source schema is `ecommerce`, and capture prefix is `raw`. Each new capture lineage uses fresh raw storage and checkpoints. Preserve the previous deleted-stack record and run outputs in an ignored dated archive before a new session.
+The existing AWS profile, stack and ownership labels retain `synthea-cdc`; active database names are `olist`, the source schema is `ecommerce`, and capture prefix is `raw`. DMS is configured to map the target schema to `initial-load`, producing `raw/initial-load/<table>/LOAD*.csv`; transaction-preserving changes remain in `raw/cdc/`. Each new capture lineage uses fresh raw storage and checkpoints. Preserve the previous deleted-stack record and run outputs in an ignored dated archive before a new session.
 
 ## Provision and capture
 
@@ -30,7 +30,7 @@ After CREATE_COMPLETE:
 
 `prepare_cloud_source.py` downloads the pinned ZIP into a temporary directory, uploads a copy as `dataset/original-olist-brazilian-ecommerce.zip`, loads RDS and removes the temporary directory on exit. It never creates a local source database. This is the only full-dataset setup command; `olist-cdc` only simulates business changes against the prepared RDS source.
 
-Repeat `connections` until both endpoints report `successful`, then start the task. Starting is deliberate: the source must be seeded first. Wait for all four tables to complete their full load; inspect real files before accepting the CSV contract.
+Repeat `connections` until both endpoints report `successful`, then start the task. Starting is deliberate: the source must be seeded first. Wait for all four tables to complete their full load; inspect real files before accepting the CSV contract. The `initial-load` target-schema mapping has offline coverage; confirm its folder and CDC schema labels during the next fresh DMS run. Do not apply this mapping change by resuming an older task with existing file checkpoints.
 
 ```sh
 .venv/bin/python scripts/capture.py start

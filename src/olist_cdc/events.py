@@ -33,7 +33,8 @@ def parse_csv(text, source_file, *, snapshot_table=None):
             if len(row) < 3:
                 raise ValueError(f"{source_file}:{line}: missing CDC operation/table/schema")
             operation, table, schema, *fields = row
-            if schema != "ecommerce":
+            # Retained captures use the source name; the target mapping aliases it.
+            if schema not in ("ecommerce", "initial-load"):
                 raise ValueError(f"Unexpected schema {schema}")
         else:
             operation, *fields = row

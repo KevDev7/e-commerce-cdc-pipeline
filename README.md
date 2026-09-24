@@ -67,7 +67,7 @@ from the cloud demonstration.
 
 ```text
 dataset/original-olist-brazilian-ecommerce.zip
-raw/ecommerce/<table>/LOAD*.csv
+raw/initial-load/<table>/LOAD*.csv
 raw/cdc/*.csv
 copy-ready/<capture-relative-path-without-.csv>/<table>.parquet
 ```

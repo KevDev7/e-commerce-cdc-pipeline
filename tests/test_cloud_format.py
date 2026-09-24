@@ -54,7 +54,7 @@ def test_invalid_timestamp_or_changed_shape_cannot_produce_copy_file():
 
 
 def test_capture_paths_distinguish_snapshot_from_cdc_and_reject_unexpected_tables():
-    assert snapshot_table('raw/ecommerce/customers/LOAD00000001.csv', 'raw') == 'customers'
+    assert snapshot_table('raw/initial-load/customers/LOAD00000001.csv', 'raw') == 'customers'
     assert snapshot_table('raw/cdc/20260922.csv', 'raw') is None
     with pytest.raises(ValueError, match='Unexpected'):
-        snapshot_table('raw/ecommerce/unknown/LOAD00000001.csv', 'raw')
+        snapshot_table('raw/initial-load/unknown/LOAD00000001.csv', 'raw')

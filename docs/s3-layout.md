@@ -4,15 +4,22 @@ Current retained bucket: `olist-cdc-ezajhtylhk8v`.
 
 ```text
 dataset/original-olist-brazilian-ecommerce.zip
-raw/ecommerce/<table>/LOAD*.csv
+raw/initial-load/<table>/LOAD*.csv
 raw/cdc/*.csv
-copy-ready/ecommerce/<table>/LOAD00000001/<table>.parquet
+copy-ready/initial-load/<table>/LOAD00000001/<table>.parquet
 copy-ready/cdc/<original-cdc-filename-without-.csv>/<table>.parquet
 ```
 
 Validation reports are kept in Git under `docs/evidence/`; duplicate S3 copies
 have been removed. The bucket contains only the source archive, original captures
 and derived Parquet.
+
+`initial-load/` holds the baseline full-load snapshots; `cdc/` holds subsequent
+changes. The PostgreSQL schema is still `ecommerce`. A DMS target-schema rename
+is configured to map it to `initial-load` in S3 using the native
+[schema transformation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.SelectionTransformation.Transformations.html).
+CDC files keep their `cdc/` path. The parser accepts both the original and target
+schema labels; file location determines whether a record is a snapshot.
 
 The ZIP is the complete Kaggle version 2 download. DMS snapshots and CDC files
 remain unchanged in `raw/`. Derived Parquet paths mirror each CSV's path relative
@@ -63,3 +70,9 @@ files were verified with only their `_source_file` bucket references updated.
 The new bucket preserves encryption, blocked public access and bucket-owner
 control. The old bucket was removed after all 19 destination files passed checks.
 Future demo stacks also create buckets with the `olist-cdc-` prefix.
+
+The retained snapshots have been moved to `initial-load/` in both layers. All
+19 objects were verified: CSV bytes and Parquet data values are unchanged; only
+the snapshot Parquet `_source_file` paths were updated. Dataset and CDC files
+were untouched. Offline checks passed; the new DMS target-schema mapping still
+needs confirmation during the next fresh cloud run.

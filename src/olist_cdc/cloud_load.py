@@ -30,7 +30,7 @@ def warehouse_connection():
 
 def snapshot_table(key, prefix):
     parts = key.removeprefix(prefix.rstrip("/") + "/").split("/")
-    if len(parts) == 3 and parts[0] == "ecommerce" and parts[1] in TABLES and parts[2].startswith("LOAD"):
+    if len(parts) == 3 and parts[0] == "initial-load" and parts[1] in TABLES and parts[2].startswith("LOAD"):
         return parts[1]
     if len(parts) == 2 and parts[0] == "cdc":
         return None

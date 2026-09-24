@@ -42,6 +42,17 @@
     },
     {
       "rule-type": "transformation",
+      "rule-id": "5",
+      "rule-name": "name-initial-load-folder",
+      "rule-target": "schema",
+      "object-locator": {
+        "schema-name": "ecommerce"
+      },
+      "rule-action": "rename",
+      "value": "initial-load"
+    },
+    {
+      "rule-type": "transformation",
       "rule-id": "10",
       "rule-name": "add-_source_lsn",
       "rule-target": "column",
