@@ -31,7 +31,7 @@ def test_teardown_preserves_bucket_and_refuses_legacy_delete_policy(monkeypatch,
     module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
     module.STATE = tmp_path/'state.json'; module.STATE.write_text('{}')
     module.stack = lambda: {'StackId': 'project-stack'}
-    module.outputs = lambda: {'S3Bucket': 'project-bucket'}
+    module.outputs = lambda: {'S3Bucket': 'project-bucket', 'SourceHost': 'source-host'}
     if retain:
         module.delete()
         assert calls == [{'StackName': 'project-stack'}]
@@ -40,25 +40,3 @@ def test_teardown_preserves_bucket_and_refuses_legacy_delete_policy(monkeypatch,
         with pytest.raises(RuntimeError, match='Retain'):
             module.delete()
         assert calls == []
-
-
-def test_export_failure_prevents_source_deletion(monkeypatch, tmp_path):
-    calls = []
-    cf = SimpleNamespace(get_template=lambda **kw: {'TemplateBody': template()},
-                         delete_stack=lambda **kw: calls.append(kw))
-    session = SimpleNamespace(client=lambda service: {'cloudformation': cf, 'dms': object()}[service])
-    monkeypatch.setattr('boto3.Session', lambda **kw: session)
-    spec = importlib.util.spec_from_file_location('cloud_stack_reference_test', Path('scripts/cloud_stack.py'))
-    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-    module.STATE = tmp_path/'state.json'; module.STATE.write_text('{}')
-    module.stack = lambda: {'StackId': 'project-stack'}
-    module.outputs = lambda: {'S3Bucket': 'project-bucket', 'SourceHost': 'source-host'}
-    def fail(*args):
-        raise RuntimeError('export failed')
-    monkeypatch.setattr('olist_cdc.reference.preserve_live', fail)
-    with pytest.raises(RuntimeError, match='export failed'):
-        module.delete()
-    assert calls == []
-    module.delete(skip_reference_reason='Source was never initialized')
-    assert len(calls) == 1
-    assert json.loads(module.STATE.read_text())['reference_export_skipped'] == 'Source was never initialized'

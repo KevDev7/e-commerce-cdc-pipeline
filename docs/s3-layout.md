@@ -25,7 +25,7 @@ operations and timestamps, must match the previous Parquet files exactly.
 Old objects are removed only after all replacements are verified. The migration
 [report](evidence/olist-s3-layout-migration.json) records the object mapping and checks.
 
-Historical validation reports and reference exports retain their original paths
+Historical validation reports retain their original paths
 as evidence of earlier runs. Translate their prefixes using the table above
 when looking for the files today. This rename is not a new DMS capture or a new
 warehouse validation run.

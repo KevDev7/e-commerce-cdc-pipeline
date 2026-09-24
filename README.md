@@ -94,7 +94,6 @@ raw/dms/olist/ecommerce/<table>/LOAD*.csv   # Initial table snapshots
 raw/dms/olist/cdc/*.csv                    # Captured inserts, updates and deletes
 copy-ready/<source-hash>/<content-hash>/<table>.parquet
 validation/                               # Results from completed checks
-reference/                                # Small source examples and schema reference
 ```
 
 The original ZIP is Kaggle dataset version 2; its download URL and SHA-256
@@ -106,7 +105,7 @@ in Redshift, not in S3 folders. The hashes tie each derived file to its input
 location and content.
 
 The retained bucket still has its original `synthea-cdc-demo-…` resource name;
-its active dataset is Olist. Earlier validation reports and reference exports
+its active dataset is Olist. Earlier validation reports
 record the paths that existed when they were created. See the
 [S3 path migration](docs/s3-layout.md) for the old-to-new mapping.
 

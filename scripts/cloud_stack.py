@@ -140,7 +140,7 @@ def connections():
         print(label, state, connection.get("LastFailureMessage", ""))
 
 
-def delete(skip_reference_reason=None):
+def delete():
     current = stack()
     result = outputs()
     dms = SESSION.client("dms")
@@ -169,17 +169,6 @@ def delete(skip_reference_reason=None):
         state["capture_prefix"] = "raw/dms/olist"
         STATE.write_text(json.dumps(state, indent=2))
         print(f"Retaining s3://{bucket}/ (source archive, original captures and derived Parquet)")
-    if "SourceHost" in result and "S3Bucket" in result:
-        if skip_reference_reason:
-            state = json.loads(STATE.read_text())
-            state["reference_export_skipped"] = skip_reference_reason
-        else:
-            from olist_cdc.reference import preserve_live
-            uri = preserve_live(SESSION, result["S3Bucket"], result["SourceHost"])
-            print(f"Source reference saved: {uri}")
-            state = json.loads(STATE.read_text())
-            state["source_reference"] = uri
-        STATE.write_text(json.dumps(state, indent=2))
     CF.delete_stack(StackName=current["StackId"])
     print("Compute deletion started; S3 data retained, no datasets downloaded. Verify DELETE_COMPLETE.")
 
@@ -201,11 +190,10 @@ def cleanup_logs():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["validate", "create", "status", "env", "warehouse", "usage-limit", "connections", "delete", "cleanup-logs"])
-    parser.add_argument("--skip-reference-reason", help="For failed/unreachable source deployments: record why reference export is impossible")
     args = parser.parse_args()
     if args.command == "validate":
         CF.validate_template(TemplateBody=template())
         print("CloudFormation template valid")
     else:
         {"create": create, "status": status, "env": sync_env, "warehouse": enable_warehouse,
-         "usage-limit": usage_limit, "connections": connections, "delete": lambda: delete(args.skip_reference_reason), "cleanup-logs": cleanup_logs}[args.command]()
+         "usage-limit": usage_limit, "connections": connections, "delete": delete, "cleanup-logs": cleanup_logs}[args.command]()

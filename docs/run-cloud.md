@@ -127,11 +127,9 @@ The loader stores original DMS files unchanged, derives explicitly typed Zstanda
 docker compose -f compose.airflow.yaml stop
 ```
 
-Before deletion, stop simulated writes. When the stack has a source endpoint, `delete` automatically reads a consistent, read-only PostgreSQL snapshot and uploads a small reference JSON to the retained bucket under `reference/`. It includes one order with its customer, all its items and payments, every row in `project_meta.seed_runs` and `project_meta.simulation_steps`, and the source schema SQL. A convenient local copy is kept at ignored `data/reference/source-reference.json`. This is a reference sample, not a source backup. The S3 URI is recorded in `data/cloud-state.json`.
-
-If reference export fails, deletion stops so the metadata is not silently lost. Retry after correcting connectivity or credentials. For a failed or uninitialized source that cannot be exported, explicitly record the reason with `delete --skip-reference-reason "Source was never initialized"`; this permits cleanup without leaving paid compute running unnecessarily. Only use that option when accepting the loss of unsaved reference rows.
-
-Deletion retains the bucket and all objects and removes the compute stack. It saves only the small reference export locally, never a full database. It refuses to delete a legacy stack whose deployed bucket lacks `DeletionPolicy=Retain`; update that policy first. The small `data/cloud-state.json` records `retained_bucket`, region and capture prefix before deletion. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS log group. Verify no project RDS/DMS/Redshift compute or database snapshots remain, and verify the retained bucket is private and readable with the project profile. Remove `.env.cloud` and `.aws/credentials` afterward. Keep deployment metadata before approving another session. Never modify other projects' resources.
+Before deletion, stop simulated writes. Deletion retains the bucket and its data
+and removes the compute stack. It does not export sample rows or download data
+to the workstation. It refuses to delete a legacy stack whose deployed bucket lacks `DeletionPolicy=Retain`; update that policy first. The small `data/cloud-state.json` records `retained_bucket`, region and capture prefix before deletion. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS log group. Verify no project RDS/DMS/Redshift compute or database snapshots remain, and verify the retained bucket is private and readable with the project profile. Remove `.env.cloud` and `.aws/credentials` afterward. Keep deployment metadata before approving another session. Never modify other projects' resources.
 
 The retained bucket incurs S3 storage/request charges until deliberately removed. It remains accessible through the project AWS profile after its stack-managed DMS/COPY roles are removed. Rebuilding a warehouse later requires a new COPY role scoped to that retained bucket, the matching capture prefix and a fresh raw database/ledger; then load the original CSV captures to regenerate Parquet and rebuild dbt. Retention is not an automated cross-session restore service.
 
@@ -180,19 +178,3 @@ source and warehouse rows; remove the stopped project containers and their
 `olist-cdc_airflow-data` volume holds local Airflow metadata/logs and can also be
 removed after saving the small validation summary. Do not remove other projects'
 containers or volumes. Future local tests recreate disposable databases.
-
-## Read examples after teardown
-
-Open `data/reference/source-reference.json`, or retrieve its recorded S3 object. To export while RDS is still available, independently of teardown:
-
-```sh
-.venv/bin/python scripts/export_reference.py --bucket YOUR_PROJECT_BUCKET --host YOUR_RDS_HOST
-```
-
-For older demonstrations that did not export metadata, recover a connected historical business example from retained DMS initial snapshots:
-
-```sh
-.venv/bin/python scripts/export_reference.py --bucket YOUR_RETAINED_BUCKET --recover-prefix raw/dms/olist
-```
-
-Recovery streams the snapshots without storing a full dataset locally. It saves the small result locally and in the same bucket. It explicitly marks both metadata tables unavailable; it does not fabricate historical metadata or claim the initial snapshot represents current state. Reference rows stay out of Git. No RDS, DMS or Redshift compute is started by recovery.
