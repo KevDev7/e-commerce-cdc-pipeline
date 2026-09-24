@@ -1,6 +1,10 @@
-# Olist validation
+# Olist validation history
 
-## Current Parquet loading path
+These are dated results from the revisions tested at the time. Model/test counts,
+file paths and monitoring details may differ from the current implementation.
+Use the [README](../README.md) and [AWS runbook](run-cloud.md) for current behavior.
+
+## Parquet demonstration — September 22, 2026
 
 The separate Parquet session loaded all 415,418 historical source rows through
 DMS CSV → explicitly typed Zstandard Parquet → Redshift COPY. Initial and

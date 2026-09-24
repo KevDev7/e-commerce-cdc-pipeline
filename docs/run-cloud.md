@@ -1,8 +1,8 @@
 # Short AWS demonstration
 
-Use only the `synthea-cdc` AWS profile. Agree a new session allowance before provisioning Olist; the historical $5 Synthea sessions have finished. Finish local preparation first. This stack creates billable resources. A Redshift usage limit covers compute only, not the total AWS bill.
+Use only the `synthea-cdc` AWS profile. Agree a new session allowance before provisioning Olist. Finish local preparation first. This stack creates billable resources. A Redshift usage limit covers compute only, not the total AWS bill.
 
-The existing AWS profile, stack and ownership labels retain `synthea-cdc`; active database names are `olist`, the source schema is `ecommerce`, and capture prefix is `raw/dms/olist`. Use fresh raw storage and checkpoints for Olist. Preserve the old deleted-stack record and run outputs in an ignored dated archive before an approved new session. Do not update a live Synthea capture task in place.
+The existing AWS profile, stack and ownership labels retain `synthea-cdc`; active database names are `olist`, the source schema is `ecommerce`, and capture prefix is `raw/dms/olist`. Each new capture lineage uses fresh raw storage and checkpoints. Preserve the previous deleted-stack record and run outputs in an ignored dated archive before a new session.
 
 ## Provision and capture
 

@@ -1,180 +1,91 @@
 # Olist CDC
 
-A student data engineering portfolio project that loads **real, anonymized historical Olist orders** into PostgreSQL, simulates clearly labeled new business activity, and captures the resulting database changes through transaction logs.
+A student portfolio project demonstrating real PostgreSQL log-based change data
+capture, reliable incremental processing, and tested warehouse marts.
 
-**Architecture:** PostgreSQL → AWS DMS (WAL-based CDC) → S3 (original CSV + derived Parquet) → Redshift → dbt raw/staging/intermediate/marts. Airflow and Docker run locally. Five-minute downstream batches run during demos, with one active run and idle-file skipping.
+```text
+Olist ZIP → PostgreSQL on RDS → DMS reads WAL → S3 CSV captures
+                                                   ↓
+                                            Typed Parquet
+                                                   ↓
+                                            Redshift raw
+                                                   ↓
+                                  dbt staging → intermediate → marts
+```
 
-**What is real and what is simulated:** the starting records come from [Olist's Brazilian E-Commerce Public Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce). Subsequent new orders, payments, updates and disposable deletes are simulated by our Python application through SQL. PostgreSQL generates real WAL. This is not a connection to Olist's live production systems. Dataset attribution/license: Olist, CC BY-NC-SA 4.0; downloaded data is excluded from Git.
+Airflow runs locally in Docker and processes available files every five minutes
+during demonstrations. Quiet batches skip warehouse work. RDS, DMS and Redshift
+are temporary; the source archive and captured data stay in S3 between demos.
 
-## Reliability demonstrated
+## What is real and what is simulated
 
-| Scenario | Expected behavior | Evidence |
-|---|---|---|
-| SQL inserts, updates, deletes and rollback | Committed changes appear in PostgreSQL WAL; rolled-back changes do not | Local logical-decoding tests |
-| Source writes during an initial snapshot | Snapshot stays consistent; changes remain available in WAL | Local exported-snapshot test |
-| Load fails after writing one table | Raw rows and file checkpoint roll back together; retry succeeds | Multi-table failure test |
-| Same file retried or events redelivered under a new filename | Event identities prevent duplicate raw records | Replay tests |
-| Snapshot arrives after a newer update/delete | Source sequence wins; deleted rows stay deleted | dbt integration fixtures |
-| Two items and two payments for an order | Separate aggregation prevents multiplied totals | dbt integration fixtures and real Olist reconciliation |
-| Raw load succeeds but dbt fails | Batch is not acknowledged; next run still builds marts | Batch checkpoint and Airflow tests |
-| No new capture files | Skip warehouse work without waking Redshift | S3 metadata fixtures and Airflow tests |
-| Multiple status changes between warehouse batches | Retain observed transitions; suppress same-status updates without losing deletes/reinserts | Order-history integration fixtures |
-| Late file changes a previously built history interval | Recompute affected entity history, including removing obsolete versions | Successive incremental-build tests |
-| Item/payment changes without an order update | Recalculate that order, including when its last detail is deleted | Successive incremental-build tests |
-| Incremental mart fails after writing rows and its checkpoint | Roll back both; retry matches a full rebuild | SQL failure-injection test |
-| Quiet build or duplicate event delivery | Leave existing mart rows untouched | PostgreSQL row-identity checks |
-| Failed task followed by a successful retry | Preserve both attempts and report final batch outcome correctly | SQLite audit tests and real Airflow task-state checks |
+The starting data is the real, anonymized [Brazilian E-Commerce Public Dataset
+by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce), Kaggle
+version 2, licensed CC BY-NC-SA 4.0. We load four of its nine CSV files:
 
-Local fixtures cover adversarial ordering and row-identity checks. The live AWS run additionally verified bootstrap overlap, raw/mart rollback, capture recovery, replay, scheduled processing and source-to-Redshift reconciliation; see [cloud evidence](docs/evidence/olist-aws-validation.json).
-
-## Current validation
-
-The Olist pipeline is **validated locally and end to end on AWS**. All 415,418 selected historical rows passed through RDS PostgreSQL → DMS → S3 → Redshift. The current 19 dbt models and 49 data tests pass on Redshift. Every current source field reconciled after simulated inserts, updates and deletes.
-
-The live demonstration verified 21 changes committed during the initial customer snapshot, recovery of 14 changes committed while DMS was stopped, atomic raw-load and incremental-mart retries, and duplicate-file replay. Two real scheduled Airflow batches passed; the next quiet run skipped loading/building/reporting. Bootstrap timing used 100,002 additional synthetic customer rows, reported separately from Olist's records. That earlier demonstration used gzip CSV COPY inputs; the current Parquet path was validated separately.
-
-**Parquet validation:** all 415,418 historical rows loaded through actual Redshift Parquet COPY. Initial and incremental builds each passed 19 models and 49 tests. A 15-change batch passed raw rollback/retry, hard-delete, customer-history, full-field reconciliation and replay checks. All 42 automated tests and CI Airflow checks passed. [Results](docs/evidence/olist-parquet-validation.json).
-
-[Reproducible checks and measured evidence](docs/validation.md) distinguish actual cloud results from local fixtures. Earlier Synthea results remain [archived](docs/archive/synthea/README.md).
-
-## Source and model scope
-
-| Source table | Historical rows | Mart |
+| Source table | Historical rows | Warehouse marts |
 |---|---:|---|
 | customers | 99,441 | dim_customers; dim_customer_history |
 | orders | 99,441 | fct_orders; fct_order_status_history |
 | order_items | 112,650 | fct_order_items |
 | order_payments | 103,886 | fct_order_payments |
 
-`customer_id` is the order-associated customer record; `customer_unique_id` links repeat customers. Item and payment composite keys are preserved and given deterministic row keys. Item/payment amounts aggregate independently before joining orders, avoiding multiplied totals. Orders missing items or payments remain visible. Customer history tracks observed changes after capture starts, not addresses from before the historical export.
+Python simulates new orders, status/address updates and disposable deletes by
+committing SQL transactions. PostgreSQL generates the real WAL that DMS captures;
+this project is not connected to Olist's production systems. The complete original
+ZIP is retained, while the selected tables contain 415,418 historical rows.
 
-The deliverable ends at populated, tested marts. No dashboards, Spark, Kafka cluster or always-on cloud infrastructure is required for this scope.
+## What the pipeline demonstrates
 
-## Optional local development
+- Initial loading followed by log-based inserts, updates and hard deletes.
+- Source ordering, duplicate-event handling, atomic raw loads and safe retries.
+- Six incremental dbt marts with per-model checkpoints and affected-entity updates.
+- Customer SCD Type 2 behavior and order-status history derived from captured events.
+- Customer-version joins for new captured orders; pre-capture history stays unknown.
+- Separate item/payment aggregation, source reconciliation and data-quality tests.
+- Scheduled batches, idle skipping and completion only after successful builds/tests.
 
-The normal demo uses cloud databases and retains datasets in S3. These optional commands create full local data copies; skip them when keeping data off the workstation. CI runs integration fixtures on GitHub.
+The deliverable ends at populated, tested marts. Product/seller dimensions,
+dashboards, Spark and Kafka are outside this scope. See the [source contract](docs/source.md),
+[warehouse models](docs/warehouse.md) and [incremental recovery rules](docs/incremental-dbt.md).
 
-Requires Docker Desktop, Python 3.12 and uv. Copy `.env.example` to `.env` and set a local development password. Existing Synthea users should use `POSTGRES_DB=olist`; the Olist Compose project has a separate data volume.
+## Run a demonstration
 
-```sh
-uv sync --locked
-docker compose up -d --wait postgres
-uv run olist-cdc init
-uv run olist-cdc seed
-uv run python scripts/build_local_warehouse.py
-uv run python scripts/validate_local_olist.py
-uv run pytest --integration -q
-```
+Follow the **[AWS runbook](docs/run-cloud.md)** for setup, seeding, capture,
+scheduling, validation and teardown. It is the main operating guide. Agree a
+spending allowance before provisioning a new session, use only the project's
+`synthea-cdc` AWS profile, and remove paid compute after the demonstration.
+That legacy resource/profile name identifies this project's resources; the data is Olist.
 
-The local warehouse builder is explicitly a snapshot fixture, not a CDC extractor. It preserves an existing fixture; it does not follow later source mutations. Actual capture in AWS is DMS. The tests independently verify actual PostgreSQL WAL and exercise downstream DMS-format event fixtures.
+No full database is needed on your Mac. The cloud seed download is temporary.
+GitHub CI uses small disposable PostgreSQL fixtures and checks actual Airflow task
+states. [Optional development instructions](docs/development.md) are separate
+from the cloud demonstration.
 
-To simulate new source activity:
-
-```sh
-uv run olist-cdc simulate --scenario demo-001
-# Or execute phases individually:
-uv run olist-cdc simulate --scenario demo-002 --phase open
-```
-
-Phases are open → approve → ship → deliver → correct → create-delete-test → delete-test → rollback-test. Retrying a phase is idempotent. Simulated IDs are deterministic and their scenario is recorded in project metadata. Hard deletes target only the disposable test records. `docker compose stop` stops the local database without deleting its data.
-
-## Cloud demonstrations
-
-Use the [AWS runbook](docs/run-cloud.md) after agreeing a budget for a new paid session. Airflow starts paused and runs every five minutes when enabled. Quiet runs check capture/S3 without waking Redshift; completed-batch checkpoints advance only after dbt and reporting succeed. Stop scheduling and delete paid infrastructure after each demo.
-
-The GitHub repository and existing AWS profile/resource ownership names still use `synthea-cdc` for continuity. The active application/package, DAG, databases, source schema and capture prefix are Olist-specific. Keep using only that project's configured AWS profile, never another project's credentials.
-
-See [source semantics](docs/source.md), [warehouse schema](docs/warehouse.md), [Olist validation](docs/validation.md) and [migration inspection](docs/olist-migration.md).
-
-## S3 layout and file formats
+## S3 layout
 
 ```text
-source/original-olist-brazilian-ecommerce.zip  # Original Kaggle dataset, version 2
-raw/dms/olist/ecommerce/<table>/LOAD*.csv   # Initial table snapshots
-raw/dms/olist/cdc/*.csv                    # Captured inserts, updates and deletes
+source/original-olist-brazilian-ecommerce.zip
+raw/dms/olist/ecommerce/<table>/LOAD*.csv
+raw/dms/olist/cdc/*.csv
 copy-ready/<source-hash>/<content-hash>/<table>.parquet
-validation/                               # Results from completed checks
+validation/
 ```
 
-The original ZIP is Kaggle dataset version 2; its download URL and SHA-256
-remain pinned in `src/olist_cdc/seed.py`. Prepared files are
-identified by their `.parquet` extension; no extra format-version folder is needed.
-The raw capture path has no dataset version number.
-S3 holds source and ingestion files; dbt staging, intermediate and marts live
-in Redshift, not in S3 folders. The hashes tie each derived file to its input
-location and content.
+Original CSV captures are replayable evidence. Derived Parquet files use explicit
+types and Zstandard compression for Redshift COPY. dbt's staging, intermediate
+and marts are warehouse layers, not S3 folders. [Path details](docs/s3-layout.md).
 
-The retained bucket still has its original `synthea-cdc-demo-…` resource name;
-its active dataset is Olist. Earlier validation reports
-record the paths that existed when they were created. See the
-[S3 path migration](docs/s3-layout.md) for the old-to-new mapping.
+## Verification and limits
 
-Keep Olist's original ZIP/CSV as source evidence and DMS's transaction-preserving
-CSV as replayable capture. Python writes one derived Parquet file per table per
-capture file under `copy-ready/`, using Zstandard compression and
-explicit decimal, timestamp, boolean and string types. Redshift loads those
-files with `COPY FORMAT AS PARQUET`. The raw event schema, source ordering,
-file ledger and event deduplication stay the same.
+The September 22, 2026 AWS Parquet demonstration loaded all 415,418 historical
+rows and verified a 15-change simulated batch, raw rollback/retry, replay,
+hard deletes, customer-version joins and source-to-target reconciliation.
+[Saved results](docs/evidence/olist-parquet-validation.json) describe that tested
+revision, not a new cloud run after every repository change.
 
-Parquet preserves 35-digit change sequences and exact monetary decimals; invalid
-types fail instead of silently rounding. Its schema is embedded per file, not
-enforced globally by S3. dbt tests still check keys, relationships and business
-rules. Existing loaded CSV captures are safely skipped; switching formats does
-not require resetting their ledger or rewriting the warehouse.
-
-## Incremental dbt processing
-
-All six marts use dbt incremental models with `unique_key` and the `delete+insert` strategy. Each mart tracks the raw files it has processed and selects affected customer, order, item or payment keys. Order totals also refresh when item or payment records change. Staging and intermediate models remain views.
-
-Affected entities are replaced inside a transaction, including removing hard-deleted records and obsolete history versions. Window calculations filter to affected entities before ranking events; history is recalculated from each entity's retained events, so a late file can correct earlier intervals. The mart's file checkpoint commits with its changes; a failed model retries those files. Unchanged entities retain their existing rows. This adds incremental warehouse processing to the existing log-based capture.
-
-Local tests compare successive incremental results with `--full-refresh`, inject a SQL failure after the checkpoint write, and verify quiet/replayed batches do not rewrite mart rows. This reduces mart writes; it is not a claim that every upstream scan or data-quality test is incremental. See [processing and recovery details](docs/incremental-dbt.md).
-
-## Customer versions at order creation
-
-Customer history implements **SCD Type 2 behavior in `dim_customer_history`**,
-derived from retained CDC events using dbt SQL. `dim_customers` holds current
-attributes. Versions track observed city, state, postal-code and customer-identity
-changes; the project does not use dbt snapshots or introduce a customer tier.
-History follows the source `customer_id` record, while `customer_unique_id` links
-repeat customers across records. See the [mart grains and worked join example](docs/warehouse.md#marts-six-incremental-tables).
-
-New captured orders carry a customer_version_id pointing to the observed address version when their INSERT occurred. An order created before a customer correction keeps the earlier version; a later order uses the new version. Customer-only late files also revisit affected orders. Original historical snapshot orders have NULL version IDs with `creation_not_captured`; missing captured history is labeled separately. We do not invent customer history for 2016–2018 purchases.
-
-## Order-status history
-
-`fct_orders` answers “what is the order's current state?” `fct_order_status_history` answers “which states did we observe, and when did they change?” It retains transitions such as created → approved → shipped → delivered, even when multiple changes arrive in one batch. Repeated updates with the same status do not create extra versions; deletes and reinserts remain visible.
-
-Each version includes observation timestamps, source-sequence bounds, an initial-snapshot flag, deletion/current flags and observed_duration_seconds for closed, non-deleted intervals. Historical Olist orders begin with their observed snapshot state. We do not infer missing earlier statuses or measure capture-observation time as the original purchase-to-delivery duration.
-
-## Inspect batch operations
-
-```sh
-uv run python scripts/report_batches.py
-uv run python scripts/report_batches.py --run-id 'your-airflow-run-id'
-```
-
-The local audit records task attempts, run outcomes, elapsed time, committed-file input counts by operation, snapshot rows, dbt outcome and the last successful completion. Quiet batches remain distinguishable from failures. SQLite runs locally alongside Airflow, so reporting does not wake Redshift. Input counts are not claims about new warehouse rows after deduplication. See [audit schema and retry semantics](docs/batch-audit.md).
-
-## Measured workload
-
-On an active 4-RPU Redshift warehouse, a simulated 250-order workload produced **1,600 real captured changes** (1,000 inserts, 500 updates, 100 hard deletes). The final S3 object arrived 60 seconds after source writes finished. Loading took 32 seconds; incremental dbt plus all 49 tests took 102 seconds. All source fields reconciled, 225 orders remained, and totals/customer versions were correct. This was one manually invoked batch over existing Olist history, not sustained throughput or a five-minute latency guarantee. [Conditions and reproduction](docs/workload.md).
-
-## Demo cleanup
-
-Teardown retains the private, encrypted S3 bucket containing the pinned source ZIP,
-original DMS CSV records and derived Parquet. It removes RDS, DMS and Redshift
-compute without downloading datasets. The seed ZIP is temporary during cloud
-initialization; no full local database is needed. Small run reports and the
-retained bucket address stay in ignored `data/`. S3 storage continues to incur
-small charges while retained. Prior sessions' [cleanup evidence](docs/evidence/olist-session-cleanup.json)
-records the older delete-everything policy.
-
-The Parquet session's teardown was verified: all project compute and database
-snapshots are absent; **20 S3 objects totaling about 165 MB remain private and
-encrypted**. No project datasets, database containers or database volumes remain
-on the Mac. [Retention and cleanup evidence](docs/evidence/olist-parquet-retention.json).
-
-## Remaining validation
-
-The live demo verifies correctness and scheduled execution, not sustained production throughput or a latency SLA. Derived COPY inputs now use typed Zstandard Parquet. The [measured comparison](docs/parquet-evaluation.md) shows smaller large snapshots but larger tiny CDC files; this is not a universal space or speed improvement. The Parquet COPY path is validated on AWS; its scheduled latency and sustained throughput have not been rebenchmarked. dbt test failure blocks batch acknowledgement but does not provide atomic publication of all marts.
+Current changes are checked in [GitHub CI](https://github.com/KevDev7/synthea-cdc/actions).
+The [validation history](docs/validation.md) distinguishes cloud runs, local fixtures
+and earlier implementations. The five-minute schedule is a trigger interval,
+not a latency guarantee. dbt tests block batch acknowledgement but do not publish
+all marts atomically. Historical customer attributes before capture are unknown.
