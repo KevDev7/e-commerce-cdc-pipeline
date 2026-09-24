@@ -64,7 +64,7 @@ def create():
            "POSTGRES_PASSWORD": "Aa1" + secrets.token_hex(16), "DMS_PASSWORD": "Bb2" + secrets.token_hex(16),
            "REDSHIFT_USER": "warehouse_owner", "REDSHIFT_DATABASE": "olist", "REDSHIFT_PASSWORD": "Cc3" + secrets.token_hex(16)}
     write_env(env)
-    parameters = {"Vpc": vpc, "Subnets": ",".join(s["SubnetId"] for s in selected), "ClientCidr": ip + "/32", "EnableWarehouse": "false",
+    parameters = {"DatasetBucketName": "olist-cdc-" + secrets.token_hex(6), "Vpc": vpc, "Subnets": ",".join(s["SubnetId"] for s in selected), "ClientCidr": ip + "/32", "EnableWarehouse": "false",
                   "SourcePassword": env["POSTGRES_PASSWORD"], "DmsPassword": env["DMS_PASSWORD"], "WarehousePassword": env["REDSHIFT_PASSWORD"]}
     iam = SESSION.client("iam")
     for key, name in (("DmsVpcRole", "dms-vpc-role"), ("DmsLogRole", "dms-cloudwatch-logs-role")):

@@ -66,7 +66,7 @@ from the cloud demonstration.
 ## S3 layout
 
 ```text
-source/original-olist-brazilian-ecommerce.zip
+dataset/original-olist-brazilian-ecommerce.zip
 raw/ecommerce/<table>/LOAD*.csv
 raw/cdc/*.csv
 copy-ready/<capture-relative-path-without-.csv>/<table>.parquet

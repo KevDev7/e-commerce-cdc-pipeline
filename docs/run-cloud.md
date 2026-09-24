@@ -14,7 +14,7 @@ From the repository root, with `.venv` installed:
 .venv/bin/python scripts/cloud_stack.py status
 ```
 
-`create` makes one CloudFormation stack. It uses three existing default public subnets, new project security groups, no NAT gateway, one RDS PostgreSQL micro instance, one DMS small instance, and one private S3 bucket. Database access is restricted to your current public IPv4 address and the DMS security group. RDS/DMS use encrypted connections. A changed home IP requires updating the stack's ClientCidr parameter. Do not open database ports to everyone.
+`create` makes one CloudFormation stack. It uses three existing default public subnets, new project security groups, no NAT gateway, one RDS PostgreSQL micro instance, one DMS small instance, and one private S3 bucket named `olist-cdc-<unique suffix>`. Database access is restricted to your current public IPv4 address and the DMS security group. RDS/DMS use encrypted connections. A changed home IP requires updating the stack's ClientCidr parameter. Do not open database ports to everyone.
 
 The stack creates DMS's standard service roles only when absent; existing roles are left alone. All other resources belong to this stack. The source is a reproducible copy of historical Olist data plus disposable simulated activity, so deletion intentionally does not retain a paid database snapshot.
 
@@ -28,7 +28,7 @@ After CREATE_COMPLETE:
 .venv/bin/python scripts/cloud_stack.py connections
 ```
 
-`prepare_cloud_source.py` downloads the pinned ZIP into a temporary directory, uploads a copy as `source/original-olist-brazilian-ecommerce.zip`, loads RDS and removes the temporary directory on exit. It never creates a local source database. This is the only full-dataset setup command; `olist-cdc` only simulates business changes against the prepared RDS source.
+`prepare_cloud_source.py` downloads the pinned ZIP into a temporary directory, uploads a copy as `dataset/original-olist-brazilian-ecommerce.zip`, loads RDS and removes the temporary directory on exit. It never creates a local source database. This is the only full-dataset setup command; `olist-cdc` only simulates business changes against the prepared RDS source.
 
 Repeat `connections` until both endpoints report `successful`, then start the task. Starting is deliberate: the source must be seeded first. Wait for all four tables to complete their full load; inspect real files before accepting the CSV contract.
 

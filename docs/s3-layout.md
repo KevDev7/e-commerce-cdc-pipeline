@@ -1,7 +1,9 @@
 # S3 layout
 
+Current retained bucket: `olist-cdc-ezajhtylhk8v`.
+
 ```text
-source/original-olist-brazilian-ecommerce.zip
+dataset/original-olist-brazilian-ecommerce.zip
 raw/ecommerce/<table>/LOAD*.csv
 raw/cdc/*.csv
 copy-ready/ecommerce/<table>/LOAD00000001/<table>.parquet
@@ -42,8 +44,8 @@ needed when rebuilding the warehouse from the same retained capture.
 
 Earlier path changes are documented in the [original layout report](evidence/olist-s3-layout-migration.json)
 and [format-folder removal report](evidence/olist-copy-ready-layout-migration.json).
-The legacy `synthea-cdc` bucket/profile/resource labels still identify this project's
-resources; the current dataset is Olist.
+The AWS profile and compute/resource ownership labels retain `synthea-cdc` for
+project isolation. The S3 bucket name uses `olist-cdc`; the dataset is Olist.
 
 The capture prefix is now `raw/`: the optional `dms/olist/` nesting was removed
 while project compute was inactive. All six CSV copies were verified before old
@@ -54,3 +56,10 @@ keys were removed. The 12 Parquet files kept their paths and every value except
 Older reports retain the paths used during those runs. Rebuild a fresh warehouse
 from the moved captures; do not reuse file ledgers or batch checkpoints from an
 older path layout against a running warehouse.
+
+The retained data was moved into the Olist-named bucket, and `source/` became
+`dataset/`. The original ZIP and six CSVs were copied unchanged. All 12 Parquet
+files were verified with only their `_source_file` bucket references updated.
+The new bucket preserves encryption, blocked public access and bucket-owner
+control. The old bucket was removed after all 19 destination files passed checks.
+Future demo stacks also create buckets with the `olist-cdc-` prefix.

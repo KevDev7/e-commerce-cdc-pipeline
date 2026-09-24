@@ -20,6 +20,7 @@ def template():
     def add(name, kind, properties, **extra):
         resources[name] = {"Type": "AWS::" + kind, "Properties": properties, **extra}
     add("Bucket", "S3::Bucket", {
+        "BucketName": ref("DatasetBucketName"),
         "PublicAccessBlockConfiguration": {x: True for x in ("BlockPublicAcls", "BlockPublicPolicy", "IgnorePublicAcls", "RestrictPublicBuckets")},
         "BucketEncryption": {"ServerSideEncryptionConfiguration": [{"ServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}]}, "Tags": TAGS},
         DeletionPolicy="Retain", UpdateReplacePolicy="Retain")
@@ -95,7 +96,7 @@ def template():
         "ConfigParameters": [{"ParameterKey": "require_ssl", "ParameterValue": "true"},
                              {"ParameterKey": "max_query_execution_time", "ParameterValue": "300"}], "Tags": TAGS,
     }, Condition="WarehouseEnabled")
-    parameters = {"Vpc": {"Type": "AWS::EC2::VPC::Id"}, "Subnets": {"Type": "List<AWS::EC2::Subnet::Id>"},
+    parameters = {"DatasetBucketName": {"Type": "String"}, "Vpc": {"Type": "AWS::EC2::VPC::Id"}, "Subnets": {"Type": "List<AWS::EC2::Subnet::Id>"},
                   "ClientCidr": {"Type": "String"}, "EnableWarehouse": {"Type": "String", "Default": "false", "AllowedValues": ["true", "false"]}}
     for key in ("SourcePassword", "DmsPassword", "WarehousePassword"):
         parameters[key] = {"Type": "String", "NoEcho": True, "MinLength": 16}

@@ -17,7 +17,7 @@ with TemporaryDirectory(prefix="olist-seed-") as temporary:
     archive = Path(temporary) / "source.zip"
     download(archive)
     aws_session().client("s3").upload_file(str(archive), os.environ["S3_BUCKET"],
-        "source/original-olist-brazilian-ecommerce.zip", ExtraArgs={"ServerSideEncryption": "AES256"})
+        "dataset/original-olist-brazilian-ecommerce.zip", ExtraArgs={"ServerSideEncryption": "AES256"})
     with connect() as connection:
         initialize(connection)
         print(load(connection, archive))
