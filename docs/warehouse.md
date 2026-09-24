@@ -22,11 +22,9 @@ The same raw/staging/intermediate/marts structure targets local PostgreSQL for d
 
 `stg_customers`, `stg_orders`, `stg_order_items`, `stg_order_payments` expose typed source fields and event ID, operation, sequence, timestamp and snapshot flag. Tests check event uniqueness, required identifiers and supported operations. This is the only staging layer.
 
-## Intermediate: nine views
+## Intermediate: seven views
 
 - Four `int_*_current` views rank each source row key by source sequence, select its latest state and exclude tombstones. Late snapshots never overwrite newer changes.
-- `int_order_item_totals` aggregates item prices, freight and item count by order.
-- `int_order_payment_totals` aggregates payment value and payment-entry count by order. An installment count is not a multiplier for payment_value.
 - `int_customer_history` records observed attribute changes with version IDs, observed_from/to, source_order_from/to, is_deleted and is_initial_snapshot. A snapshot that overlaps already captured CDC cannot establish an earlier history version; it stays in raw/current processing, but ambiguous history begins with CDC. This preserves the preceding project's overlap fix.
 
 `int_order_status_history` applies the same overlapping-snapshot safeguard to orders, retains status transitions and deletion markers, and suppresses repeated same-status updates. It uses source sequence to order versions even when commit timestamps match.
@@ -61,7 +59,7 @@ also allows another order to reference an existing customer record.
 - **fct_order_items:** source item fields excluding updated_at; one row per order and item sequence.
 - **fct_order_payments:** source payment fields excluding updated_at; one row per order and payment sequence.
 
-Items and payments are aggregated separately before joining orders. Two items and two payments therefore remain two of each, not four duplicated combinations. Orders lacking details survive left joins, with explicit presence flags and zero aggregate counts.
+The order fact aggregates affected current items and payments separately before joining orders; no separate aggregate views are built. Payment value is not multiplied by installment count. Two items and two payments therefore remain two of each, not four duplicated combinations. Orders lacking details survive left joins, with explicit presence flags and zero aggregate counts.
 
 Customer history begins at capture observation, years after most historical purchases. For captured new orders, fct_orders links to the customer version covering the captured INSERT's source sequence and whose observation time is no later than that commit. Source sequence resolves changes sharing a commit timestamp. The assignment uses the customer on that INSERT; later reassignment of the current order does not rewrite who created it. `customer_id` remains the current source value.
 

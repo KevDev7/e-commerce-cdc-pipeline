@@ -7,8 +7,6 @@
 -- depends_on: {{ ref('int_order_creations') }}
 -- depends_on: {{ ref('dim_customer_history') }}
 -- depends_on: {{ ref('int_orders_current') }}
--- depends_on: {{ ref('int_order_item_totals') }}
--- depends_on: {{ ref('int_order_payment_totals') }}
 with creations as (
     {{ order_creations() }}
 ), orders as (

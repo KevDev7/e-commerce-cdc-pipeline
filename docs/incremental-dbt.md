@@ -59,3 +59,8 @@ after this upgrade. Retained raw events rebuild the assignments; no source reloa
 or capture reset is needed. Normal runs afterward remain incremental.
 
 The customer-version lookup reads the canonical history view; unlike the fact's order/detail calculations, its customer window scan is not guaranteed to be limited to affected customers. Incremental materialization reduces fact writes, not necessarily every upstream scan.
+
+The current graph has 17 models: four staging views, seven intermediate views
+and six incremental marts. Two unused intermediate aggregate views were removed;
+`fct_orders` continues to calculate its existing affected-order totals internally.
+Earlier cloud reports retain the model counts from those tested revisions.
