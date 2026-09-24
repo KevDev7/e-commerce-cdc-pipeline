@@ -1,6 +1,32 @@
 # Five consecutive scheduled cycles
 
-Status: execution tooling prepared; results are recorded only after the live run.
+Status: verified on AWS on September 24, 2026. [Saved evidence](evidence/olist-five-cycle-validation.json).
+
+Five consecutive scheduled runs started at approximately 22:25, 22:30, 22:35,
+22:40 and 22:45 UTC. Every task succeeded on its first attempt. Each cycle passed
+17 dbt models, 49 data tests and a full comparison of the four current source
+tables against Redshift. The loads committed one new CDC file per cycle and
+skipped all previously loaded files; no warehouse backfill or full refresh ran.
+
+| Cycle | Changes | Continuing order after processing |
+|---|---:|---|
+| 1 | 19 | created |
+| 2 | 18 | approved |
+| 3 | 16 | shipped |
+| 4 | 17 | delivered |
+| 5 | 20 | delivered; follow-up order uses the corrected customer version |
+
+The clean sequence captured 54 inserts, 24 updates and 12 deletes (90 events).
+The initial timing attempt added 37 events separately: its first batch passed,
+the next scheduled run correctly skipped idle input, and the following normal
+scheduled run loaded the pending changes. Those runs are not counted among the
+five clean cycles. The generator was aligned with a schedule boundary before
+restarting the measurement; no pipeline processing logic was changed to hide
+the idle result.
+
+This demonstrates repeated operation for small, controlled workloads, not a
+throughput benchmark or a latency guarantee. The first pre-test reconciliation
+query on the restored warehouse timed out; retry passed before writes began.
 
 Reuse the retained RDS snapshot, Redshift namespace and S3 bucket. The
 `infra.restore.restore_template` helper defines temporary compute referencing

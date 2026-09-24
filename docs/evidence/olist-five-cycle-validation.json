@@ -1,0 +1,1492 @@
+{
+  "started_at": "2026-09-24T22:22:00.110094+00:00",
+  "prefix": "aligned-20260924",
+  "baseline": {
+    "customers": {
+      "rows": 99458,
+      "max_order": "20260924221532200000000000000000265"
+    },
+    "orders": {
+      "rows": 99471,
+      "max_order": "20260924221533070000000000000000285"
+    },
+    "order_items": {
+      "rows": 112660,
+      "max_order": "20260924221529780000000000000000165"
+    },
+    "order_payments": {
+      "rows": 103896,
+      "max_order": "20260924221533070000000000000000281"
+    }
+  },
+  "baseline_reconciliation": {
+    "verified_at": "2026-09-24T22:21:58.366927+00:00",
+    "tables": {
+      "customers": {
+        "count": 99446,
+        "all_fields_match": true
+      },
+      "orders": {
+        "count": 99450,
+        "all_fields_match": true
+      },
+      "order_items": {
+        "count": 112660,
+        "all_fields_match": true
+      },
+      "order_payments": {
+        "count": 103896,
+        "all_fields_match": true
+      }
+    }
+  },
+  "original_raw_files": {
+    "raw/cdc/CDC_TXN-20260924204131111.csv": 4484,
+    "raw/cdc/CDC_TXN-20260924204835628.csv": 4484,
+    "raw/cdc/CDC_TXN-20260924221256514.csv": 5715,
+    "raw/cdc/CDC_TXN-20260924221629784.csv": 5321,
+    "raw/initial-load/customers/LOAD00000001.csv": 14652081,
+    "raw/initial-load/order_items/LOAD00000001.csv": 26610550,
+    "raw/initial-load/order_payments/LOAD00000001.csv": 15620921,
+    "raw/initial-load/orders/LOAD00000001.csv": 26987410
+  },
+  "previous_run_ids": [
+    "scheduled__2026-09-24T22:05:00+00:00",
+    "scheduled__2026-09-24T22:10:00+00:00",
+    "scheduled__2026-09-24T22:15:00+00:00"
+  ],
+  "cycles": [
+    {
+      "cycle": 1,
+      "generated_at": "2026-09-24T22:22:00.110874+00:00",
+      "events": 19,
+      "airflow": {
+        "run_id": "scheduled__2026-09-24T22:20:00+00:00",
+        "state": "success",
+        "logical_date": "2026-09-24 22:20:00+00:00",
+        "start": "2026-09-24 22:25:04.404219+00:00",
+        "end": "2026-09-24 22:26:34.056138+00:00",
+        "tasks": [
+          {
+            "task": "check",
+            "state": "success",
+            "tries": 1,
+            "duration": 1.838278
+          },
+          {
+            "task": "pending",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.956636
+          },
+          {
+            "task": "load",
+            "state": "success",
+            "tries": 1,
+            "duration": 12.768543
+          },
+          {
+            "task": "build",
+            "state": "success",
+            "tries": 1,
+            "duration": 66.556826
+          },
+          {
+            "task": "complete",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.440133
+          }
+        ]
+      },
+      "raw": {
+        "customers": {
+          "rows": 99463,
+          "max_order": "20260924222204370000000000000000421"
+        },
+        "orders": {
+          "rows": 99479,
+          "max_order": "20260924222204370000000000000000425"
+        },
+        "order_items": {
+          "rows": 112664,
+          "max_order": "20260924222204370000000000000000433"
+        },
+        "order_payments": {
+          "rows": 103898,
+          "max_order": "20260924222201400000000000000000325"
+        }
+      },
+      "progress_order_status": "created",
+      "scenario": {
+        "scenario": "aligned-20260924-c1",
+        "operations": {
+          "I": 9,
+          "D": 2,
+          "U": 4
+        },
+        "lifecycle_and_totals": true,
+        "hard_deletes": true,
+        "rollback_excluded": true,
+        "unique_event_ids": true,
+        "original_order_city": "sao paulo",
+        "followup_order_city": "campinas",
+        "distinct_observed_versions": true
+      },
+      "reconciliation": {
+        "verified_at": "2026-09-24T22:26:56.242922+00:00",
+        "tables": {
+          "customers": {
+            "count": 99448,
+            "all_fields_match": true
+          },
+          "orders": {
+            "count": 99453,
+            "all_fields_match": true
+          },
+          "order_items": {
+            "count": 112664,
+            "all_fields_match": true
+          },
+          "order_payments": {
+            "count": 103898,
+            "all_fields_match": true
+          }
+        }
+      },
+      "dbt": {
+        "success": 18,
+        "pass": 49
+      },
+      "task_summaries": [
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 1.302,
+          "run_id": "scheduled__2026-09-24T22:20:00+00:00",
+          "status": "success",
+          "step": "check"
+        },
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.462,
+          "run_id": "scheduled__2026-09-24T22:20:00+00:00",
+          "status": "success",
+          "step": "pending"
+        },
+        {
+          "attempt": "1",
+          "details": {
+            "files_already_loaded": 8,
+            "files_committed": 1,
+            "files_listed": 9,
+            "input_D": 2,
+            "input_I": 13,
+            "input_U": 4
+          },
+          "duration_seconds": 12.23,
+          "run_id": "scheduled__2026-09-24T22:20:00+00:00",
+          "status": "success",
+          "step": "load"
+        },
+        {
+          "attempt": "1",
+          "details": {
+            "full_refresh": false
+          },
+          "duration_seconds": 66.114,
+          "run_id": "scheduled__2026-09-24T22:20:00+00:00",
+          "status": "success",
+          "step": "build"
+        },
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.002,
+          "run_id": "scheduled__2026-09-24T22:20:00+00:00",
+          "status": "success",
+          "step": "complete"
+        }
+      ]
+    },
+    {
+      "cycle": 2,
+      "generated_at": "2026-09-24T22:26:56.249841+00:00",
+      "events": 18,
+      "airflow": {
+        "run_id": "scheduled__2026-09-24T22:25:00+00:00",
+        "state": "success",
+        "logical_date": "2026-09-24 22:25:00+00:00",
+        "start": "2026-09-24 22:30:01.602361+00:00",
+        "end": "2026-09-24 22:31:22.957045+00:00",
+        "tasks": [
+          {
+            "task": "check",
+            "state": "success",
+            "tries": 1,
+            "duration": 1.026846
+          },
+          {
+            "task": "pending",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.792314
+          },
+          {
+            "task": "load",
+            "state": "success",
+            "tries": 1,
+            "duration": 11.205312
+          },
+          {
+            "task": "build",
+            "state": "success",
+            "tries": 1,
+            "duration": 60.906392
+          },
+          {
+            "task": "complete",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.439847
+          }
+        ]
+      },
+      "raw": {
+        "customers": {
+          "rows": 99467,
+          "max_order": "20260924222659600000000000000000557"
+        },
+        "orders": {
+          "rows": 99487,
+          "max_order": "20260924222700510000000000000000577"
+        },
+        "order_items": {
+          "rows": 112666,
+          "max_order": "20260924222657100000000000000000457"
+        },
+        "order_payments": {
+          "rows": 103902,
+          "max_order": "20260924222700510000000000000000573"
+        }
+      },
+      "progress_order_status": "approved",
+      "scenario": {
+        "scenario": "aligned-20260924-c2",
+        "operations": {
+          "U": 4,
+          "D": 2,
+          "I": 9
+        },
+        "lifecycle_and_totals": true,
+        "hard_deletes": true,
+        "rollback_excluded": true,
+        "unique_event_ids": true,
+        "original_order_city": "sao paulo",
+        "followup_order_city": "campinas",
+        "distinct_observed_versions": true
+      },
+      "reconciliation": {
+        "verified_at": "2026-09-24T22:32:02.081808+00:00",
+        "tables": {
+          "customers": {
+            "count": 99449,
+            "all_fields_match": true
+          },
+          "orders": {
+            "count": 99455,
+            "all_fields_match": true
+          },
+          "order_items": {
+            "count": 112666,
+            "all_fields_match": true
+          },
+          "order_payments": {
+            "count": 103902,
+            "all_fields_match": true
+          }
+        }
+      },
+      "dbt": {
+        "success": 18,
+        "pass": 49
+      },
+      "task_summaries": [
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.52,
+          "run_id": "scheduled__2026-09-24T22:25:00+00:00",
+          "status": "success",
+          "step": "check"
+        },
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.308,
+          "run_id": "scheduled__2026-09-24T22:25:00+00:00",
+          "status": "success",
+          "step": "pending"
+        },
+        {
+          "attempt": "1",
+          "details": {
+            "files_already_loaded": 9,
+            "files_committed": 1,
+            "files_listed": 10,
+            "input_D": 2,
+            "input_I": 11,
+            "input_U": 5
+          },
+          "duration_seconds": 10.66,
+          "run_id": "scheduled__2026-09-24T22:25:00+00:00",
+          "status": "success",
+          "step": "load"
+        },
+        {
+          "attempt": "1",
+          "details": {
+            "full_refresh": false
+          },
+          "duration_seconds": 60.435,
+          "run_id": "scheduled__2026-09-24T22:25:00+00:00",
+          "status": "success",
+          "step": "build"
+        },
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.002,
+          "run_id": "scheduled__2026-09-24T22:25:00+00:00",
+          "status": "success",
+          "step": "complete"
+        }
+      ]
+    },
+    {
+      "cycle": 3,
+      "generated_at": "2026-09-24T22:32:02.084570+00:00",
+      "events": 16,
+      "airflow": {
+        "run_id": "scheduled__2026-09-24T22:30:00+00:00",
+        "state": "success",
+        "logical_date": "2026-09-24 22:30:00+00:00",
+        "start": "2026-09-24 22:35:01.246681+00:00",
+        "end": "2026-09-24 22:36:23.959821+00:00",
+        "tasks": [
+          {
+            "task": "check",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.923539
+          },
+          {
+            "task": "pending",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.755184
+          },
+          {
+            "task": "load",
+            "state": "success",
+            "tries": 1,
+            "duration": 12.190131
+          },
+          {
+            "task": "build",
+            "state": "success",
+            "tries": 1,
+            "duration": 62.384606
+          },
+          {
+            "task": "complete",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.416671
+          }
+        ]
+      },
+      "raw": {
+        "customers": {
+          "rows": 99471,
+          "max_order": "20260924223205370000000000000000701"
+        },
+        "orders": {
+          "rows": 99495,
+          "max_order": "20260924223206210000000000000000713"
+        },
+        "order_items": {
+          "rows": 112668,
+          "max_order": "20260924223202890000000000000000601"
+        },
+        "order_payments": {
+          "rows": 103904,
+          "max_order": "20260924223203300000000000000000617"
+        }
+      },
+      "progress_order_status": "shipped",
+      "scenario": {
+        "scenario": "aligned-20260924-c3",
+        "operations": {
+          "U": 4,
+          "D": 2,
+          "I": 9
+        },
+        "lifecycle_and_totals": true,
+        "hard_deletes": true,
+        "rollback_excluded": true,
+        "unique_event_ids": true,
+        "original_order_city": "sao paulo",
+        "followup_order_city": "campinas",
+        "distinct_observed_versions": true
+      },
+      "reconciliation": {
+        "verified_at": "2026-09-24T22:37:06.902423+00:00",
+        "tables": {
+          "customers": {
+            "count": 99450,
+            "all_fields_match": true
+          },
+          "orders": {
+            "count": 99457,
+            "all_fields_match": true
+          },
+          "order_items": {
+            "count": 112668,
+            "all_fields_match": true
+          },
+          "order_payments": {
+            "count": 103904,
+            "all_fields_match": true
+          }
+        }
+      },
+      "dbt": {
+        "success": 18,
+        "pass": 49
+      },
+      "task_summaries": [
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.444,
+          "run_id": "scheduled__2026-09-24T22:30:00+00:00",
+          "status": "success",
+          "step": "check"
+        },
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.297,
+          "run_id": "scheduled__2026-09-24T22:30:00+00:00",
+          "status": "success",
+          "step": "pending"
+        },
+        {
+          "attempt": "1",
+          "details": {
+            "files_already_loaded": 10,
+            "files_committed": 1,
+            "files_listed": 11,
+            "input_D": 2,
+            "input_I": 9,
+            "input_U": 5
+          },
+          "duration_seconds": 11.728,
+          "run_id": "scheduled__2026-09-24T22:30:00+00:00",
+          "status": "success",
+          "step": "load"
+        },
+        {
+          "attempt": "1",
+          "details": {
+            "full_refresh": false
+          },
+          "duration_seconds": 61.961,
+          "run_id": "scheduled__2026-09-24T22:30:00+00:00",
+          "status": "success",
+          "step": "build"
+        },
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.001,
+          "run_id": "scheduled__2026-09-24T22:30:00+00:00",
+          "status": "success",
+          "step": "complete"
+        }
+      ]
+    },
+    {
+      "cycle": 4,
+      "generated_at": "2026-09-24T22:37:06.906731+00:00",
+      "events": 17,
+      "airflow": {
+        "run_id": "scheduled__2026-09-24T22:35:00+00:00",
+        "state": "success",
+        "logical_date": "2026-09-24 22:35:00+00:00",
+        "start": "2026-09-24 22:40:01.837364+00:00",
+        "end": "2026-09-24 22:41:24.830152+00:00",
+        "tasks": [
+          {
+            "task": "check",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.9057
+          },
+          {
+            "task": "pending",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.733518
+          },
+          {
+            "task": "load",
+            "state": "success",
+            "tries": 1,
+            "duration": 11.442113
+          },
+          {
+            "task": "build",
+            "state": "success",
+            "tries": 1,
+            "duration": 63.481801
+          },
+          {
+            "task": "complete",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.418526
+          }
+        ]
+      },
+      "raw": {
+        "customers": {
+          "rows": 99476,
+          "max_order": "20260924223711320000000000000000861"
+        },
+        "orders": {
+          "rows": 99503,
+          "max_order": "20260924223711020000000000000000849"
+        },
+        "order_items": {
+          "rows": 112670,
+          "max_order": "20260924223707800000000000000000737"
+        },
+        "order_payments": {
+          "rows": 103906,
+          "max_order": "20260924223708200000000000000000753"
+        }
+      },
+      "progress_order_status": "delivered",
+      "scenario": {
+        "scenario": "aligned-20260924-c4",
+        "operations": {
+          "U": 4,
+          "I": 9,
+          "D": 2
+        },
+        "lifecycle_and_totals": true,
+        "hard_deletes": true,
+        "rollback_excluded": true,
+        "unique_event_ids": true,
+        "original_order_city": "sao paulo",
+        "followup_order_city": "campinas",
+        "distinct_observed_versions": true
+      },
+      "reconciliation": {
+        "verified_at": "2026-09-24T22:42:14.286649+00:00",
+        "tables": {
+          "customers": {
+            "count": 99451,
+            "all_fields_match": true
+          },
+          "orders": {
+            "count": 99459,
+            "all_fields_match": true
+          },
+          "order_items": {
+            "count": 112670,
+            "all_fields_match": true
+          },
+          "order_payments": {
+            "count": 103906,
+            "all_fields_match": true
+          }
+        }
+      },
+      "dbt": {
+        "success": 18,
+        "pass": 49
+      },
+      "task_summaries": [
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.449,
+          "run_id": "scheduled__2026-09-24T22:35:00+00:00",
+          "status": "success",
+          "step": "check"
+        },
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.288,
+          "run_id": "scheduled__2026-09-24T22:35:00+00:00",
+          "status": "success",
+          "step": "pending"
+        },
+        {
+          "attempt": "1",
+          "details": {
+            "files_already_loaded": 11,
+            "files_committed": 1,
+            "files_listed": 12,
+            "input_D": 2,
+            "input_I": 9,
+            "input_U": 6
+          },
+          "duration_seconds": 10.992,
+          "run_id": "scheduled__2026-09-24T22:35:00+00:00",
+          "status": "success",
+          "step": "load"
+        },
+        {
+          "attempt": "1",
+          "details": {
+            "full_refresh": false
+          },
+          "duration_seconds": 63.038,
+          "run_id": "scheduled__2026-09-24T22:35:00+00:00",
+          "status": "success",
+          "step": "build"
+        },
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.001,
+          "run_id": "scheduled__2026-09-24T22:35:00+00:00",
+          "status": "success",
+          "step": "complete"
+        }
+      ]
+    },
+    {
+      "cycle": 5,
+      "generated_at": "2026-09-24T22:42:14.292064+00:00",
+      "events": 20,
+      "airflow": {
+        "run_id": "scheduled__2026-09-24T22:40:00+00:00",
+        "state": "success",
+        "logical_date": "2026-09-24 22:40:00+00:00",
+        "start": "2026-09-24 22:45:01.646015+00:00",
+        "end": "2026-09-24 22:46:26.287445+00:00",
+        "tasks": [
+          {
+            "task": "check",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.979016
+          },
+          {
+            "task": "pending",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.895493
+          },
+          {
+            "task": "load",
+            "state": "success",
+            "tries": 1,
+            "duration": 12.148288
+          },
+          {
+            "task": "build",
+            "state": "success",
+            "tries": 1,
+            "duration": 62.879275
+          },
+          {
+            "task": "complete",
+            "state": "success",
+            "tries": 1,
+            "duration": 0.477442
+          }
+        ]
+      },
+      "raw": {
+        "customers": {
+          "rows": 99482,
+          "max_order": "20260924224220530000000000000001029"
+        },
+        "orders": {
+          "rows": 99513,
+          "max_order": "20260924224220530000000000000001025"
+        },
+        "order_items": {
+          "rows": 112672,
+          "max_order": "20260924224215330000000000000000885"
+        },
+        "order_payments": {
+          "rows": 103908,
+          "max_order": "20260924224215870000000000000000901"
+        }
+      },
+      "progress_order_status": "delivered",
+      "scenario": {
+        "scenario": "aligned-20260924-c5",
+        "operations": {
+          "U": 4,
+          "I": 9,
+          "D": 2
+        },
+        "lifecycle_and_totals": true,
+        "hard_deletes": true,
+        "rollback_excluded": true,
+        "unique_event_ids": true,
+        "original_order_city": "sao paulo",
+        "followup_order_city": "campinas",
+        "distinct_observed_versions": true
+      },
+      "reconciliation": {
+        "verified_at": "2026-09-24T22:46:53.802864+00:00",
+        "tables": {
+          "customers": {
+            "count": 99452,
+            "all_fields_match": true
+          },
+          "orders": {
+            "count": 99462,
+            "all_fields_match": true
+          },
+          "order_items": {
+            "count": 112672,
+            "all_fields_match": true
+          },
+          "order_payments": {
+            "count": 103908,
+            "all_fields_match": true
+          }
+        }
+      },
+      "dbt": {
+        "success": 18,
+        "pass": 49
+      },
+      "task_summaries": [
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.458,
+          "run_id": "scheduled__2026-09-24T22:40:00+00:00",
+          "status": "success",
+          "step": "check"
+        },
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.308,
+          "run_id": "scheduled__2026-09-24T22:40:00+00:00",
+          "status": "success",
+          "step": "pending"
+        },
+        {
+          "attempt": "1",
+          "details": {
+            "files_already_loaded": 12,
+            "files_committed": 1,
+            "files_listed": 13,
+            "input_D": 4,
+            "input_I": 12,
+            "input_U": 4
+          },
+          "duration_seconds": 11.637,
+          "run_id": "scheduled__2026-09-24T22:40:00+00:00",
+          "status": "success",
+          "step": "load"
+        },
+        {
+          "attempt": "1",
+          "details": {
+            "full_refresh": false
+          },
+          "duration_seconds": 62.433,
+          "run_id": "scheduled__2026-09-24T22:40:00+00:00",
+          "status": "success",
+          "step": "build"
+        },
+        {
+          "attempt": "1",
+          "details": {},
+          "duration_seconds": 0.001,
+          "run_id": "scheduled__2026-09-24T22:40:00+00:00",
+          "status": "success",
+          "step": "complete"
+        }
+      ]
+    }
+  ],
+  "manual_warehouse_loads": 0,
+  "full_refreshes": 0,
+  "cutover_new_min_order": "20260924222200980000000000000000297",
+  "completed_at": "2026-09-24T22:46:54.061424+00:00",
+  "five_consecutive_intervals": true,
+  "new_snapshot_files": 0,
+  "total_new_events": 90,
+  "all_session_runs": [
+    {
+      "run_id": "scheduled__2026-09-24T22:05:00+00:00",
+      "state": "success",
+      "start": "2026-09-24 22:13:03.789755+00:00",
+      "end": "2026-09-24 22:14:43.774390+00:00",
+      "tasks": [
+        {
+          "task": "check",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "pending",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "load",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "build",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "complete",
+          "state": "success",
+          "tries": 1
+        }
+      ]
+    },
+    {
+      "run_id": "scheduled__2026-09-24T22:10:00+00:00",
+      "state": "success",
+      "start": "2026-09-24 22:15:01.871176+00:00",
+      "end": "2026-09-24 22:15:09.088793+00:00",
+      "tasks": [
+        {
+          "task": "check",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "pending",
+          "state": "skipped",
+          "tries": 1
+        },
+        {
+          "task": "load",
+          "state": "skipped",
+          "tries": 0
+        },
+        {
+          "task": "build",
+          "state": "skipped",
+          "tries": 0
+        },
+        {
+          "task": "complete",
+          "state": "skipped",
+          "tries": 0
+        }
+      ]
+    },
+    {
+      "run_id": "scheduled__2026-09-24T22:15:00+00:00",
+      "state": "success",
+      "start": "2026-09-24 22:20:01.905492+00:00",
+      "end": "2026-09-24 22:21:22.801141+00:00",
+      "tasks": [
+        {
+          "task": "check",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "pending",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "load",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "build",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "complete",
+          "state": "success",
+          "tries": 1
+        }
+      ]
+    },
+    {
+      "run_id": "scheduled__2026-09-24T22:20:00+00:00",
+      "state": "success",
+      "start": "2026-09-24 22:25:04.404219+00:00",
+      "end": "2026-09-24 22:26:34.056138+00:00",
+      "tasks": [
+        {
+          "task": "check",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "pending",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "load",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "build",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "complete",
+          "state": "success",
+          "tries": 1
+        }
+      ]
+    },
+    {
+      "run_id": "scheduled__2026-09-24T22:25:00+00:00",
+      "state": "success",
+      "start": "2026-09-24 22:30:01.602361+00:00",
+      "end": "2026-09-24 22:31:22.957045+00:00",
+      "tasks": [
+        {
+          "task": "check",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "pending",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "load",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "build",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "complete",
+          "state": "success",
+          "tries": 1
+        }
+      ]
+    },
+    {
+      "run_id": "scheduled__2026-09-24T22:30:00+00:00",
+      "state": "success",
+      "start": "2026-09-24 22:35:01.246681+00:00",
+      "end": "2026-09-24 22:36:23.959821+00:00",
+      "tasks": [
+        {
+          "task": "check",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "pending",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "load",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "build",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "complete",
+          "state": "success",
+          "tries": 1
+        }
+      ]
+    },
+    {
+      "run_id": "scheduled__2026-09-24T22:35:00+00:00",
+      "state": "success",
+      "start": "2026-09-24 22:40:01.837364+00:00",
+      "end": "2026-09-24 22:41:24.830152+00:00",
+      "tasks": [
+        {
+          "task": "check",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "pending",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "load",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "build",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "complete",
+          "state": "success",
+          "tries": 1
+        }
+      ]
+    },
+    {
+      "run_id": "scheduled__2026-09-24T22:40:00+00:00",
+      "state": "success",
+      "start": "2026-09-24 22:45:01.646015+00:00",
+      "end": "2026-09-24 22:46:26.287445+00:00",
+      "tasks": [
+        {
+          "task": "check",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "pending",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "load",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "build",
+          "state": "success",
+          "tries": 1
+        },
+        {
+          "task": "complete",
+          "state": "success",
+          "tries": 1
+        }
+      ]
+    }
+  ],
+  "compute_usage_at_validation": {
+    "charged_rpu_seconds": 6572.0,
+    "estimated_redshift_compute_usd": 0.685,
+    "billing_may_lag": true
+  },
+  "s3": {
+    "bucket": "olist-cdc-efe3cff0a88c",
+    "objects": [
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204131111/customers.parquet",
+        "bytes": 4553
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204131111/order_items.parquet",
+        "bytes": 5693
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204131111/order_payments.parquet",
+        "bytes": 4890
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204131111/orders.parquet",
+        "bytes": 5867
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204835628/customers.parquet",
+        "bytes": 4548
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204835628/order_items.parquet",
+        "bytes": 5694
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204835628/order_payments.parquet",
+        "bytes": 4893
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924204835628/orders.parquet",
+        "bytes": 5872
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924221256514/customers.parquet",
+        "bytes": 4626
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924221256514/order_items.parquet",
+        "bytes": 5841
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924221256514/order_payments.parquet",
+        "bytes": 4891
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924221256514/orders.parquet",
+        "bytes": 5945
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924221629784/customers.parquet",
+        "bytes": 4548
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924221629784/order_items.parquet",
+        "bytes": 5694
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924221629784/order_payments.parquet",
+        "bytes": 4992
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924221629784/orders.parquet",
+        "bytes": 5961
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924222300992/customers.parquet",
+        "bytes": 4627
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924222300992/order_items.parquet",
+        "bytes": 5840
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924222300992/order_payments.parquet",
+        "bytes": 4890
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924222300992/orders.parquet",
+        "bytes": 5948
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924222757109/customers.parquet",
+        "bytes": 4544
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924222757109/order_items.parquet",
+        "bytes": 5693
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924222757109/order_payments.parquet",
+        "bytes": 4988
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924222757109/orders.parquet",
+        "bytes": 5962
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924223302900/customers.parquet",
+        "bytes": 4553
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924223302900/order_items.parquet",
+        "bytes": 5696
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924223302900/order_payments.parquet",
+        "bytes": 4890
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924223302900/orders.parquet",
+        "bytes": 5961
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924223807809/customers.parquet",
+        "bytes": 4624
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924223807809/order_items.parquet",
+        "bytes": 5693
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924223807809/order_payments.parquet",
+        "bytes": 4891
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924223807809/orders.parquet",
+        "bytes": 5968
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924224315338/customers.parquet",
+        "bytes": 4649
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924224315338/order_items.parquet",
+        "bytes": 5694
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924224315338/order_payments.parquet",
+        "bytes": 4894
+      },
+      {
+        "key": "copy-ready/cdc/CDC_TXN-20260924224315338/orders.parquet",
+        "bytes": 6076
+      },
+      {
+        "key": "copy-ready/initial-load/customers/LOAD00000001.parquet",
+        "bytes": 6016620
+      },
+      {
+        "key": "copy-ready/initial-load/order_items/LOAD00000001.parquet",
+        "bytes": 7804898
+      },
+      {
+        "key": "copy-ready/initial-load/order_payments/LOAD00000001.parquet",
+        "bytes": 6170474
+      },
+      {
+        "key": "copy-ready/initial-load/orders/LOAD00000001.parquet",
+        "bytes": 8947149
+      },
+      {
+        "key": "dataset/original-olist-brazilian-ecommerce.zip",
+        "bytes": 44717580
+      },
+      {
+        "key": "raw/cdc/CDC_TXN-20260924204131111.csv",
+        "bytes": 4484
+      },
+      {
+        "key": "raw/cdc/CDC_TXN-20260924204835628.csv",
+        "bytes": 4484
+      },
+      {
+        "key": "raw/cdc/CDC_TXN-20260924221256514.csv",
+        "bytes": 5715
+      },
+      {
+        "key": "raw/cdc/CDC_TXN-20260924221629784.csv",
+        "bytes": 5321
+      },
+      {
+        "key": "raw/cdc/CDC_TXN-20260924222300992.csv",
+        "bytes": 5715
+      },
+      {
+        "key": "raw/cdc/CDC_TXN-20260924222757109.csv",
+        "bytes": 5321
+      },
+      {
+        "key": "raw/cdc/CDC_TXN-20260924223302900.csv",
+        "bytes": 4834
+      },
+      {
+        "key": "raw/cdc/CDC_TXN-20260924223807809.csv",
+        "bytes": 5088
+      },
+      {
+        "key": "raw/cdc/CDC_TXN-20260924224315338.csv",
+        "bytes": 5946
+      },
+      {
+        "key": "raw/initial-load/customers/LOAD00000001.csv",
+        "bytes": 14652081
+      },
+      {
+        "key": "raw/initial-load/order_items/LOAD00000001.csv",
+        "bytes": 26610550
+      },
+      {
+        "key": "raw/initial-load/order_payments/LOAD00000001.csv",
+        "bytes": 15620921
+      },
+      {
+        "key": "raw/initial-load/orders/LOAD00000001.csv",
+        "bytes": 26987410
+      }
+    ],
+    "total_bytes": 157765180
+  },
+  "baseline_warmup": "First restored warehouse reconciliation query exceeded the client read timeout. Retrying completed before any new business writes.",
+  "initial_timing_attempt": {
+    "started_at": "2026-09-24T22:11:54.740249+00:00",
+    "prefix": "five-20260924",
+    "baseline": {
+      "customers": {
+        "rows": 99449,
+        "max_order": "20260924204738160000000000000000257"
+      },
+      "orders": {
+        "rows": 99455,
+        "max_order": "20260924204738160000000000000000253"
+      },
+      "order_items": {
+        "rows": 112654,
+        "max_order": "20260924204735620000000000000000157"
+      },
+      "order_payments": {
+        "rows": 103890,
+        "max_order": "20260924204736050000000000000000173"
+      }
+    },
+    "baseline_reconciliation": {
+      "verified_at": "2026-09-24T22:11:51.739695+00:00",
+      "tables": {
+        "customers": {
+          "count": 99443,
+          "all_fields_match": true
+        },
+        "orders": {
+          "count": 99445,
+          "all_fields_match": true
+        },
+        "order_items": {
+          "count": 112654,
+          "all_fields_match": true
+        },
+        "order_payments": {
+          "count": 103890,
+          "all_fields_match": true
+        }
+      }
+    },
+    "original_raw_files": {
+      "raw/cdc/CDC_TXN-20260924204131111.csv": 4484,
+      "raw/cdc/CDC_TXN-20260924204835628.csv": 4484,
+      "raw/initial-load/customers/LOAD00000001.csv": 14652081,
+      "raw/initial-load/order_items/LOAD00000001.csv": 26610550,
+      "raw/initial-load/order_payments/LOAD00000001.csv": 15620921,
+      "raw/initial-load/orders/LOAD00000001.csv": 26987410
+    },
+    "cycles": [
+      {
+        "cycle": 1,
+        "generated_at": "2026-09-24T22:11:54.741521+00:00",
+        "events": 19,
+        "airflow": {
+          "run_id": "scheduled__2026-09-24T22:05:00+00:00",
+          "state": "success",
+          "logical_date": "2026-09-24 22:05:00+00:00",
+          "start": "2026-09-24 22:13:03.789755+00:00",
+          "end": "2026-09-24 22:14:43.774390+00:00",
+          "tasks": [
+            {
+              "task": "check",
+              "state": "success",
+              "tries": 1,
+              "duration": 1.451597
+            },
+            {
+              "task": "pending",
+              "state": "success",
+              "tries": 1,
+              "duration": 0.688009
+            },
+            {
+              "task": "load",
+              "state": "success",
+              "tries": 1,
+              "duration": 12.713946
+            },
+            {
+              "task": "build",
+              "state": "success",
+              "tries": 1,
+              "duration": 77.866609
+            },
+            {
+              "task": "complete",
+              "state": "success",
+              "tries": 1,
+              "duration": 0.454257
+            }
+          ]
+        },
+        "raw": {
+          "customers": {
+            "rows": 99454,
+            "max_order": "20260924221201100000000000000000129"
+          },
+          "orders": {
+            "rows": 99463,
+            "max_order": "20260924221201100000000000000000133"
+          },
+          "order_items": {
+            "rows": 112658,
+            "max_order": "20260924221201100000000000000000141"
+          },
+          "order_payments": {
+            "rows": 103892,
+            "max_order": "20260924221157250000000000000000033"
+          }
+        },
+        "progress_order_status": "created",
+        "scenario": {
+          "scenario": "five-20260924-c1",
+          "operations": {
+            "U": 4,
+            "I": 9,
+            "D": 2
+          },
+          "lifecycle_and_totals": true,
+          "hard_deletes": true,
+          "rollback_excluded": true,
+          "unique_event_ids": true,
+          "original_order_city": "sao paulo",
+          "followup_order_city": "campinas",
+          "distinct_observed_versions": true
+        },
+        "reconciliation": {
+          "verified_at": "2026-09-24T22:15:28.976415+00:00",
+          "tables": {
+            "customers": {
+              "count": 99445,
+              "all_fields_match": true
+            },
+            "orders": {
+              "count": 99448,
+              "all_fields_match": true
+            },
+            "order_items": {
+              "count": 112658,
+              "all_fields_match": true
+            },
+            "order_payments": {
+              "count": 103892,
+              "all_fields_match": true
+            }
+          }
+        },
+        "dbt": {
+          "success": 18,
+          "pass": 49
+        }
+      }
+    ],
+    "manual_warehouse_loads": 0,
+    "full_refreshes": 0,
+    "cutover_new_min_order": "20260924221156510000000000000000005",
+    "failed_at": "2026-09-24T22:15:34.440486+00:00",
+    "error": "AssertionError: {'run_id': 'scheduled__2026-09-24T22:10:00+00:00', 'state': 'success', 'logical_date': '2026-09-24 22:10:00+00:00', 'start': '2026-09-24 22:15:01.871176+00:00', 'end': '2026-09-24 22:15:09.088793+00:00', 'tasks': [{'task': 'check', 'state': 'success', 'tries': 1, 'duration': 0.919998}, {'task': 'pending', 'state': 'skipped', 'tries': 1, 'duration': 1.764039}, {'task': 'load', 'state': 'skipped', 'tries': 0, 'duration': 0.0}, {'task': 'build', 'state': 'skipped', 'tries': 0, 'duration': 0.0}, {'task': 'complete', 'state': 'skipped', 'tries': 0, 'duration': 0.0}]}"
+  }
+}

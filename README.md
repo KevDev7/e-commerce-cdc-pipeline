@@ -81,12 +81,13 @@ and marts are warehouse layers, not S3 folders. [Path details](docs/s3-layout.md
 
 ## Verification and limits
 
-The September 24, 2026 AWS run loaded all 415,418 historical rows and verified
-30 simulated changes across two successful scheduled batches. Both builds passed
-17 models and 49 tests. The shared checkpoint rollback/retry, hard deletes,
-customer-version joins and every current source field passed cloud validation.
-[Saved results](docs/evidence/olist-retained-cloud-validation.json) include the
-initial endpoint timeout and subsequent recovery, without claiming a latency SLA.
+The September 24, 2026 restored-baseline test completed **five consecutive
+five-minute Airflow cycles**, processing 90 simulated changes without a new
+warehouse backfill or manual warehouse loads. Every cycle passed 17 models,
+49 tests and comparison of all four current tables against RDS. The test also
+followed one order across batches and verified customer-version joins, hard
+deletes and rollback exclusion. [Results and the initial idle-cycle finding](docs/five-cycle-validation.md)
+include actual run IDs, load counts and startup limitations.
 
 Current changes are checked in [GitHub CI](https://github.com/KevDev7/synthea-cdc/actions).
 The [validation history](docs/validation.md) distinguishes cloud runs, local fixtures

@@ -1,5 +1,17 @@
 # Olist validation history
 
+## September 24, 2026: five consecutive microbatches
+
+The [five-cycle report](five-cycle-validation.md) and
+[machine-readable evidence](evidence/olist-five-cycle-validation.json) record five
+consecutive scheduler-created runs, all successful on their first attempts.
+The restored baseline was reconciled before writes; a fresh CDC-only DMS task
+added 90 changes across the measured sequence, with no new full-load files.
+Each cycle passed 17 models, 49 tests and source reconciliation. The earlier
+mid-interval timing attempt and its correct idle skip are preserved separately
+inside the evidence, rather than counted as five successful data-processing cycles.
+
+
 ## September 24, 2026: current cloud run and data retention
 
 [Cloud evidence](evidence/olist-retained-cloud-validation.json) verifies revision
