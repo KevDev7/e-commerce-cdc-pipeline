@@ -8,7 +8,7 @@ olist_cdc:
       user: "{{ env_var('POSTGRES_USER', 'cdc_owner') }}"
       password: "{{ env_var('POSTGRES_PASSWORD') }}"
       dbname: "{{ env_var('WAREHOUSE_DATABASE', 'olist_warehouse') }}"
-      schema: analytics
+      schema: staging
       threads: 2
     redshift:
       type: redshift
@@ -17,7 +17,7 @@ olist_cdc:
       user: "{{ env_var('REDSHIFT_USER', 'not-configured') }}"
       password: "{{ env_var('REDSHIFT_PASSWORD', 'not-configured') }}"
       dbname: "{{ env_var('REDSHIFT_DATABASE', 'olist') }}"
-      schema: analytics
+      schema: staging
       sslmode: verify-full
       threads: 2
 

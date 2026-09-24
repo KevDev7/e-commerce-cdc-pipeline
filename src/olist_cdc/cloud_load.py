@@ -130,7 +130,7 @@ def report():
         cursor = connection.cursor()
         counts = {}
         for table in ("dim_customers", "dim_customer_history", "fct_orders", "fct_order_status_history", "fct_order_items", "fct_order_payments"):
-            cursor.execute(f"SELECT count(*) FROM analytics_marts.{table}")
+            cursor.execute(f"SELECT count(*) FROM marts.{table}")
             counts[table] = cursor.fetchone()[0]
         log.info("Populated marts: %s", json.dumps(counts))
         connection.commit()

@@ -35,7 +35,7 @@ def test_customer_version_at_captured_order_creation(database, tmp_path):
     def assignments():
         return {row[0]: row[1:] for row in database.execute('''
             SELECT o.order_id,o.customer_history_status,h.city,h.source_order_from
-            FROM analytics_marts.fct_orders o LEFT JOIN analytics_marts.dim_customer_history h
+            FROM marts.fct_orders o LEFT JOIN marts.dim_customer_history h
             ON o.customer_version_id=h.customer_version_id ORDER BY o.order_id''')}
 
     customer = dict(customer_id='c1', customer_unique_id='p1', city='sao paulo', state='SP')
@@ -71,6 +71,6 @@ def test_customer_version_at_captured_order_creation(database, tmp_path):
                          event('orders', {**order,'customer_id':'late'}, 95, 'U')])
     build()
     assert assignments()['o1'] == ('matched','santos',35)
-    before = database.execute('SELECT * FROM analytics_marts.fct_orders ORDER BY order_id').fetchall()
+    before = database.execute('SELECT * FROM marts.fct_orders ORDER BY order_id').fetchall()
     build('--full-refresh')
-    assert database.execute('SELECT * FROM analytics_marts.fct_orders ORDER BY order_id').fetchall() == before
+    assert database.execute('SELECT * FROM marts.fct_orders ORDER BY order_id').fetchall() == before

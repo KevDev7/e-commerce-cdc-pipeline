@@ -111,11 +111,11 @@ def verify(result):
             for op,total,unique in cursor.fetchall():
                 assert total==unique
                 ops[op]=ops.get(op,0)+total
-            cursor.execute(f'SELECT count(*) FROM analytics_marts.{mart} WHERE {column} IN ({placeholders})',params)
+            cursor.execute(f'SELECT count(*) FROM marts.{mart} WHERE {column} IN ({placeholders})',params)
             assert cursor.fetchone()[0]==remaining
         placeholders=','.join(['%s']*len(keys['orders']))
         cursor.execute(f'''SELECT count(*),sum(o.order_total),sum(o.payment_total)
-            FROM analytics_marts.fct_orders o JOIN analytics_marts.dim_customer_history h
+            FROM marts.fct_orders o JOIN marts.dim_customer_history h
             ON o.customer_version_id=h.customer_version_id
             WHERE o.order_id IN ({placeholders}) AND o.status='delivered' AND h.city='sao paulo' ''',tuple(keys['orders']))
         assert tuple(cursor.fetchone())==(remaining,55*remaining,55*remaining)

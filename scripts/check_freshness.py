@@ -109,7 +109,7 @@ def main():
                 if step == 'load':
                     cursor.execute('SELECT count(*) FROM "raw".customers WHERE customer_id=%s AND city=%s AND _op=\'I\' AND NOT _is_snapshot', (customer_id, city))
                 else:
-                    cursor.execute('SELECT count(*) FROM analytics_marts.dim_customers WHERE customer_id=%s AND city=%s', (customer_id, city))
+                    cursor.execute('SELECT count(*) FROM marts.dim_customers WHERE customer_id=%s AND city=%s', (customer_id, city))
                 if cursor.fetchone()[0] != 1:
                     raise AssertionError(f'Probe missing or duplicated after {step}')
                 target.commit()

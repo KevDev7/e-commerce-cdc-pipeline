@@ -22,16 +22,16 @@ from olist_cdc.cloud_load import warehouse_connection
 def state():
     with warehouse_connection() as connection:
         cursor = connection.cursor()
-        cursor.execute('SELECT * FROM analytics_marts.fct_orders ORDER BY order_id')
+        cursor.execute('SELECT * FROM marts.fct_orders ORDER BY order_id')
         digest = hashlib.sha256()
         count = 0
         for row in cursor:
             digest.update(json.dumps(row, default=str, separators=(',', ':')).encode() + b'\n')
             count += 1
-        cursor.execute('SELECT source_file FROM analytics_marts.fct_orders__files ORDER BY source_file')
+        cursor.execute('SELECT source_file FROM marts.fct_orders__files ORDER BY source_file')
         files = [row[0] for row in cursor]
         cursor.execute('''SELECT count(*) FROM "raw".orders o WHERE NOT EXISTS (
-            SELECT 1 FROM analytics_marts.fct_orders__files f WHERE f.source_file=o._source_file)''')
+            SELECT 1 FROM marts.fct_orders__files f WHERE f.source_file=o._source_file)''')
         pending = cursor.fetchone()[0]
         connection.commit()
     return dict(rows=count, sha256=digest.hexdigest(), files=files, pending_order_events=pending)

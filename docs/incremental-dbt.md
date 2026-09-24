@@ -10,7 +10,7 @@ Capture still reads PostgreSQL WAL through DMS. This change affects the warehous
 4. Shared SQL macros place the affected-key filter before current-state/history window functions, rather than depending on the optimizer to push a predicate through a view. The intermediate views use those same definitions without an incremental filter. All retained events for those entities remain available to resolve source order, history intervals and aggregate totals. dbt applies its standard `delete+insert` strategy with the model's unique key.
 5. A transactional post-hook acknowledges only the frozen file list. The mart writes and checkpoint commit together. Failure rolls both back.
 
-Each mart owns an `analytics_marts.<mart>__files` ledger. A successful selected model cannot consume another model's work. First deployment over existing tables processes all retained files because these ledgers are initially empty. A full refresh rebuilds every row, including after transformation logic changes.
+Each mart owns an `marts.<mart>__files` ledger. A successful selected model cannot consume another model's work. First deployment over existing tables processes all retained files because these ledgers are initially empty. A full refresh rebuilds every row, including after transformation logic changes.
 
 An arrival checkpoint answers “which files have I processed?” Source sequence answers “which event is newer?” Keeping those separate prevents a late, lower-sequence file from being skipped. A file redelivering only known event IDs has no new raw rows, so it advances the model checkpoints without rewriting mart rows.
 

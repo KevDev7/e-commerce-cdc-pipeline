@@ -61,17 +61,17 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     text=csv_text([order_snapshot,baseline])
     load_local(database,parse_csv(text,'orders/LOAD.csv',snapshot_table='orders'),'orders/LOAD.csv')
     build()
-    assert database.execute("SELECT status,item_total,freight_total,order_total,payment_total,item_count,payment_count FROM analytics_marts.fct_orders WHERE order_id='o1'").fetchone()==('delivered',100,10,110,110,2,2)
-    assert database.execute("SELECT item_count,payment_count,has_items,has_payments FROM analytics_marts.fct_orders WHERE order_id='o2'").fetchone()==(0,0,False,False)
-    assert database.execute('SELECT customer_id,city FROM analytics_marts.dim_customers').fetchall()==[('c1','campinas')]
-    assert database.execute("SELECT city,is_current FROM analytics_marts.dim_customer_history WHERE customer_id='c1' ORDER BY source_order_from").fetchall()==[('sao paulo',False),('campinas',True)]
-    assert database.execute("SELECT count(*) FROM analytics_marts.dim_customer_history WHERE customer_id='c2' AND is_current").fetchone()[0]==0
+    assert database.execute("SELECT status,item_total,freight_total,order_total,payment_total,item_count,payment_count FROM marts.fct_orders WHERE order_id='o1'").fetchone()==('delivered',100,10,110,110,2,2)
+    assert database.execute("SELECT item_count,payment_count,has_items,has_payments FROM marts.fct_orders WHERE order_id='o2'").fetchone()==(0,0,False,False)
+    assert database.execute('SELECT customer_id,city FROM marts.dim_customers').fetchall()==[('c1','campinas')]
+    assert database.execute("SELECT city,is_current FROM marts.dim_customer_history WHERE customer_id='c1' ORDER BY source_order_from").fetchall()==[('sao paulo',False),('campinas',True)]
+    assert database.execute("SELECT count(*) FROM marts.dim_customer_history WHERE customer_id='c2' AND is_current").fetchone()[0]==0
     assert database.execute('SELECT count(*) FROM raw.order_payments').fetchone()[0]==2
     assert database.execute('SELECT count(*) FROM raw.customers WHERE _is_snapshot').fetchone()[0]==2
-    history=database.execute("SELECT status,is_current,observed_duration_seconds FROM analytics_marts.fct_order_status_history WHERE order_id='o1' ORDER BY source_order_from").fetchall()
+    history=database.execute("SELECT status,is_current,observed_duration_seconds FROM marts.fct_order_status_history WHERE order_id='o1' ORDER BY source_order_from").fetchall()
     assert [r[:2] for r in history]==[('created',False),('approved',False),('delivered',True)]
     assert history[1][2]==86400 and history[2][2] is None
-    assert database.execute("SELECT is_deleted,is_current FROM analytics_marts.fct_order_status_history WHERE order_id='o3' ORDER BY source_order_from").fetchall()==[(False,False),(True,False),(False,True)]
-    assert database.execute("SELECT status,is_initial_snapshot,observed_duration_seconds FROM analytics_marts.fct_order_status_history WHERE order_id='o4'").fetchall()==[('delivered',True,None)]
+    assert database.execute("SELECT is_deleted,is_current FROM marts.fct_order_status_history WHERE order_id='o3' ORDER BY source_order_from").fetchall()==[(False,False),(True,False),(False,True)]
+    assert database.execute("SELECT status,is_initial_snapshot,observed_duration_seconds FROM marts.fct_order_status_history WHERE order_id='o4'").fetchall()==[('delivered',True,None)]
 
-    assert database.execute("SELECT observed_duration_seconds FROM analytics_marts.fct_order_status_history WHERE order_id='o5' ORDER BY source_order_from").fetchall()==[(3600,),(None,)]
+    assert database.execute("SELECT observed_duration_seconds FROM marts.fct_order_status_history WHERE order_id='o5' ORDER BY source_order_from").fetchall()==[(3600,),(None,)]

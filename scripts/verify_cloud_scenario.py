@@ -19,33 +19,33 @@ def verify(cursor, scenario):
         return [tuple(row) for row in cursor.fetchall()]
 
     assert rows('''SELECT status,item_total,freight_total,payment_total,item_count,payment_count
-                   FROM analytics_marts.fct_orders WHERE order_id=%s''', (key['order'],)) == [
+                   FROM marts.fct_orders WHERE order_id=%s''', (key['order'],)) == [
                        ('delivered', 100, 10, 110, 2, 2)]
-    assert rows('''SELECT status FROM analytics_marts.fct_order_status_history
+    assert rows('''SELECT status FROM marts.fct_order_status_history
                    WHERE order_id=%s ORDER BY source_order_from''', (key['order'],)) == [
                        ('created',), ('approved',), ('shipped',), ('delivered',)]
-    assert rows('''SELECT city FROM analytics_marts.dim_customer_history
+    assert rows('''SELECT city FROM marts.dim_customer_history
                    WHERE customer_id=%s ORDER BY source_order_from''', (key['customer'],)) == [
                        ('sao paulo',), ('campinas',)]
     for table, column, identity in (
         ('dim_customers', 'customer_id', key['delete-customer']),
         ('fct_orders', 'order_id', key['delete-order']),
     ):
-        assert rows(f'SELECT count(*) FROM analytics_marts.{table} WHERE {column}=%s', (identity,)) == [(0,)]
-    assert rows('''SELECT is_deleted FROM analytics_marts.dim_customer_history
+        assert rows(f'SELECT count(*) FROM marts.{table} WHERE {column}=%s', (identity,)) == [(0,)]
+    assert rows('''SELECT is_deleted FROM marts.dim_customer_history
                    WHERE customer_id=%s ORDER BY source_order_from''', (key['delete-customer'],)) == [(False,), (True,)]
     assert rows('''SELECT count(*) FROM "raw".orders WHERE order_id=%s AND status='ROLLBACK_SENTINEL' ''',
                 (key['order'],)) == [(0,)]
     versions = {row[0]: row[1:] for row in rows(
         """SELECT o.order_id,o.customer_history_status,h.city,h.customer_version_id
-           FROM analytics_marts.fct_orders o
-           LEFT JOIN analytics_marts.dim_customer_history h
+           FROM marts.fct_orders o
+           LEFT JOIN marts.dim_customer_history h
            ON o.customer_version_id=h.customer_version_id
            WHERE o.order_id IN (%s,%s)""", (key['order'], key['repeat-order']))}
     assert versions[key['order']][:2] == ('matched', 'sao paulo'), versions
     assert versions[key['repeat-order']][:2] == ('matched', 'campinas'), versions
     assert versions[key['order']][2] != versions[key['repeat-order']][2]
-    assert rows("""SELECT count(*) FROM analytics_marts.fct_orders
+    assert rows("""SELECT count(*) FROM marts.fct_orders
                    WHERE customer_history_status='creation_not_captured'
                      AND customer_version_id IS NOT NULL""") == [(0,)]
     operations = {}

@@ -48,11 +48,11 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
 
     def contents(physical=False):
         extra = ', xmin::text, ctid::text' if physical else ''
-        return {m: sorted(database.execute(f'SELECT *{extra} FROM analytics_marts.{m}').fetchall(), key=repr)
+        return {m: sorted(database.execute(f'SELECT *{extra} FROM marts.{m}').fetchall(), key=repr)
                 for m in MARTS}
 
     def checkpoints():
-        return {m: database.execute(f'SELECT source_file FROM analytics_marts.{m}__files ORDER BY 1').fetchall()
+        return {m: database.execute(f'SELECT source_file FROM marts.{m}__files ORDER BY 1').fetchall()
                 for m in MARTS}
 
     customer = dict(customer_id='c1', customer_unique_id='person1', city='sao paulo', state='SP', postal_code='00123')
@@ -90,9 +90,9 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
                event('customers', changed_customer, 61, 'U')]
     load('updates.csv', changes)
     build('build')
-    assert database.execute("SELECT item_total,freight_total,payment_total,item_count,payment_count FROM analytics_marts.fct_orders WHERE order_id='o1'").fetchone() == (80, 5, 85, 1, 1)
-    assert database.execute("SELECT count(*) FROM analytics_marts.dim_customers WHERE customer_id='c2'").fetchone() == (0,)
-    assert database.execute("SELECT count(*) FROM analytics_marts.fct_orders WHERE order_id='o3'").fetchone() == (0,)
+    assert database.execute("SELECT item_total,freight_total,payment_total,item_count,payment_count FROM marts.fct_orders WHERE order_id='o1'").fetchone() == (80, 5, 85, 1, 1)
+    assert database.execute("SELECT count(*) FROM marts.dim_customers WHERE customer_id='c2'").fetchone() == (0,)
+    assert database.execute("SELECT count(*) FROM marts.fct_orders WHERE order_id='o3'").fetchone() == (0,)
     # Other customers/orders and their history retain their original physical rows.
     now = contents(physical=True)
     for mart, key, index in [('dim_customers', 'c3', 0), ('dim_customer_history', 'c3', 1),
@@ -104,8 +104,8 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
                       event('customers', changed_customer, 31, 'U'),
                       event('customers', {**customer, 'city': 'santos'}, 51, 'U')])
     build('build')
-    assert database.execute("SELECT source_order_from FROM analytics_marts.fct_order_status_history WHERE order_id='o1' ORDER BY 1").fetchall() == [(10,), (20,), (30,)]
-    assert database.execute("SELECT city,source_order_from FROM analytics_marts.dim_customer_history WHERE customer_id='c1' ORDER BY source_order_from").fetchall() == [('sao paulo', 1), ('campinas', 31), ('santos', 51), ('campinas', 61)]
+    assert database.execute("SELECT source_order_from FROM marts.fct_order_status_history WHERE order_id='o1' ORDER BY 1").fetchall() == [(10,), (20,), (30,)]
+    assert database.execute("SELECT city,source_order_from FROM marts.dim_customer_history WHERE customer_id='c1' ORDER BY source_order_from").fetchall() == [('sao paulo', 1), ('campinas', 31), ('santos', 51), ('campinas', 61)]
 
     # Duplicate delivery under a new filename acknowledges that file without rewriting marts.
     before_replay = contents(physical=True)
@@ -141,10 +141,10 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
         if mart != 'fct_orders':
             assert partial[mart] == before_checkpoint[mart]
     build('build')
-    assert database.execute("SELECT item_count,payment_count,has_items,has_payments,order_total,payment_total FROM analytics_marts.fct_orders WHERE order_id='o1'").fetchone() == (0, 0, False, False, 0, 0)
-    assert database.execute('SELECT count(*) FROM analytics_marts.fct_order_items').fetchone() == (0,)
-    assert database.execute('SELECT count(*) FROM analytics_marts.fct_order_payments').fetchone() == (0,)
-    assert database.execute("SELECT is_deleted,is_current FROM analytics_marts.dim_customer_history WHERE customer_id='c2' ORDER BY source_order_from").fetchall() == [(False, False), (True, False), (False, True)]
+    assert database.execute("SELECT item_count,payment_count,has_items,has_payments,order_total,payment_total FROM marts.fct_orders WHERE order_id='o1'").fetchone() == (0, 0, False, False, 0, 0)
+    assert database.execute('SELECT count(*) FROM marts.fct_order_items').fetchone() == (0,)
+    assert database.execute('SELECT count(*) FROM marts.fct_order_payments').fetchone() == (0,)
+    assert database.execute("SELECT is_deleted,is_current FROM marts.dim_customer_history WHERE customer_id='c2' ORDER BY source_order_from").fetchall() == [(False, False), (True, False), (False, True)]
 
     incremental = contents()
     ledger = checkpoints()

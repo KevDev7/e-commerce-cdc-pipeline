@@ -2,6 +2,11 @@
 
 The same raw/staging/intermediate/marts structure targets local PostgreSQL for development and Redshift for cloud demonstrations. DMS writes original transaction-preserving CSVs to S3 under `raw/`. They are retained unchanged; explicitly typed Zstandard Parquet inputs for Redshift COPY are derived under `copy-ready/`.
 
+The database schemas are `raw`, `staging`, `intermediate`, and `marts`.
+The dbt schema-naming macro uses each configured layer name directly. This
+configuration applies to the next warehouse build; historical validation reports
+retain the previous `analytics_` names.
+
 ## Raw: four append-only event tables
 
 `raw.customers`, `raw.orders`, `raw.order_items`, `raw.order_payments` retain [all source columns](source.md), including `updated_at`, plus:
@@ -101,7 +106,7 @@ they remain optional extensions. Customer tier has no field or business rule in
 the current source contract. Additional tiers would require an explicit business
 definition and clearly labeled derived or simulated values.
 
-The 13 staging/intermediate models remain views. The six marts incrementally replace affected entities, using newly loaded files to identify work. Six `<mart>__files` metadata tables in `analytics_marts` each store `source_file varchar(2048)`; they are processing checkpoints, not additional business models. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
+The 11 staging/intermediate models remain views. The six marts incrementally replace affected entities, using newly loaded files to identify work. Six `<mart>__files` metadata tables in `marts` each store `source_file varchar(2048)`; they are processing checkpoints, not additional business models. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
 
 Event IDs are readable strings rather than SHA-256 digests. The raw column is
 `varchar(128)` to fit composite snapshot keys. Source business IDs are unchanged.

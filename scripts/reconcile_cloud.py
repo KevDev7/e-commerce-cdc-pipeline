@@ -42,7 +42,7 @@ def main():
             columns = ','.join(source_columns(table))
             source_rows = source.execute(f'SELECT {columns} FROM ecommerce.{table} ORDER BY 1')
             cursor = target.cursor()
-            cursor.execute(f'SELECT {columns} FROM analytics_intermediate.int_{table}_current ORDER BY 1')
+            cursor.execute(f'SELECT {columns} FROM intermediate.int_{table}_current ORDER BY 1')
             result[table] = compare_rows(table, source_rows, cursor)
             cursor.close()
         target.commit()
