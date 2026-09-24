@@ -19,7 +19,10 @@
   six files; the idle pending check exited 99 without warehouse work.
 
 This run retains cloud data after removing compute, unlike earlier teardown
-policies. Final resource verification is recorded separately after cleanup.
+policies. [Final resource verification](evidence/olist-retained-cloud-cleanup.json)
+confirms stack deletion, an available encrypted RDS snapshot, the retained
+Redshift namespace, 19 private S3 objects (157,578,661 bytes), and removal of
+project compute and local Airflow data. The older S3 capture lineage stays separate.
 
 
 ## September 24, 2026: second simplification pass
