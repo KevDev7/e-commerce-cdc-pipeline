@@ -1,5 +1,4 @@
 import csv
-import hashlib
 import io
 import zipfile
 
@@ -13,8 +12,8 @@ ORDER = '0' * 31 + '2'
 
 
 @pytest.fixture
-def archive(tmp_path, monkeypatch):
-    def make(*, orphan=False):
+def archive(tmp_path):
+    def make(*, orphan=False, missing_payment_file=False):
         rows = {
             'customers': [CUSTOMER, CUSTOMER, '00123', 'sao paulo', 'SP'],
             'orders': [ORDER, CUSTOMER, 'created', '2017-01-01 12:00:00', '', '', '', '2017-01-08 00:00:00'],
@@ -24,10 +23,11 @@ def archive(tmp_path, monkeypatch):
         path = tmp_path / 'olist.zip'
         with zipfile.ZipFile(path, 'w') as z:
             for table, mapping in seed.TABLES.items():
+                if missing_payment_file and table == 'order_payments':
+                    continue
                 stream = io.StringIO(newline=''); writer = csv.writer(stream)
                 writer.writerow([v for v in mapping.values() if v]); writer.writerow(rows[table])
                 z.writestr('olist_' + table + '_dataset.csv', stream.getvalue())
-        monkeypatch.setattr(seed, 'SHA256', hashlib.sha256(path.read_bytes()).hexdigest())
         return path
     return make
 
@@ -52,7 +52,9 @@ def test_invalid_relationship_rolls_back_entire_seed(database, archive):
     assert database.execute('SELECT count(*) FROM project_meta.seed_runs').fetchone()[0] == 0
 
 
-def test_changed_upstream_archive_is_rejected(tmp_path):
-    path=tmp_path/'unexpected.zip';path.write_bytes(b'unexpected archive')
-    with pytest.raises(ValueError,match='checksum changed'):
-        seed.download(path)
+@pytest.mark.integration
+def test_missing_selected_csv_rolls_back_seed(database, archive):
+    with pytest.raises(ValueError, match='Expected exactly one olist_order_payments_dataset.csv'):
+        seed.load(database, archive(missing_payment_file=True))
+    assert database.execute('SELECT count(*) FROM ecommerce.customers').fetchone()[0] == 0
+    assert database.execute('SELECT count(*) FROM project_meta.seed_runs').fetchone()[0] == 0

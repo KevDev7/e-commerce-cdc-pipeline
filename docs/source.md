@@ -1,6 +1,6 @@
 # Olist source contract
 
-Source: [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce), version 2, published under CC BY-NC-SA 4.0. The exact download and SHA-256 are pinned in `src/olist_cdc/seed.py`; mismatched bytes require inspection. Cloud preparation downloads the original ZIP temporarily, retains a copy in S3, and removes the local temporary file. Datasets are never committed.
+Source: [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce), version 2, published under CC BY-NC-SA 4.0. The version-specific download URL is in `src/olist_cdc/seed.py`. Loading checks the selected CSV filenames, required columns and source constraints; it does not require an exact ZIP checksum. Cloud preparation downloads the original ZIP temporarily, retains a copy in S3, and removes the local temporary file. Datasets are never committed.
 
 This is real, anonymized historical business data, not a live API or event stream. The application database is a portfolio reconstruction. New source activity is simulated through real SQL transactions; PostgreSQL produces the WAL read by DMS.
 
@@ -23,4 +23,7 @@ The archive's business timestamps have no timezone offset. Store them as `timest
 
 Empty CSV values become SQL NULL. Zip-code prefixes remain strings, preserving leading zeroes. Money uses decimal types. Missing delivery/approval dates and orders without item/payment records are retained. No rule forces payment totals to equal item plus freight totals: they differ in the actual data.
 
-Source seeding is atomic, checksum-pinned and recorded once. Retrying never overwrites subsequent changes. Start a fresh database for a different seed or source schema. The inspected counts and anomalies are in [the migration record](olist-migration.md).
+Source seeding is atomic and recorded once under `olist-kaggle-v2`. Retrying never overwrites subsequent changes. Start a fresh database for a different seed or source schema. The inspected counts and anomalies are in [the migration record](olist-migration.md).
+
+The seed ledger now uses `seed_id` instead of an archive hash. This source setup
+is for a fresh demo database; an older source ledger is not migrated in place.

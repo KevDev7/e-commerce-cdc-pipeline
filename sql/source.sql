@@ -56,7 +56,7 @@ BEGIN
 END;
 $$;
 CREATE TABLE IF NOT EXISTS project_meta.seed_runs (
-    archive_sha256 text PRIMARY KEY,
+    seed_id text PRIMARY KEY,
     loaded_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     row_counts jsonb NOT NULL
 );

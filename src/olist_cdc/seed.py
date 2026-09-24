@@ -1,5 +1,4 @@
 import csv
-import hashlib
 import io
 from pathlib import Path
 import urllib.request
@@ -9,7 +8,7 @@ from psycopg import sql
 from psycopg.types.json import Jsonb
 
 URL = "https://www.kaggle.com/api/v1/datasets/download/olistbr/brazilian-ecommerce?datasetVersionNumber=2"
-SHA256 = "967e41e04fc306fe604e2a693f488995a8b41e5047418f8a5c8e4abd6deca784"
+SEED_ID = "olist-kaggle-v2"
 # Derived row keys are first in source column order; all natural-key parts remain.
 TABLES = {
     "customers": {"customer_id": "customer_id", "customer_unique_id": "customer_unique_id",
@@ -45,20 +44,14 @@ def download(path: Path):
             temporary.replace(path)
         finally:
             temporary.unlink(missing_ok=True)
-    actual = hashlib.sha256(path.read_bytes()).hexdigest()
-    if actual != SHA256:
-        raise ValueError(f"Sample checksum changed ({actual}); inspect the new sample before updating the pin.")
 
 
 def load(connection, archive: Path):
-    archive_hash = hashlib.sha256(archive.read_bytes()).hexdigest()
-    if archive_hash != SHA256:
-        raise ValueError("Only the inspected, pinned Olist archive is accepted by this seed loader.")
     with connection.transaction():
         connection.execute("SET LOCAL TIME ZONE 'UTC'")
         connection.execute("SELECT pg_advisory_xact_lock(8174201)")
         previous = connection.execute(
-            "SELECT row_counts FROM project_meta.seed_runs WHERE archive_sha256=%s", (archive_hash,)
+            "SELECT row_counts FROM project_meta.seed_runs WHERE seed_id=%s", (SEED_ID,)
         ).fetchone()
         if previous:
             return {"status": "already_loaded", "row_counts": previous[0]}
@@ -87,6 +80,6 @@ def load(connection, archive: Path):
                             values = mapped_values(table, row)
                             copy.write_row(values)
                             counts[table] += 1
-        connection.execute("INSERT INTO project_meta.seed_runs (archive_sha256,row_counts) VALUES (%s,%s)",
-                           (archive_hash, Jsonb(counts)))
+        connection.execute("INSERT INTO project_meta.seed_runs (seed_id,row_counts) VALUES (%s,%s)",
+                           (SEED_ID, Jsonb(counts)))
     return {"status": "loaded", "row_counts": counts}
