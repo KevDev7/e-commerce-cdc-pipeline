@@ -105,7 +105,7 @@ they remain optional extensions. Customer tier has no field or business rule in
 the current source contract. Additional tiers would require an explicit business
 definition and clearly labeled derived or simulated values.
 
-The 11 staging/intermediate models remain views. The six marts incrementally replace affected entities, using newly loaded files to identify work. Six `<mart>__files` metadata tables in `marts` each store `source_file varchar(2048)`; they are processing checkpoints, not additional business models. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
+The 11 staging/intermediate models remain views. The six marts incrementally replace affected entities, using newly loaded files to identify work. One `marts.processed_files` tracking table stores `model_name varchar(128)` and `source_file varchar(2048)`; each pair records one model's completed input file. It is not an additional business model. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
 
 Event IDs are readable strings rather than SHA-256 digests. The raw column is
 `varchar(128)` to fit composite snapshot keys. Source business IDs are unchanged.

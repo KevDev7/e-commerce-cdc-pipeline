@@ -52,7 +52,7 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
                 for m in MARTS}
 
     def checkpoints():
-        return {m: database.execute(f'SELECT source_file FROM marts.{m}__files ORDER BY 1').fetchall()
+        return {m: database.execute('SELECT source_file FROM marts.processed_files WHERE model_name=%s ORDER BY 1', (m,)).fetchall()
                 for m in MARTS}
 
     customer = dict(customer_id='c1', customer_unique_id='person1', city='sao paulo', state='SP', postal_code='00123')
@@ -73,6 +73,8 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
     load('baseline.csv', baseline)
     build('build')
     initial = contents(physical=True)
+    assert database.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='marts' AND table_type='BASE TABLE' ORDER BY 1").fetchall() == [(m,) for m in sorted((*MARTS, 'processed_files'))]
+    assert all(files == [('baseline.csv',)] for files in checkpoints().values())
 
     # A no-input build must leave every stored row untouched, not silently rebuild tables.
     build('build')
@@ -127,8 +129,8 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
     hook = broken / 'macros/incremental_files.sql'
     # Inject an actual SQL failure after checkpoint insertion, within the model transaction.
     hook.write_text(hook.read_text().replace(
-        "select source_file from {{ cdc_temp('pending') }};",
-        "select source_file from {{ cdc_temp('pending') }};\n    select 1/0;"))
+        "select '{{ this.identifier }}', source_file from {{ cdc_temp('pending') }};",
+        "select '{{ this.identifier }}', source_file from {{ cdc_temp('pending') }};\n    select 1/0;"))
     build('run', '--select', 'fct_orders', project=broken, success=False)
     assert contents(physical=True) == before_failure
     assert checkpoints() == before_checkpoint
@@ -148,6 +150,10 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
 
     incremental = contents()
     ledger = checkpoints()
+    # A selected full refresh cannot erase another model's progress.
+    build('run', '--select', 'fct_orders', '--full-refresh')
+    assert contents() == incremental
+    assert checkpoints() == ledger
     build('build', '--full-refresh')
     assert contents() == incremental
     assert checkpoints() == ledger

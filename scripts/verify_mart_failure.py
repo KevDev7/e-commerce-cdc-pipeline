@@ -28,10 +28,10 @@ def state():
         for row in cursor:
             digest.update(json.dumps(row, default=str, separators=(',', ':')).encode() + b'\n')
             count += 1
-        cursor.execute('SELECT source_file FROM marts.fct_orders__files ORDER BY source_file')
+        cursor.execute("SELECT source_file FROM marts.processed_files WHERE model_name='fct_orders' ORDER BY source_file")
         files = [row[0] for row in cursor]
         cursor.execute('''SELECT count(*) FROM "raw".orders o WHERE NOT EXISTS (
-            SELECT 1 FROM marts.fct_orders__files f WHERE f.source_file=o._source_file)''')
+            SELECT 1 FROM marts.processed_files f WHERE f.model_name='fct_orders' AND f.source_file=o._source_file)''')
         pending = cursor.fetchone()[0]
         connection.commit()
     return dict(rows=count, sha256=digest.hexdigest(), files=files, pending_order_events=pending)
@@ -63,7 +63,7 @@ def main():
                         ignore=shutil.ignore_patterns('target','logs','profiles.yml','dbt_packages'))
         hook = project/'macros/incremental_files.sql'
         original = hook.read_text()
-        needle = "select source_file from {{ cdc_temp('pending') }};"
+        needle = "select '{{ this.identifier }}', source_file from {{ cdc_temp('pending') }};"
         if original.count(needle) != 1:
             raise RuntimeError('Checkpoint hook changed; review fault injection before running')
         hook.write_text(original.replace(needle, needle+'\n    select 1/0;'))
