@@ -34,7 +34,7 @@ state before and after failure, retries the model, and records the result under
 ignored `data/mart-failure.json`. The normal build afterward updates the remaining
 marts and runs all data tests. Original project SQL is not modified by the check.
 
-With the source quiescent and the latest DMS batch loaded, `.venv/bin/python scripts/reconcile_cloud.py` compares every current field with Redshift. `.venv/bin/python scripts/verify_replay.py` redelivers a real CDC file and retries the batch, asserting unchanged raw counts and unique event identities. See the Olist validation evidence for completed executions. Reconciliation against an actively changing source would require coordinating a common checkpoint, which this small demo does not automate.
+With the source quiescent and the latest DMS batch loaded, `.venv/bin/python scripts/reconcile_cloud.py` compares ordered rows field by field with Redshift, reporting the first mismatch or a row-count difference. It does not hash rows or save datasets locally. `.venv/bin/python scripts/verify_replay.py` redelivers a real CDC file and retries the batch, asserting unchanged raw counts and unique event identities. See the Olist validation evidence for completed executions. Reconciliation against an actively changing source would require coordinating a common checkpoint, which this small demo does not automate.
 
 ## Verify a completed simulated lifecycle
 
