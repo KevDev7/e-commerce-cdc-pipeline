@@ -1488,5 +1488,39 @@
     "cutover_new_min_order": "20260924221156510000000000000000005",
     "failed_at": "2026-09-24T22:15:34.440486+00:00",
     "error": "AssertionError: {'run_id': 'scheduled__2026-09-24T22:10:00+00:00', 'state': 'success', 'logical_date': '2026-09-24 22:10:00+00:00', 'start': '2026-09-24 22:15:01.871176+00:00', 'end': '2026-09-24 22:15:09.088793+00:00', 'tasks': [{'task': 'check', 'state': 'success', 'tries': 1, 'duration': 0.919998}, {'task': 'pending', 'state': 'skipped', 'tries': 1, 'duration': 1.764039}, {'task': 'load', 'state': 'skipped', 'tries': 0, 'duration': 0.0}, {'task': 'build', 'state': 'skipped', 'tries': 0, 'duration': 0.0}, {'task': 'complete', 'state': 'skipped', 'tries': 0, 'duration': 0.0}]}"
-  }
+  },
+  "dms_table_statistics_including_initial_attempt": [
+    {
+      "TableName": "orders",
+      "FullLoadRows": 0,
+      "Inserts": 25,
+      "Updates": 25,
+      "Deletes": 8,
+      "TableState": "Table completed"
+    },
+    {
+      "TableName": "order_items",
+      "FullLoadRows": 0,
+      "Inserts": 18,
+      "Updates": 0,
+      "Deletes": 0,
+      "TableState": "Table completed"
+    },
+    {
+      "TableName": "order_payments",
+      "FullLoadRows": 0,
+      "Inserts": 18,
+      "Updates": 0,
+      "Deletes": 0,
+      "TableState": "Table completed"
+    },
+    {
+      "TableName": "customers",
+      "FullLoadRows": 0,
+      "Inserts": 17,
+      "Updates": 8,
+      "Deletes": 8,
+      "TableState": "Table completed"
+    }
+  ]
 }

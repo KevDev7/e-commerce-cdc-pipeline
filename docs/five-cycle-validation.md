@@ -80,3 +80,10 @@ run. This leaves time for verification and the next DMS file before the followin
 trigger. Existing Airflow history is preserved and excluded from the new sequence.
 An initial mid-interval attempt produced a correct idle skip while the generator
 was still checking the prior batch; this is retained separately from the clean run.
+
+[Final cleanup verification](evidence/olist-five-cycle-cleanup.json) confirms the
+updated encrypted RDS snapshot is available, all 54 S3 objects and the Redshift
+namespace remain, and project compute plus local Airflow data are removed. The
+original source snapshot is also preserved. Reported Redshift usage at validation
+was 6,572 charged RPU-seconds (about $0.685 at the checked regional rate), with
+other AWS services and billing lag additional; this is not a final invoice.

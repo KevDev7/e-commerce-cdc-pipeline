@@ -1,0 +1,37 @@
+{
+  "verified_at": "2026-09-24T23:00:16.010160+00:00",
+  "stack_status": "DELETE_COMPLETE",
+  "retained": {
+    "s3_bucket": "olist-cdc-efe3cff0a88c",
+    "s3_objects": 54,
+    "s3_bytes": 157765180,
+    "s3_inventory_unchanged": true,
+    "s3_public_access_blocked": true,
+    "rds_snapshot": "synthea-cdc-demo-snapshot-source-c9sbssrikxav",
+    "rds_snapshot_status": "available",
+    "rds_snapshot_encrypted": true,
+    "redshift_namespace": "synthea-cdc",
+    "redshift_namespace_status": "AVAILABLE",
+    "copy_role_retained": true,
+    "older_s3_lineage_preserved": {
+      "objects": 14,
+      "bytes": 157553389
+    }
+  },
+  "removed": {
+    "rds_instance": true,
+    "dms_instance_and_task": true,
+    "redshift_workgroup": true,
+    "dms_log_group": true
+  },
+  "restore_required": "Restore RDS snapshot and recreate a Redshift workgroup before querying; these operations incur new compute costs.",
+  "local": {
+    "project_database_containers": 0,
+    "project_database_volumes": 0,
+    "airflow_container_and_metadata_volume_removed": true,
+    "temporary_credentials_removed": true,
+    "no_full_dataset_downloaded": true,
+    "retained_warehouse_credentials": "Ignored .env.cloud with permissions 0600"
+  },
+  "original_source_snapshot_retained": "synthea-cdc-demo-snapshot-source-iqezmqtyne2k"
+}
