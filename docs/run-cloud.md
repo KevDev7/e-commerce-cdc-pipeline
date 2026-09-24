@@ -100,7 +100,13 @@ uv run python scripts/verify_cloud_scenario.py aws-001
 uv run python scripts/reconcile_cloud.py
 ```
 
-Replay, failure injection, bootstrap timing, historical joins and measured workloads
+The main scenario includes a follow-up order after the address correction: its
+customer version must differ from the original order. Both are checked by the
+same verifier. The scenario produces 9 inserts, 4 updates and 2 deletes. Use a new
+scenario name for this expanded demonstration; older completed scenarios did not
+include this phase.
+
+Replay, failure injection, bootstrap timing and measured workloads
 are [optional verification scenarios](verification.md). They are separate from the
 normal setup → simulate → process → verify → cleanup flow.
 

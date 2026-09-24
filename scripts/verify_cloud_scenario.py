@@ -36,20 +36,35 @@ def verify(cursor, scenario):
                    WHERE customer_id=%s ORDER BY source_order_from''', (key['delete-customer'],)) == [(False,), (True,)]
     assert rows('''SELECT count(*) FROM "raw".orders WHERE order_id=%s AND status='ROLLBACK_SENTINEL' ''',
                 (key['order'],)) == [(0,)]
+    versions = {row[0]: row[1:] for row in rows(
+        """SELECT o.order_id,o.customer_history_status,h.city,h.customer_version_id
+           FROM analytics_marts.fct_orders o
+           LEFT JOIN analytics_marts.dim_customer_history h
+           ON o.customer_version_id=h.customer_version_id
+           WHERE o.order_id IN (%s,%s)""", (key['order'], key['repeat-order']))}
+    assert versions[key['order']][:2] == ('matched', 'sao paulo'), versions
+    assert versions[key['repeat-order']][:2] == ('matched', 'campinas'), versions
+    assert versions[key['order']][2] != versions[key['repeat-order']][2]
+    assert rows("""SELECT count(*) FROM analytics_marts.fct_orders
+                   WHERE customer_history_status='creation_not_captured'
+                     AND customer_version_id IS NOT NULL""") == [(0,)]
     operations = {}
     for table, column, identities in (
         ('customers', 'customer_id', (key['customer'], key['delete-customer'])),
-        ('orders', 'order_id', (key['order'], key['delete-order'])),
+        ('orders', 'order_id', (key['order'], key['delete-order'], key['repeat-order'])),
         ('order_items', 'order_id', (key['order'], key['delete-order'])),
         ('order_payments', 'order_id', (key['order'], key['delete-order'])),
     ):
+        placeholders = ','.join(['%s'] * len(identities))
         for op, count, unique in rows(f'''SELECT _op,count(*),count(DISTINCT _event_id)
-                    FROM "raw".{table} WHERE {column} IN (%s,%s) AND NOT _is_snapshot GROUP BY _op''', identities):
+                    FROM "raw".{table} WHERE {column} IN ({placeholders}) AND NOT _is_snapshot GROUP BY _op''', identities):
             assert count == unique
             operations[op] = operations.get(op, 0) + count
-    assert operations == {'I': 8, 'U': 4, 'D': 2}, operations
+    assert operations == {'I': 9, 'U': 4, 'D': 2}, operations
     return dict(scenario=scenario, operations=operations, lifecycle_and_totals=True,
-                hard_deletes=True, rollback_excluded=True, unique_event_ids=True)
+                hard_deletes=True, rollback_excluded=True, unique_event_ids=True,
+                original_order_city='sao paulo', followup_order_city='campinas',
+                distinct_observed_versions=True)
 
 
 def main():

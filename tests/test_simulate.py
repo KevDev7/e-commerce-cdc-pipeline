@@ -13,7 +13,7 @@ def test_order_lifecycle_and_retry(database):
     assert database.execute('SELECT sum(payment_value) FROM ecommerce.order_payments').fetchone()[0]==110
     assert database.execute('SELECT sum(price+freight_value) FROM ecommerce.order_items').fetchone()[0]==110
     assert database.execute('SELECT city FROM ecommerce.customers').fetchall()==[('campinas',)]
-    assert database.execute('SELECT count(*) FROM ecommerce.orders').fetchone()[0]==1
+    assert database.execute('SELECT count(*) FROM ecommerce.orders').fetchone()[0]==2
 
 
 @pytest.mark.integration
@@ -25,8 +25,8 @@ def test_wal_contains_committed_changes_in_order_but_not_rollback(database):
         for phase in PHASES:run_phase(database,'wal-test',phase)
         records=[r[0] for r in database.execute('SELECT data FROM pg_logical_slot_get_changes(%s,NULL,NULL)',(slot,))]
         changes=[r for r in records if r.startswith('table ecommerce.')]
-        assert len(changes)==14
-        assert sum(': INSERT:' in r for r in changes)==8
+        assert len(changes)==15
+        assert sum(': INSERT:' in r for r in changes)==9
         assert sum(': UPDATE:' in r for r in changes)==4
         assert sum(': DELETE:' in r for r in changes)==2
         assert not any('ROLLBACK_SENTINEL' in r for r in records)

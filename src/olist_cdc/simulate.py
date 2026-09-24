@@ -8,14 +8,14 @@ from uuid import UUID, uuid5
 import psycopg
 
 NAMESPACE = UUID('ac97c34a-c917-48cc-aed0-81c37f3db319')
-PHASES = ('open', 'approve', 'ship', 'deliver', 'correct', 'create-delete-test', 'delete-test', 'rollback-test')
+PHASES = ('open', 'approve', 'ship', 'deliver', 'correct', 'repeat-order', 'create-delete-test', 'delete-test', 'rollback-test')
 
 
 def ids(scenario):
     if not re.fullmatch(r'[a-zA-Z0-9_-]{1,50}', scenario):
         raise ValueError('Scenario names must be 1–50 letters, digits, underscores or hyphens')
     return {kind: uuid5(NAMESPACE, f'{scenario}:{kind}').hex
-            for kind in ('customer', 'person', 'order', 'product', 'seller', 'delete-customer', 'delete-order')}
+            for kind in ('customer', 'person', 'order', 'product', 'seller', 'delete-customer', 'delete-order', 'repeat-order')}
 
 
 def run_phase(connection, scenario, phase):
@@ -59,6 +59,11 @@ def run_phase(connection, scenario, phase):
                 customer_delivered_at=CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo' WHERE order_id=%s""", (key['order'],))
         elif phase == 'correct':
             connection.execute("UPDATE ecommerce.customers SET city='campinas',postal_code='13000' WHERE customer_id=%s", (key['customer'],))
+        elif phase == 'repeat-order':
+            # The later order should use the corrected customer version.
+            connection.execute("""INSERT INTO ecommerce.orders (order_id,customer_id,status,purchased_at)
+                VALUES (%s,%s,'created',CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')""",
+                (key['repeat-order'],key['customer']))
         elif phase == 'create-delete-test':
             connection.execute("""INSERT INTO ecommerce.customers (customer_id,customer_unique_id,city,state)
                 VALUES (%s,%s,'disposable CDC test','SP')""", (key['delete-customer'],key['delete-customer']))
