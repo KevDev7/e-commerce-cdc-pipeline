@@ -7,14 +7,15 @@ pipeline layout versions.
 | --- | --- | --- |
 | Original Kaggle dataset, release 2 | `source/olist/kaggle-v2/` | `source/olist-v2/` |
 | Original DMS snapshots and changes | `raw/dms/olist/` | `olist-v1/` |
-| Derived, typed Redshift COPY files | `copy-ready/parquet-v1/` | Unchanged |
+| Derived, typed Redshift COPY files | `copy-ready/` | `copy-ready/parquet-v1/` |
 
 The old `olist-v1` name described a capture layout, not Kaggle version 1.
-`parquet-v1` still names the normalized file-format version, independently of
-the dataset version. Snapshot rows and subsequent CDC changes share one capture
-lineage; these paths do not imply separate datasets.
+The redundant `parquet-v1` folder has also been removed. Prepared files now use
+`copy-ready/<source-hash>/<content-hash>/<table>.parquet`; their extension
+identifies the format. Snapshot rows and subsequent CDC changes share one
+capture lineage; these paths do not imply separate datasets.
 
-## Retained demo migration
+## Original source and capture path migration
 
 The September 2026 retained bucket was reorganized while its compute stack was
 deleted. The ZIP and original CSV bytes are preserved. Parquet files are
@@ -37,3 +38,14 @@ baseline.
 
 The bucket, AWS profile and resource ownership labels retain `synthea-cdc` to
 identify the existing project resources. They do not describe the active data.
+
+## COPY-ready folder simplification
+
+A subsequent move removed only `parquet-v1/` from the prepared-file paths.
+The original CSV locations, source hashes, content hashes and every Parquet
+byte stay the same. S3 copies were verified by size and SHA-256 before the old
+objects were removed. See the [verification report](evidence/olist-copy-ready-layout-migration.json).
+The loader now writes and loads the shorter paths. The existing COPY role already
+allows `copy-ready/*`, so it needs no policy change. This move does not change
+the raw file ledger or event identities and does not require a warehouse rebuild.
+Historical reports retain the paths used during their original runs.

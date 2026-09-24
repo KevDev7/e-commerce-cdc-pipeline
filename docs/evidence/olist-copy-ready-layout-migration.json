@@ -1,0 +1,81 @@
+{
+  "migrated_at": "2026-09-24T13:40:57.362581+00:00",
+  "bucket": "synthea-cdc-demo-bucket-ezajhtylhk8v",
+  "status": "complete",
+  "verification": "Identical size and SHA256 for all 12 Parquet files; source CSVs unchanged",
+  "objects": [
+    {
+      "old_key": "copy-ready/parquet-v1/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/customers.parquet",
+      "new_key": "copy-ready/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/customers.parquet",
+      "bytes": 5271,
+      "sha256": "690889eb4bef23dc335da9a123febc9a0d236c47abca82d3568d7f4b9affaac9"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_items.parquet",
+      "new_key": "copy-ready/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_items.parquet",
+      "bytes": 6334,
+      "sha256": "798f5305caba81fc3d2dc9a472c45b02f5c8b28ad6e39dbee6bc220adcef5167"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_payments.parquet",
+      "new_key": "copy-ready/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_payments.parquet",
+      "bytes": 5515,
+      "sha256": "f21121fbae4f2b3a8dd47ad51f9d01fa77aa97513c5e8d7fae1406d9237c7cce"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/orders.parquet",
+      "new_key": "copy-ready/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/orders.parquet",
+      "bytes": 6724,
+      "sha256": "5e56dced93fe13a507bb0fc8f01d17e4d1815bab97afc05d7770172d7f4b97d2"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/2d402c90e9d24267b6b3087bda41f14ac128a5a197dc122ad2240e045ceb6ee8/6fe4de0bdcd42102d6edc34c8c587783911a7dec09c80e4c32de20056a9d1740/customers.parquet",
+      "new_key": "copy-ready/2d402c90e9d24267b6b3087bda41f14ac128a5a197dc122ad2240e045ceb6ee8/6fe4de0bdcd42102d6edc34c8c587783911a7dec09c80e4c32de20056a9d1740/customers.parquet",
+      "bytes": 7710199,
+      "sha256": "1817394e22e5ff9b26bb4b87adef2f351be99df6dbb0da3a37df0971bebeb54d"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/customers.parquet",
+      "new_key": "copy-ready/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/customers.parquet",
+      "bytes": 5306,
+      "sha256": "1cb4d0507f691dccb79b7e41fd40082b31e1a5aa635d8b749dd5cbf8e706c136"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_items.parquet",
+      "new_key": "copy-ready/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_items.parquet",
+      "bytes": 6369,
+      "sha256": "6a39e44b5d99be0d0eac3aeb5d28ec7d3132fd9c4bdbd6f87955c8ffc1b438da"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_payments.parquet",
+      "new_key": "copy-ready/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_payments.parquet",
+      "bytes": 5550,
+      "sha256": "887b4124e0c4762f7cbb20a5eba196691c48a08c0713cec045fcf2dbb4041491"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/orders.parquet",
+      "new_key": "copy-ready/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/orders.parquet",
+      "bytes": 6759,
+      "sha256": "97f10bdc7cf675effeeb1bc9b1dcf5aabb0d0aa690b7c4cd4702dcbc848e5468"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/89befc01de59437e20c331be68195dd2517b9eb3d4d287ee9215fb24eee38697/a12e5892c036791a98b25dc7f4fec817734ca031ce97a34b3caefa06f40718d4/orders.parquet",
+      "new_key": "copy-ready/89befc01de59437e20c331be68195dd2517b9eb3d4d287ee9215fb24eee38697/a12e5892c036791a98b25dc7f4fec817734ca031ce97a34b3caefa06f40718d4/orders.parquet",
+      "bytes": 10641215,
+      "sha256": "6560e77e294e6007ec96d297c8c73c315f7890f9100662ad45b883d9bf1ce40a"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/b52c88c093cbea943a084cd2bd853e94a9943a0c35953ac9e460ac05cc5f1edc/490f12ef6bff9096b688a68f7def8cba66b906e7e8e78a2be4fe20e27157355b/order_items.parquet",
+      "new_key": "copy-ready/b52c88c093cbea943a084cd2bd853e94a9943a0c35953ac9e460ac05cc5f1edc/490f12ef6bff9096b688a68f7def8cba66b906e7e8e78a2be4fe20e27157355b/order_items.parquet",
+      "bytes": 9962570,
+      "sha256": "f0be776a42825d45d8bb7370dffaaf765d67deb9331073422e359c5edac42e68"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/b8093ea9ede6508717962ed5ef83e6e6cad5ef2c2fbb705aff01c4b53716b4ae/48b2b24509479df6489f6b0717fe7ffc0cf07a9daeb46bb08441d7a303121900/order_payments.parquet",
+      "new_key": "copy-ready/b8093ea9ede6508717962ed5ef83e6e6cad5ef2c2fbb705aff01c4b53716b4ae/48b2b24509479df6489f6b0717fe7ffc0cf07a9daeb46bb08441d7a303121900/order_payments.parquet",
+      "bytes": 7930987,
+      "sha256": "79af0f20ad668ef9b5c707d39c09ef3085e71e9d894c5a18e305338c5ed76720"
+    }
+  ],
+  "final_object_count": 23
+}

@@ -74,7 +74,7 @@ def load_file(connection, s3, bucket, key, role, *, metrics=None):
                 continue
             # COPY input is derived; the original DMS file remains untouched.
             source_identity = hashlib.sha256(source.encode()).hexdigest()
-            staging_key = f"copy-ready/parquet-v1/{source_identity}/{digest}/{table}.parquet"
+            staging_key = f"copy-ready/{source_identity}/{digest}/{table}.parquet"
             s3.put_object(Bucket=bucket, Key=staging_key, Body=normalized_parquet(batch, table), ServerSideEncryption="AES256")
             cursor.execute(f'CREATE TEMP TABLE incoming_{table} (LIKE "raw".{table})')
             copy_sql = sql.SQL("COPY {} FROM {} IAM_ROLE {} FORMAT AS PARQUET").format(

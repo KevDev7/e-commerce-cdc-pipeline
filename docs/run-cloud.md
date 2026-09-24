@@ -117,7 +117,7 @@ marts and runs all data tests. Original project SQL is not modified by the check
 
 ## Replay and cleanup
 
-The loader stores original DMS files unchanged, derives explicitly typed Zstandard Parquet COPY inputs under `copy-ready/parquet-v1/`, and commits the raw records with the file ledger in one transaction. A replay skips identical files; events redelivered under another file name are deduplicated by source identity. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
+The loader stores original DMS files unchanged, derives explicitly typed Zstandard Parquet COPY inputs under `copy-ready/`, and commits the raw records with the file ledger in one transaction. A replay skips identical files; events redelivered under another file name are deduplicated by source identity. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
 
 ```sh
 .venv/bin/python scripts/cloud_stack.py delete

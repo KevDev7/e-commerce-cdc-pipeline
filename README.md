@@ -92,13 +92,14 @@ See [source semantics](docs/source.md), [warehouse schema](docs/warehouse.md), [
 source/olist/kaggle-v2/<archive-sha256>.zip  # Original Kaggle dataset, version 2
 raw/dms/olist/ecommerce/<table>/LOAD*.csv   # Initial table snapshots
 raw/dms/olist/cdc/*.csv                    # Captured inserts, updates and deletes
-copy-ready/parquet-v1/<source-hash>/<content-hash>/<table>.parquet
+copy-ready/<source-hash>/<content-hash>/<table>.parquet
 validation/                               # Results from completed checks
 reference/                                # Small source examples and schema reference
 ```
 
-`kaggle-v2` identifies the downloaded dataset release. `parquet-v1` identifies
-the typed COPY-file format. The raw capture path has no dataset version number.
+`kaggle-v2` identifies the downloaded dataset release. Prepared files are
+identified by their `.parquet` extension; no extra format-version folder is needed.
+The raw capture path has no dataset version number.
 S3 holds source and ingestion files; dbt staging, intermediate and marts live
 in Redshift, not in S3 folders. The hashes tie each derived file to its input
 location and content.
@@ -110,7 +111,7 @@ record the paths that existed when they were created. See the
 
 Keep Olist's original ZIP/CSV as source evidence and DMS's transaction-preserving
 CSV as replayable capture. Python writes one derived Parquet file per table per
-capture file under `copy-ready/parquet-v1/`, using Zstandard compression and
+capture file under `copy-ready/`, using Zstandard compression and
 explicit decimal, timestamp, boolean and string types. Redshift loads those
 files with `COPY FORMAT AS PARQUET`. The raw event schema, source ordering,
 file ledger and event deduplication stay the same.
