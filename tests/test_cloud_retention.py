@@ -44,3 +44,20 @@ def test_teardown_preserves_bucket_and_refuses_legacy_delete_policy(monkeypatch,
         with pytest.raises(RuntimeError, match='DeletionPolicy'):
             module.delete()
         assert calls == []
+
+
+def test_restore_reuses_cloud_data_without_full_load_or_owning_retained_resources():
+    from infra.restore import restore_template
+    body = restore_template({'retained_bucket': 'existing-bucket',
+        'retained_namespace': 'existing-warehouse', 'retained_copy_role': 'existing-role',
+        'retained_source_snapshot': 'existing-snapshot'})
+    resources = body['Resources']
+    assert not {'Bucket', 'Namespace', 'CopyRole'} & resources.keys()
+    assert resources['Source']['DeletionPolicy'] == 'Snapshot'
+    props = resources['Source']['Properties']
+    assert props['DBSnapshotIdentifier'] == 'existing-snapshot'
+    assert not {'MasterUsername', 'MasterUserPassword', 'DBName'} & props.keys()
+    assert resources['Capture']['Properties']['MigrationType'] == 'cdc'
+    assert resources['Workgroup']['Properties']['NamespaceName'] == 'existing-warehouse'
+    assert resources['TargetEndpoint']['Properties']['S3Settings']['BucketName'] == 'existing-bucket'
+    assert 'Fn::GetAtt": ["Bucket"' not in json.dumps(body)

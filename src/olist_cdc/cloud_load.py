@@ -44,6 +44,15 @@ def check_capture():
     if task["Status"] != "running":
         raise RuntimeError(f"Capture task is {task['Status']}: {task.get('LastFailureMessage', '')}")
     tables = dms.describe_table_statistics(ReplicationTaskArn=arn)["TableStatistics"]
+    failed = [t["TableName"] for t in tables
+              if t.get("TableState") in ("Table error", "Table cancelled")]
+    if failed:
+        raise RuntimeError(f"Capture tables failed: {sorted(failed)}")
+    if task.get("MigrationType") == "cdc":
+        # CDC-only restore runs reuse an independently reconciled warehouse baseline.
+        # Such a task does not execute a full load or report its completion states.
+        log.info("CDC-only capture running; no full load is performed by this task")
+        return
     completed = {t["TableName"] for t in tables if t["SchemaName"] == "ecommerce" and t["TableState"] == "Table completed"}
     if completed != set(TABLES):
         raise RuntimeError(f"Initial load is not complete: {sorted(completed)}")
