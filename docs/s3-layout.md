@@ -1,58 +1,37 @@
 # S3 layout
 
-The paths identify what the files do, without mixing dataset versions with
-pipeline layout versions.
+```text
+source/original-olist-brazilian-ecommerce.zip
+raw/dms/olist/ecommerce/<table>/LOAD*.csv
+raw/dms/olist/cdc/*.csv
+copy-ready/ecommerce/<table>/LOAD00000001/<table>.parquet
+copy-ready/cdc/<original-cdc-filename-without-.csv>/<table>.parquet
+validation/
+```
 
-| Purpose | Current path or prefix | Previous path or prefix |
-| --- | --- | --- |
-| Original Kaggle dataset, release 2 | `source/original-olist-brazilian-ecommerce.zip` | `source/olist-v2/<sha256>.zip`, then `source/olist/kaggle-v2/<sha256>.zip` |
-| Original DMS snapshots and changes | `raw/dms/olist/` | `olist-v1/` |
-| Derived, typed Redshift COPY files | `copy-ready/` | `copy-ready/parquet-v1/` |
+The ZIP is the complete Kaggle version 2 download. DMS snapshots and CDC files
+remain unchanged in `raw/`. Derived Parquet paths mirror each CSV's path relative
+to `raw/dms/olist/`. The full relative path distinguishes snapshots with identical
+filenames in different tables. A CDC file may contain several tables, so each
+gets its own Parquet file. The extension identifies the format; no format-version
+folder or hash folder is needed.
 
-The old `olist-v1` name described a capture layout, not Kaggle version 1.
-The redundant `parquet-v1` folder has also been removed. Prepared files now use
-`copy-ready/<source-hash>/<content-hash>/<table>.parquet`; their extension
-identifies the format. Snapshot rows and subsequent CDC changes share one
-capture lineage; these paths do not imply separate datasets.
+Retries write the same prepared paths. Capture files must remain immutable:
+the loader tracks original S3 keys and skips previously committed files without
+re-downloading them. Events redelivered under another filename are still deduplicated.
+A new capture lineage requires a fresh bucket and warehouse state.
 
-## Original source and capture path migration
+On September 24, 2026, all 12 retained Parquet objects were copied to readable paths
+inside S3. Replacement sizes and ETags matched before old derived keys were removed.
+The ZIP, original CSVs and Parquet contents were unchanged; no dataset was downloaded
+and no warehouse compute was started. Earlier reports retain their historical paths.
 
-The September 2026 retained bucket was reorganized while its compute stack was
-deleted. The ZIP and original CSV bytes are preserved. Parquet files are
-regenerated because their source-path hash and `_source_file` column must point
-to the renamed CSV files. All other fields, including event IDs, source order,
-operations and timestamps, must match the previous Parquet files exactly.
-Old objects are removed only after all replacements are verified. The migration
-[report](evidence/olist-s3-layout-migration.json) records the object mapping and checks.
+The simplified raw file ledger omits content checksums. Deploy against a fresh raw
+warehouse, then replay retained CSV files and rebuild marts. Existing raw ledgers
+from the older implementation must not be reused unchanged. No source reload is
+needed when rebuilding the warehouse from the same retained capture.
 
-Historical validation reports retain their original paths
-as evidence of earlier runs. Translate their prefixes using the table above
-when looking for the files today. This rename is not a new DMS capture or a new
-warehouse validation run.
-
-Do not apply this move to a running deployment: existing file ledgers and
-Airflow batch checkpoints refer to original paths. This retained demonstration
-has no running warehouse to migrate. Future deployments use the updated DMS
-configuration, IAM path and loader defaults together, with their own fresh raw
-baseline.
-
-The bucket, AWS profile and resource ownership labels retain `synthea-cdc` to
-identify the existing project resources. They do not describe the active data.
-
-## COPY-ready folder simplification
-
-A subsequent move removed only `parquet-v1/` from the prepared-file paths.
-The original CSV locations, source hashes, content hashes and every Parquet
-byte stay the same. S3 copies were verified by size and SHA-256 before the old
-objects were removed. See the [verification report](evidence/olist-copy-ready-layout-migration.json).
-The loader now writes and loads the shorter paths. The existing COPY role already
-allows `copy-ready/*`, so it needs no policy change. This move does not change
-the raw file ledger or event identities and does not require a warehouse rebuild.
-Historical reports retain the paths used during their original runs.
-
-## Readable original archive name
-
-The original ZIP now lives at `source/original-olist-brazilian-ecommerce.zip`.
-Only its S3 object key changed; its bytes are unchanged. The pinned Kaggle
-version and SHA-256 verification remain in `src/olist_cdc/seed.py`. The renamed
-object was verified against that SHA-256 before the previous object was removed.
+Earlier path changes are documented in the [original layout report](evidence/olist-s3-layout-migration.json)
+and [format-folder removal report](evidence/olist-copy-ready-layout-migration.json).
+The legacy `synthea-cdc` bucket/profile/resource labels still identify this project's
+resources; the current dataset is Olist.

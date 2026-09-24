@@ -15,7 +15,7 @@ TYPES = {
 
 def raw_ddl():
     statements = ['CREATE SCHEMA IF NOT EXISTS "raw"', """CREATE TABLE IF NOT EXISTS "raw".loaded_files
-        (source_file varchar(2048) NOT NULL, content_sha256 varchar(64) NOT NULL,
+        (source_file varchar(2048) NOT NULL,
          loaded_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP, row_count bigint NOT NULL)"""]
     for table in TABLES:
         fields = [f"{name} {TYPES.get(name, 'varchar(256)')}" for name in source_columns(table)]
@@ -32,15 +32,13 @@ def initialize_raw(connection):
     connection.commit()
 
 
-def load_local(connection, events, source_file, content_sha256):
+def load_local(connection, events, source_file):
     """Reference load for PostgreSQL integration tests. No AWS behavior is mocked."""
     with connection.transaction():
         # Serialize loaders; the ledger and raw records commit together.
         connection.execute("LOCK TABLE raw.loaded_files IN EXCLUSIVE MODE")
-        previous = connection.execute("SELECT content_sha256 FROM raw.loaded_files WHERE source_file=%s", (source_file,)).fetchone()
+        previous = connection.execute("SELECT 1 FROM raw.loaded_files WHERE source_file=%s", (source_file,)).fetchone()
         if previous:
-            if previous[0] != content_sha256:
-                raise ValueError("A previously loaded source file changed; inspect it before continuing")
             return "already_loaded"
         for table in TABLES:
             batch = [event.values for event in events if event.table == table]
@@ -55,6 +53,6 @@ def load_local(connection, events, source_file, content_sha256):
                     copy.write_row(values)
             connection.execute(sql.SQL("INSERT INTO raw.{} SELECT i.* FROM {} i WHERE NOT EXISTS (SELECT 1 FROM raw.{} r WHERE r._event_id=i._event_id)").format(
                 sql.Identifier(table), temporary, sql.Identifier(table)))
-        connection.execute("INSERT INTO raw.loaded_files (source_file,content_sha256,row_count) VALUES (%s,%s,%s)",
-                           (source_file,content_sha256,len(events)))
+        connection.execute("INSERT INTO raw.loaded_files (source_file,row_count) VALUES (%s,%s)",
+                           (source_file,len(events)))
     return "loaded"

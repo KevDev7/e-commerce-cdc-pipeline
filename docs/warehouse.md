@@ -16,7 +16,7 @@ The same raw/staging/intermediate/marts structure targets local PostgreSQL for d
 | _is_snapshot | Initial-load record flag |
 | _source_file | Original S3 object URI |
 
-`raw.loaded_files` stores source_file, content_sha256, loaded_at, row_count. Raw rows and their ledger entry commit atomically. Redelivery is deduplicated by event identity; changed contents at an already loaded key are rejected. A new capture lineage requires fresh raw storage, not reuse of old sequence numbers.
+`raw.loaded_files` stores source_file, loaded_at, row_count. Raw rows and their ledger entry commit atomically. Redelivery is deduplicated by event identity; already loaded keys are skipped without downloading again. Capture files are immutable: never overwrite a loaded key. A new capture lineage requires fresh raw storage, not reuse of old sequence numbers.
 
 ## Staging: four views
 

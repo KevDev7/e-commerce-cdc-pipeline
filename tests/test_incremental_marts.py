@@ -1,6 +1,5 @@
 """Compare successive incremental builds with full rebuilds, using DMS-format fixtures."""
 from datetime import datetime, timedelta, timezone
-import hashlib
 import os
 import shutil
 import subprocess
@@ -45,7 +44,7 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
 
     def load(name, rows):
         text = csv_text(rows)
-        load_local(database, parse_csv(text, name), name, hashlib.sha256(text.encode()).hexdigest())
+        load_local(database, parse_csv(text, name), name)
 
     def contents(physical=False):
         extra = ', xmin::text, ctid::text' if physical else ''

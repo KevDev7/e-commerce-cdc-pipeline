@@ -1,5 +1,4 @@
 """Observed creation-time joins stay correct across CDC batches and missing history."""
-import hashlib
 import os
 import shutil
 import subprocess
@@ -21,8 +20,7 @@ def test_customer_version_at_captured_order_creation(database, tmp_path):
 
     def load(name, rows, snapshot=None):
         text = csv_text(rows)
-        load_local(database, parse_csv(text, name, snapshot_table=snapshot), name,
-                   hashlib.sha256(text.encode()).hexdigest())
+        load_local(database, parse_csv(text, name, snapshot_table=snapshot), name)
 
     def build(*extra):
         database.commit()

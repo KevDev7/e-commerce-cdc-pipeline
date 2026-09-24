@@ -1,5 +1,4 @@
 import csv
-import hashlib
 import io
 
 import pytest
@@ -36,15 +35,13 @@ def test_missing_order_and_schema_changes_are_rejected():
 @pytest.mark.integration
 def test_file_retry_and_redelivery_do_not_duplicate_events(database):
     initialize_raw(database)
-    text = csv_text([customer_row()]); digest=hashlib.sha256(text.encode()).hexdigest()
+    text = csv_text([customer_row()])
     events = parse_csv(text,"one.csv")
-    assert load_local(database,events,"one.csv",digest) == "loaded"
-    assert load_local(database,events,"one.csv",digest) == "already_loaded"
-    assert load_local(database,parse_csv(text,"two.csv"),"two.csv",digest) == "loaded"
+    assert load_local(database,events,"one.csv") == "loaded"
+    assert load_local(database,events,"one.csv") == "already_loaded"
+    assert load_local(database,parse_csv(text,"two.csv"),"two.csv") == "loaded"
     assert database.execute("SELECT count(*) FROM raw.customers").fetchone()[0] == 1
     database.commit()
-    with pytest.raises(ValueError,match="changed"):
-        load_local(database,events,"one.csv","different-content")
 
 
 @pytest.mark.integration
@@ -55,6 +52,6 @@ def test_failed_file_does_not_leave_partial_rows_or_a_checkpoint(database):
     rows[1][8] = "invalid-date"
     events = parse_csv(csv_text(rows),"bad.csv")
     with pytest.raises(psycopg.Error):
-        load_local(database,events,"bad.csv","hash")
+        load_local(database,events,"bad.csv")
     assert database.execute("SELECT count(*) FROM raw.customers").fetchone()[0] == 0
     assert database.execute("SELECT count(*) FROM raw.loaded_files").fetchone()[0] == 0

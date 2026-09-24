@@ -1,5 +1,4 @@
 """Local database guarantees; these tests do not stand in for DMS/Redshift validation."""
-import hashlib
 import os
 
 import psycopg
@@ -58,15 +57,14 @@ def test_failure_after_first_table_rolls_back_whole_file_then_retry_succeeds(dat
         "2026-01-01T00:00:00Z", "0/12345", "2", "2026-01-01T00:00:00Z"]]
     body = csv_text(rows)
     with pytest.raises(psycopg.Error):
-        load_local(database, parse_csv(body, "multi.csv"), "multi.csv", hashlib.sha256(body.encode()).hexdigest())
+        load_local(database, parse_csv(body, "multi.csv"), "multi.csv")
     # customers was inserted before the order_payments COPY failed.
     assert database.execute('SELECT count(*) FROM "raw".customers').fetchone()[0] == 0
     assert database.execute('SELECT count(*) FROM "raw".loaded_files').fetchone()[0] == 0
     database.commit()
     rows[1][8] = "100"
     body = csv_text(rows)
-    digest = hashlib.sha256(body.encode()).hexdigest()
-    assert load_local(database, parse_csv(body, "multi.csv"), "multi.csv", digest) == "loaded"
-    assert load_local(database, parse_csv(body, "multi.csv"), "multi.csv", digest) == "already_loaded"
+    assert load_local(database, parse_csv(body, "multi.csv"), "multi.csv") == "loaded"
+    assert load_local(database, parse_csv(body, "multi.csv"), "multi.csv") == "already_loaded"
     assert database.execute('SELECT count(*) FROM "raw".customers').fetchone()[0] == 1
     assert database.execute('SELECT count(*) FROM "raw".order_payments').fetchone()[0] == 1

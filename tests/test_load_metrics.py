@@ -26,7 +26,7 @@ def test_file_metrics_only_count_committed_files(monkeypatch,fail):
         def get_object(self,**kwargs):
             return {'Body':io.BytesIO(csv_text([customer_row(),customer_row(sequence='2',operation='U'),customer_row(sequence='3',operation='D')]).encode())}
         def put_object(self,**kwargs):
-            assert kwargs["Key"].endswith("customers.parquet")
+            assert kwargs["Key"] == "copy-ready/cdc/test/customers.parquet"
             rows = pq.read_table(pa.BufferReader(kwargs["Body"])).to_pylist()
             assert [r["_op"] for r in rows] == ["I", "U", "D"]
             assert all(r["_source_file"] == "s3://bucket/raw/dms/olist/cdc/test.csv" for r in rows)
@@ -38,3 +38,19 @@ def test_file_metrics_only_count_committed_files(monkeypatch,fail):
     else:
         assert load_file(Connection(),S3(),'bucket','raw/dms/olist/cdc/test.csv','role',metrics=metrics)==3
         assert metrics==dict(files_committed=1,input_I=1,input_U=1,input_D=1)
+
+
+def test_previously_loaded_file_is_skipped_without_downloading():
+    class Connection:
+        def cursor(self): return self
+        def execute(self, *args): pass
+        def fetchone(self): return (1,)
+        def commit(self): pass
+        def rollback(self): pass
+        def close(self): pass
+    class S3:
+        def get_object(self, **kwargs):
+            raise AssertionError("Previously loaded files must not be downloaded")
+    metrics = {}
+    assert load_file(Connection(), S3(), 'bucket', 'raw/dms/olist/cdc/test.csv', 'role', metrics=metrics) == 0
+    assert metrics == {'files_already_loaded': 1}

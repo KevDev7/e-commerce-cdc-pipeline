@@ -69,7 +69,7 @@ from the cloud demonstration.
 source/original-olist-brazilian-ecommerce.zip
 raw/dms/olist/ecommerce/<table>/LOAD*.csv
 raw/dms/olist/cdc/*.csv
-copy-ready/<source-hash>/<content-hash>/<table>.parquet
+copy-ready/<capture-relative-path-without-.csv>/<table>.parquet
 validation/
 ```
 

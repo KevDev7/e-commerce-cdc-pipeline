@@ -1,5 +1,4 @@
 """Warehouse behavior uses explicit DMS-format fixtures, not fabricated WAL."""
-import hashlib
 import os
 import shutil
 import subprocess
@@ -39,7 +38,7 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
               row('orders',{**order,'order_id':'o5'},17,'I','2026-03-08T01:30:00-05:00'),
               row('orders',{**order,'order_id':'o5','status':'delivered'},18,'U','2026-03-08T03:30:00-04:00')]
     for name,rows in [('later.csv',later),('earlier.csv',earlier),('replayed.csv',earlier)]:
-        text=csv_text(rows);load_local(database,parse_csv(text,name),name,hashlib.sha256(text.encode()).hexdigest())
+        text=csv_text(rows);load_local(database,parse_csv(text,name),name)
     profiles=tmp_path/'profiles';profiles.mkdir();shutil.copyfile(ROOT/'dbt/profiles.yml.example',profiles/'profiles.yml')
     def build():
         database.commit()
@@ -52,7 +51,7 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     if overlap_snapshot:snapshots[0][4]='campinas'
     for snapshot in snapshots:snapshot[-1]='2026-01-03T00:00:00Z' if overlap_snapshot else '2025-12-31T00:00:00Z'
     text=csv_text(snapshots)
-    load_local(database,parse_csv(text,'customers/LOAD.csv',snapshot_table='customers'),'customers/LOAD.csv',hashlib.sha256(text.encode()).hexdigest())
+    load_local(database,parse_csv(text,'customers/LOAD.csv',snapshot_table='customers'),'customers/LOAD.csv')
     # Older stable or later overlapping order snapshots must not invent transitions.
     order_snapshot = row('orders',{**order,'status':'delivered' if overlap_snapshot else 'created'},0)
     order_snapshot = [order_snapshot[0],*order_snapshot[3:]]
@@ -60,7 +59,7 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     baseline = row('orders',{**order,'order_id':'o4','status':'delivered'},0)
     baseline = [baseline[0],*baseline[3:]]
     text=csv_text([order_snapshot,baseline])
-    load_local(database,parse_csv(text,'orders/LOAD.csv',snapshot_table='orders'),'orders/LOAD.csv',hashlib.sha256(text.encode()).hexdigest())
+    load_local(database,parse_csv(text,'orders/LOAD.csv',snapshot_table='orders'),'orders/LOAD.csv')
     build()
     assert database.execute("SELECT status,item_total,freight_total,order_total,payment_total,item_count,payment_count FROM analytics_marts.fct_orders WHERE order_id='o1'").fetchone()==('delivered',100,10,110,110,2,2)
     assert database.execute("SELECT item_count,payment_count,has_items,has_payments FROM analytics_marts.fct_orders WHERE order_id='o2'").fetchone()==(0,0,False,False)
