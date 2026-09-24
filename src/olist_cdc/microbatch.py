@@ -19,7 +19,7 @@ def prepare_batch(directory, run_id):
     """Compare S3 with the last successfully built batch without waking Redshift."""
     directory = Path(directory)
     bucket = os.environ['S3_BUCKET']
-    prefix = os.environ.get('CAPTURE_PREFIX', 'olist-v1').rstrip('/') + '/'
+    prefix = os.environ.get('CAPTURE_PREFIX', 'raw/dms/olist').rstrip('/') + '/'
     s3 = aws_session().client('s3')
     objects = sorted(
         (obj['Key'], obj['ETag'], obj['Size'])

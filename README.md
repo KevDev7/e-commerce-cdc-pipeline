@@ -86,7 +86,27 @@ The GitHub repository and existing AWS profile/resource ownership names still us
 
 See [source semantics](docs/source.md), [warehouse schema](docs/warehouse.md), [Olist validation](docs/validation.md) and [migration inspection](docs/olist-migration.md).
 
-## S3 file formats
+## S3 layout and file formats
+
+```text
+source/olist/kaggle-v2/<archive-sha256>.zip  # Original Kaggle dataset, version 2
+raw/dms/olist/ecommerce/<table>/LOAD*.csv   # Initial table snapshots
+raw/dms/olist/cdc/*.csv                    # Captured inserts, updates and deletes
+copy-ready/parquet-v1/<source-hash>/<content-hash>/<table>.parquet
+validation/                               # Results from completed checks
+reference/                                # Small source examples and schema reference
+```
+
+`kaggle-v2` identifies the downloaded dataset release. `parquet-v1` identifies
+the typed COPY-file format. The raw capture path has no dataset version number.
+S3 holds source and ingestion files; dbt staging, intermediate and marts live
+in Redshift, not in S3 folders. The hashes tie each derived file to its input
+location and content.
+
+The retained bucket still has its original `synthea-cdc-demo-…` resource name;
+its active dataset is Olist. Earlier validation reports and reference exports
+record the paths that existed when they were created. See the
+[S3 path migration](docs/s3-layout.md) for the old-to-new mapping.
 
 Keep Olist's original ZIP/CSV as source evidence and DMS's transaction-preserving
 CSV as replayable capture. Python writes one derived Parquet file per table per

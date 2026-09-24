@@ -1,7 +1,7 @@
 {
   "ServiceAccessRoleArn": "REPLACE_WITH_PROJECT_DMS_S3_ROLE_ARN",
   "BucketName": "REPLACE_WITH_PROJECT_BUCKET",
-  "BucketFolder": "olist-v1",
+  "BucketFolder": "raw/dms/olist",
   "DataFormat": "csv",
   "IncludeOpForFullLoad": true,
   "CdcInsertsOnly": false,

@@ -72,12 +72,12 @@ def test_freshness_requires_specific_probe_not_any_recent_file():
             return self
 
         def paginate(self, **_):
-            return [{'Contents': [{'Key': 'olist-v1/cdc/test.csv'}]}]
+            return [{'Contents': [{'Key': 'raw/dms/olist/cdc/test.csv'}]}]
 
         def get_object(self, **_):
             return {'Body': io.BytesIO(csv_text(self.rows).encode())}
 
     s3 = S3Fixture()
-    assert find_probe(s3, 'bucket', 'olist-v1/cdc/', 'probe', set()) is None
+    assert find_probe(s3, 'bucket', 'raw/dms/olist/cdc/', 'probe', set()) is None
     s3.rows.append(customer_row(customer_id='probe', sequence='2'))
-    assert find_probe(s3, 'bucket', 'olist-v1/cdc/', 'probe', set()) == 'olist-v1/cdc/test.csv'
+    assert find_probe(s3, 'bucket', 'raw/dms/olist/cdc/', 'probe', set()) == 'raw/dms/olist/cdc/test.csv'

@@ -67,7 +67,7 @@ def load_file(connection, s3, bucket, key, role, *, metrics=None):
             if metrics is not None:
                 metrics["files_already_loaded"] = metrics.get("files_already_loaded", 0) + 1
             return 0
-        events = parse_csv(body.decode(), source, snapshot_table=snapshot_table(key, os.environ.get("CAPTURE_PREFIX", "olist-v1")))
+        events = parse_csv(body.decode(), source, snapshot_table=snapshot_table(key, os.environ.get("CAPTURE_PREFIX", "raw/dms/olist")))
         for table in TABLES:
             batch = [e for e in events if e.table == table]
             if not batch:
@@ -106,7 +106,7 @@ def load_pending(*, metrics=None):
     session = aws_session()
     s3 = session.client("s3")
     bucket = os.environ["S3_BUCKET"]
-    prefix = os.environ.get("CAPTURE_PREFIX", "olist-v1").rstrip("/") + "/"
+    prefix = os.environ.get("CAPTURE_PREFIX", "raw/dms/olist").rstrip("/") + "/"
     keys = sorted(obj["Key"] for page in s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix)
                   for obj in page.get("Contents", []) if obj["Key"].endswith(".csv"))
     if not keys:

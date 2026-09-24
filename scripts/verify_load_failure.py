@@ -69,7 +69,7 @@ def main():
     if not (ROOT / '.env.cloud').exists():
         raise RuntimeError('No active cloud environment; provision an authorized demo first')
     load_dotenv(ROOT / '.env.cloud', override=True)
-    prefix = os.environ.get("CAPTURE_PREFIX", "olist-v1") + "/cdc/"
+    prefix = os.environ.get("CAPTURE_PREFIX", "raw/dms/olist") + "/cdc/"
     if not args.key.startswith(prefix) or not args.key.endswith('.csv'):
         raise ValueError("Select an actual CDC file from this capture prefix")
     bucket = os.environ["S3_BUCKET"]

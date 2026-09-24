@@ -1,0 +1,152 @@
+{
+  "migrated_at": "2026-09-24T13:32:16.311217+00:00",
+  "bucket": "synthea-cdc-demo-bucket-ezajhtylhk8v",
+  "scope": "Retained S3 path cleanup only; no compute provisioned or warehouse run",
+  "historical_reports_preserved": true,
+  "objects": [
+    {
+      "old_key": "source/olist-v2/967e41e04fc306fe604e2a693f488995a8b41e5047418f8a5c8e4abd6deca784.zip",
+      "new_key": "source/olist/kaggle-v2/967e41e04fc306fe604e2a693f488995a8b41e5047418f8a5c8e4abd6deca784.zip",
+      "bytes": 44717580,
+      "sha256": "967e41e04fc306fe604e2a693f488995a8b41e5047418f8a5c8e4abd6deca784",
+      "verification": "identical size and SHA256"
+    },
+    {
+      "old_key": "olist-v1/cdc/CDC_TXN-20260922195743607.csv",
+      "new_key": "raw/dms/olist/cdc/CDC_TXN-20260922195743607.csv",
+      "bytes": 4439,
+      "sha256": "192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360",
+      "verification": "identical size and SHA256"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/beb57400fcef3a2b236ffec12ca0861bbe9acf65ec3dfebcf720c9b23f1ede78/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/customers.parquet",
+      "new_key": "copy-ready/parquet-v1/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/customers.parquet",
+      "bytes": 5271,
+      "rows": 4,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/beb57400fcef3a2b236ffec12ca0861bbe9acf65ec3dfebcf720c9b23f1ede78/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/orders.parquet",
+      "new_key": "copy-ready/parquet-v1/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/orders.parquet",
+      "bytes": 6724,
+      "rows": 7,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/beb57400fcef3a2b236ffec12ca0861bbe9acf65ec3dfebcf720c9b23f1ede78/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_items.parquet",
+      "new_key": "copy-ready/parquet-v1/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_items.parquet",
+      "bytes": 6334,
+      "rows": 2,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/beb57400fcef3a2b236ffec12ca0861bbe9acf65ec3dfebcf720c9b23f1ede78/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_payments.parquet",
+      "new_key": "copy-ready/parquet-v1/0edf39982d7413efe24f6eb32e0f834307349af964b8d75f7f15ab714305d0ba/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_payments.parquet",
+      "bytes": 5515,
+      "rows": 2,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    },
+    {
+      "old_key": "olist-v1/cdc/replay-CDC_TXN-20260922195743607.csv",
+      "new_key": "raw/dms/olist/cdc/replay-CDC_TXN-20260922195743607.csv",
+      "bytes": 4439,
+      "sha256": "192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360",
+      "verification": "identical size and SHA256"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/23d52865c7905f1330a6c504c6a30abab7704b061bb94a659e44ce77e104ee77/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/customers.parquet",
+      "new_key": "copy-ready/parquet-v1/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/customers.parquet",
+      "bytes": 5306,
+      "rows": 4,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/23d52865c7905f1330a6c504c6a30abab7704b061bb94a659e44ce77e104ee77/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/orders.parquet",
+      "new_key": "copy-ready/parquet-v1/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/orders.parquet",
+      "bytes": 6759,
+      "rows": 7,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/23d52865c7905f1330a6c504c6a30abab7704b061bb94a659e44ce77e104ee77/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_items.parquet",
+      "new_key": "copy-ready/parquet-v1/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_items.parquet",
+      "bytes": 6369,
+      "rows": 2,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/23d52865c7905f1330a6c504c6a30abab7704b061bb94a659e44ce77e104ee77/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_payments.parquet",
+      "new_key": "copy-ready/parquet-v1/89a4011a5efc96a1491e81cebcf594deea390eac99303dd9707753cb5bad6fa1/192eb0661d00ecf6b3312d80f4ceaff469f6e54e9817ae00eeeff969d36d9360/order_payments.parquet",
+      "bytes": 5550,
+      "rows": 2,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    },
+    {
+      "old_key": "olist-v1/ecommerce/customers/LOAD00000001.csv",
+      "new_key": "raw/dms/olist/ecommerce/customers/LOAD00000001.csv",
+      "bytes": 14652081,
+      "sha256": "6fe4de0bdcd42102d6edc34c8c587783911a7dec09c80e4c32de20056a9d1740",
+      "verification": "identical size and SHA256"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/13ef01dfe9233c6dabb05f5e39dd2c39e6d0a48e81edba9e0c2bb6df86ac6638/6fe4de0bdcd42102d6edc34c8c587783911a7dec09c80e4c32de20056a9d1740/customers.parquet",
+      "new_key": "copy-ready/parquet-v1/2d402c90e9d24267b6b3087bda41f14ac128a5a197dc122ad2240e045ceb6ee8/6fe4de0bdcd42102d6edc34c8c587783911a7dec09c80e4c32de20056a9d1740/customers.parquet",
+      "bytes": 7710199,
+      "rows": 99441,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    },
+    {
+      "old_key": "olist-v1/ecommerce/order_items/LOAD00000001.csv",
+      "new_key": "raw/dms/olist/ecommerce/order_items/LOAD00000001.csv",
+      "bytes": 26610550,
+      "sha256": "490f12ef6bff9096b688a68f7def8cba66b906e7e8e78a2be4fe20e27157355b",
+      "verification": "identical size and SHA256"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/b004fadb9bb7f37431501ddc85306488698db645fc25157860595003e1d5e414/490f12ef6bff9096b688a68f7def8cba66b906e7e8e78a2be4fe20e27157355b/order_items.parquet",
+      "new_key": "copy-ready/parquet-v1/b52c88c093cbea943a084cd2bd853e94a9943a0c35953ac9e460ac05cc5f1edc/490f12ef6bff9096b688a68f7def8cba66b906e7e8e78a2be4fe20e27157355b/order_items.parquet",
+      "bytes": 9962570,
+      "rows": 112650,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    },
+    {
+      "old_key": "olist-v1/ecommerce/order_payments/LOAD00000001.csv",
+      "new_key": "raw/dms/olist/ecommerce/order_payments/LOAD00000001.csv",
+      "bytes": 15620921,
+      "sha256": "48b2b24509479df6489f6b0717fe7ffc0cf07a9daeb46bb08441d7a303121900",
+      "verification": "identical size and SHA256"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/feaccdd1f698e92cb92b229c2a73b77f1e8879daca93df5884a3f2e5f77fc8c5/48b2b24509479df6489f6b0717fe7ffc0cf07a9daeb46bb08441d7a303121900/order_payments.parquet",
+      "new_key": "copy-ready/parquet-v1/b8093ea9ede6508717962ed5ef83e6e6cad5ef2c2fbb705aff01c4b53716b4ae/48b2b24509479df6489f6b0717fe7ffc0cf07a9daeb46bb08441d7a303121900/order_payments.parquet",
+      "bytes": 7930987,
+      "rows": 103886,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    },
+    {
+      "old_key": "olist-v1/ecommerce/orders/LOAD00000001.csv",
+      "new_key": "raw/dms/olist/ecommerce/orders/LOAD00000001.csv",
+      "bytes": 26987410,
+      "sha256": "a12e5892c036791a98b25dc7f4fec817734ca031ce97a34b3caefa06f40718d4",
+      "verification": "identical size and SHA256"
+    },
+    {
+      "old_key": "copy-ready/parquet-v1/9df26dd057347ecd4fbc93d16edbb9bb9e91e177530c4e889d1081af8b2b0501/a12e5892c036791a98b25dc7f4fec817734ca031ce97a34b3caefa06f40718d4/orders.parquet",
+      "new_key": "copy-ready/parquet-v1/89befc01de59437e20c331be68195dd2517b9eb3d4d287ee9215fb24eee38697/a12e5892c036791a98b25dc7f4fec817734ca031ce97a34b3caefa06f40718d4/orders.parquet",
+      "bytes": 10641215,
+      "rows": 99441,
+      "verification": "all columns identical except corrected _source_file; uploaded SHA256 verified"
+    }
+  ],
+  "capture_rows": {
+    "raw/dms/olist/cdc/CDC_TXN-20260922195743607.csv": 15,
+    "raw/dms/olist/cdc/replay-CDC_TXN-20260922195743607.csv": 15,
+    "raw/dms/olist/ecommerce/customers/LOAD00000001.csv": 99441,
+    "raw/dms/olist/ecommerce/order_items/LOAD00000001.csv": 112650,
+    "raw/dms/olist/ecommerce/order_payments/LOAD00000001.csv": 103886,
+    "raw/dms/olist/ecommerce/orders/LOAD00000001.csv": 99441
+  },
+  "status": "complete",
+  "final_object_count": 22,
+  "old_prefixes_absent": true
+}

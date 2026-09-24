@@ -2,7 +2,7 @@
 
 Use only the `synthea-cdc` AWS profile. Agree a new session allowance before provisioning Olist; the historical $5 Synthea sessions have finished. Finish local preparation first. This stack creates billable resources. A Redshift usage limit covers compute only, not the total AWS bill.
 
-The existing AWS profile, stack and ownership labels retain `synthea-cdc`; active database names are `olist`, the source schema is `ecommerce`, and capture prefix is `olist-v1`. Use fresh raw storage and checkpoints for Olist. Preserve the old deleted-stack record and run outputs in an ignored dated archive before an approved new session. Do not update a live Synthea capture task in place.
+The existing AWS profile, stack and ownership labels retain `synthea-cdc`; active database names are `olist`, the source schema is `ecommerce`, and capture prefix is `raw/dms/olist`. Use fresh raw storage and checkpoints for Olist. Preserve the old deleted-stack record and run outputs in an ignored dated archive before an approved new session. Do not update a live Synthea capture task in place.
 
 ## Provision and capture
 
@@ -28,7 +28,7 @@ After CREATE_COMPLETE:
 .venv/bin/python scripts/cloud_stack.py connections
 ```
 
-`prepare_cloud_source.py` downloads the pinned ZIP into a temporary directory, uploads a copy under `source/olist-v2/`, loads RDS and removes the temporary directory on exit. It never creates a local source database.
+`prepare_cloud_source.py` downloads the pinned ZIP into a temporary directory, uploads a copy under `source/olist/kaggle-v2/`, loads RDS and removes the temporary directory on exit. It never creates a local source database.
 
 Repeat `connections` until both endpoints report `successful`, then start the task. Starting is deliberate: the source must be seeded first. Wait for all four tables to complete their full load; inspect real files before accepting the CSV contract.
 
@@ -192,7 +192,7 @@ Open `data/reference/source-reference.json`, or retrieve its recorded S3 object.
 For older demonstrations that did not export metadata, recover a connected historical business example from retained DMS initial snapshots:
 
 ```sh
-.venv/bin/python scripts/export_reference.py --bucket YOUR_RETAINED_BUCKET --recover-prefix olist-v1
+.venv/bin/python scripts/export_reference.py --bucket YOUR_RETAINED_BUCKET --recover-prefix raw/dms/olist
 ```
 
 Recovery streams the snapshots without storing a full dataset locally. It saves the small result locally and in the same bucket. It explicitly marks both metadata tables unavailable; it does not fabricate historical metadata or claim the initial snapshot represents current state. Reference rows stay out of Git. No RDS, DMS or Redshift compute is started by recovery.
