@@ -59,7 +59,7 @@ That legacy resource/profile name identifies this project's resources; the data 
 
 No full database is needed on your Mac. The cloud seed download is temporary.
 GitHub CI uses small disposable PostgreSQL fixtures and checks actual Airflow task
-states. [Optional development instructions](docs/development.md) are separate
+states. [Fixture-based development checks](docs/development.md) are separate
 from the cloud demonstration.
 
 ## S3 layout

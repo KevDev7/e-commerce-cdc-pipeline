@@ -1,31 +1,37 @@
-# Optional local development
+# Development checks
 
+The full-data demonstration uses RDS and Redshift. Follow the [AWS runbook](run-cloud.md).
+GitHub CI runs small generated PostgreSQL fixtures, the dbt graph and real Airflow
+task-state checks. It does not download Olist or use AWS credentials.
 
-The normal demo uses cloud databases and retains datasets in S3. These optional commands create full local data copies; skip them when keeping data off the workstation. CI runs integration fixtures on GitHub.
+## Offline checks
 
-Requires Docker Desktop, Python 3.12 and uv. Copy `.env.example` to `.env` and set a local development password. Existing Synthea users should use `POSTGRES_DB=olist`; the Olist Compose project has a separate data volume.
+With Python 3.12 and uv installed, from the repository root:
 
 ```sh
 uv sync --locked
-docker compose up -d --wait postgres
-uv run olist-cdc init
-uv run olist-cdc seed
-uv run python scripts/build_local_warehouse.py
-uv run python scripts/validate_local_olist.py
+uv run pytest -q
+```
+
+Tests requiring PostgreSQL are skipped unless `--integration` is supplied.
+The offline suite covers CSV/Parquet conversion, command routing, batch
+checkpoints, task logs and validation helpers.
+
+## Disposable integration fixtures
+
+CI is the default place to run these. To reproduce them locally, use a disposable
+PostgreSQL test instance with logical replication enabled and set the connection
+environment variables from `.env.example` to that instance. Then run:
+
+```sh
 uv run pytest --integration -q
 ```
 
-The local warehouse builder is explicitly a snapshot fixture, not a CDC extractor. It preserves an existing fixture; it does not follow later source mutations. Actual capture in AWS is DMS. The tests independently verify actual PostgreSQL WAL and exercise downstream DMS-format event fixtures.
+The tests create small temporary databases and drop them afterward. They generate
+their own seed archives and CDC records; no Olist download or full local warehouse
+is required. Stop and remove the disposable PostgreSQL instance when done.
+`.github/workflows/checks.yml` contains the complete CI setup and Airflow smoke command.
 
-To simulate new source activity:
-
-```sh
-uv run olist-cdc simulate --scenario demo-001
-# Or execute phases individually:
-uv run olist-cdc simulate --scenario demo-002 --phase open
-```
-
-Phases are open → approve → ship → deliver → correct → create-delete-test → delete-test → rollback-test. Retrying a phase is idempotent. Simulated IDs are deterministic and their scenario is recorded in project metadata. Hard deletes target only the disposable test records. `docker compose stop` stops the local database without deleting its data.
-
-
-For the normal demonstration, follow the [AWS runbook](run-cloud.md).
+The production source loader and Parquet conversion are shared with these tests.
+The local raw loader is a test implementation for PostgreSQL; actual cloud capture
+and Redshift COPY are verified separately in the dated [AWS results](validation.md).

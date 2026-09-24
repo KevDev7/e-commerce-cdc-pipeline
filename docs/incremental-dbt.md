@@ -20,19 +20,13 @@ Run one warehouse writer at a time: the DAG already allows one active run. Pause
 
 Model checkpoints commit after successful model SQL, before the graph's data tests finish. A failing test still prevents Airflow batch acknowledgement. On retry, already successful models retain their checkpoints and the tests run again. If fixing a failure requires changing transformation logic for previously processed rows, use a full refresh; rerunning an incremental model without new files does not apply changed SQL to its old rows.
 
-For a local rebuild from the existing raw fixture:
-
-```sh
-uv run python scripts/build_local_warehouse.py --full-refresh
-```
-
 For Redshift during an authorized cloud session, with the scheduler paused:
 
 ```sh
 uv run python scripts/run_cloud.py build --full-refresh
 ```
 
-These commands run `dbt build --full-refresh`, including data tests. A schema change deliberately fails normal incremental builds (`on_schema_change: fail`); update the model and rebuild intentionally. Keep raw events for replay and history reconstruction. Do not reset raw data while retaining mart checkpoints; a new capture lineage requires fresh warehouse state.
+This command runs `dbt build --full-refresh`, including data tests. A schema change deliberately fails normal incremental builds (`on_schema_change: fail`); update the model and rebuild intentionally. Keep raw events for replay and history reconstruction. Do not reset raw data while retaining mart checkpoints; a new capture lineage requires fresh warehouse state.
 
 Incremental here means window calculations use the affected entities' histories and mart writes are limited to those entities. Views, key discovery and tests can still scan retained raw data; this is not a guarantee of constant query cost as history grows. No scale or Redshift performance benchmark is claimed. Per-model file ledgers also grow with retained files; partitioning and retention tuning are outside this small demonstration.
 
@@ -54,7 +48,7 @@ silently use an older materialized dimension. Run the complete graph before
 claiming all mart relationships have passed.
 
 The customer join adds columns to fct_orders. Existing warehouses must run
-`python scripts/run_cloud.py build --full-refresh` once (or the local equivalent)
+`python scripts/run_cloud.py build --full-refresh` once
 after this upgrade. Retained raw events rebuild the assignments; no source reload
 or capture reset is needed. Normal runs afterward remain incremental.
 
