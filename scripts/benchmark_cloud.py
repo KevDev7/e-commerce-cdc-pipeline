@@ -85,7 +85,7 @@ def capture(result):
             for event in parse_csv(body.decode(),obj['Key']):
                 if event.values[0] in keys[event.table]:
                     relevant=True
-                    found[event.values[-7]]=event.values[-6]
+                    found[event.values[-6]]=event.values[-5]
             if relevant:
                 files.append(obj['Key']);size+=len(body);delivered.append(obj['LastModified'])
     for op in found.values(): operations[op]=operations.get(op,0)+1

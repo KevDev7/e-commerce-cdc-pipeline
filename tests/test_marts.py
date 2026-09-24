@@ -47,6 +47,13 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
                  'DBT_TARGET_PATH':str(tmp_path/'target'),'DBT_LOG_PATH':str(tmp_path/'logs')},timeout=120)
         assert result.returncode==0,result.stdout[-8000:]+result.stderr[-2000:]
     build()
+    # Current-state views expose source records, not ranking/event internals.
+    for table in ('customers', 'orders', 'order_items', 'order_payments'):
+        cursor = database.execute(f'SELECT * FROM intermediate.int_{table}_current LIMIT 0')
+        assert [c.name for c in cursor.description] == source_columns(table)
+    for table in ('order_items', 'order_payments'):
+        cursor = database.execute(f'SELECT * FROM staging.stg_{table} LIMIT 0')
+        assert [c.name for c in cursor.description] == source_columns(table) + ['_event_id', '_op', '_source_order']
     snapshots=[[r[0],*r[3:]] for r in earlier[:2]]
     if overlap_snapshot:snapshots[0][4]='campinas'
     for snapshot in snapshots:snapshot[-1]='2026-01-03T00:00:00Z' if overlap_snapshot else '2025-12-31T00:00:00Z'

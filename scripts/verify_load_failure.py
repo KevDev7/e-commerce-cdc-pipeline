@@ -90,7 +90,7 @@ def main():
         # Establish the expected number of new event identities before injection.
         expected = {table: 0 for table in TABLES}
         for table in TABLES:
-            ids = [e.values[-7] for e in events if e.table == table]
+            ids = [e.values[-6] for e in events if e.table == table]
             if ids:
                 placeholders = ','.join(['%s'] * len(ids))
                 cursor.execute(f'SELECT count(DISTINCT _event_id) FROM "raw".{table} WHERE _event_id IN ({placeholders})', tuple(ids))

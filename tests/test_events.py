@@ -23,7 +23,7 @@ def test_csv_handles_quotes_commas_and_null_without_losing_empty_strings():
     assert event.values[2] is None
     assert event.values[3] == 'sao paulo, "Central"'
     assert event.values[4] == ""
-    assert event.values[-7] == "cdc:customers:1"
+    assert event.values[-6] == "cdc:customers:1"
 
 
 def test_missing_order_and_schema_changes_are_rejected():
@@ -68,7 +68,7 @@ def test_readable_snapshot_identity_fits_long_composite_key(database):
                       timestamp, '', '0', timestamp]])
     events = parse_csv(body, 'payments/LOAD.csv', snapshot_table='order_payments')
     identity = 'snapshot:order_payments:' + key
-    assert events[0].values[-7] == identity and len(identity) > 64
+    assert events[0].values[-6] == identity and len(identity) > 64
     load_local(database, events, 'payments/LOAD.csv')
     assert database.execute('SELECT _event_id FROM raw.order_payments').fetchone() == (identity,)
 

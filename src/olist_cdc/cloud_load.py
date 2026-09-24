@@ -89,7 +89,7 @@ def load_file(connection, s3, bucket, key, role, *, metrics=None):
         if metrics is not None:
             metrics['files_committed'] = metrics.get('files_committed', 0) + 1
             for event in events:
-                name = 'snapshot_rows' if event.values[-2] else 'input_' + event.values[-6]
+                name = 'snapshot_rows' if event.values[-2] else 'input_' + event.values[-5]
                 metrics[name] = metrics.get(name, 0) + 1
         log.info("Processed %s: %s incoming events (existing event identities are skipped)", key, len(events))
         return len(events)

@@ -55,7 +55,7 @@ def find_probe(s3, bucket, prefix, customer_id, seen):
             events = parse_csv(s3.get_object(Bucket=bucket, Key=key)['Body'].read().decode(), source)
             seen.add(key)
             for event in events:
-                if event.table == 'customers' and event.values[0] == customer_id and event.values[-6] == 'I':
+                if event.table == 'customers' and event.values[0] == customer_id and event.values[-5] == 'I':
                     return key
     return None
 

@@ -46,7 +46,7 @@ def value_for(value, kind):
 
 def typed_table(events, table):
     columns = source_columns(table) + list(RAW_METADATA)
-    required = set(RAW_METADATA) - {"_source_lsn"}
+    required = set(RAW_METADATA)
     schema = pa.schema([pa.field(name, field_type(name), nullable=name not in required) for name in columns])
     for event in events:
         if event.table != table or len(event.values) != len(columns):

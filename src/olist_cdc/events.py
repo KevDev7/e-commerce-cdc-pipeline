@@ -8,7 +8,7 @@ from olist_cdc.seed import TABLES
 # DMS transformations append these columns after the original source columns.
 # Olist source/metadata ordering was verified against real DMS files; see docs/validation.md.
 DMS_METADATA = ("_source_lsn", "_source_order", "_commit_at")
-RAW_METADATA = ("_event_id", "_op", "_source_lsn", "_source_order", "_commit_at", "_is_snapshot", "_source_file")
+RAW_METADATA = ("_event_id", "_op", "_source_order", "_commit_at", "_is_snapshot", "_source_file")
 NULL = "__OLIST_NULL__"
 
 
@@ -63,6 +63,6 @@ def parse_csv(text, source_file, *, snapshot_table=None):
         if event_id in seen:
             raise ValueError(f"{source_file}:{line}: repeated event identity inside file")
         seen.add(event_id)
-        events.append(Event(table, values + [event_id, operation, position or None,
+        events.append(Event(table, values + [event_id, operation,
                       int(sequence), commit_at, snapshot, source_file]))
     return events

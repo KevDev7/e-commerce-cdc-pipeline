@@ -15,7 +15,6 @@ retain the previous `analytics_` names.
 |---|---|
 | _event_id | Readable `cdc:<table>:<source-sequence>` or `snapshot:<table>:<row-key>` identity for deduplication |
 | _op | I, U, or D |
-| _source_lsn | DMS source log position |
 | _source_order | DMS change sequence; snapshots use zero |
 | _commit_at | CDC commit time; snapshot transfer time |
 | _is_snapshot | Initial-load record flag |
@@ -25,11 +24,11 @@ retain the previous `analytics_` names.
 
 ## Staging: four views
 
-`stg_customers`, `stg_orders`, `stg_order_items`, `stg_order_payments` expose typed source fields and event ID, operation, sequence, timestamp and snapshot flag. Tests check event uniqueness, required identifiers and supported operations. This is the only staging layer.
+`stg_customers` and `stg_orders` expose typed source fields and event ID, operation, sequence, timestamp and snapshot flag. Item/payment staging keeps source fields and only event ID, operation and sequence; those tables do not build temporal history. Tests check event uniqueness, required identifiers and supported operations. This is the only staging layer.
 
 ## Intermediate: seven views
 
-- Four `int_*_current` views rank each source row key by source sequence, select its latest state and exclude tombstones. Late snapshots never overwrite newer changes.
+- Four `int_*_current` views rank each source row key by source sequence, select its latest state and exclude tombstones. Late snapshots never overwrite newer changes. These four views expose only source columns (including `updated_at` for reconciliation); event metadata and the internal ranking helper stay inside the calculation.
 - `int_customer_history` records observed attribute changes with version IDs, observed_from/to, source_order_from/to, is_deleted and is_initial_snapshot. A snapshot that overlaps already captured CDC cannot establish an earlier history version; it stays in raw/current processing, but ambiguous history begins with CDC. This preserves the preceding project's overlap fix.
 
 `int_order_status_history` applies the same overlapping-snapshot safeguard to orders, retains status transitions and deletion markers, and suppresses repeated same-status updates. It uses source sequence to order versions even when commit timestamps match.
@@ -114,3 +113,11 @@ Replay into a fresh raw warehouse when upgrading from hashed IDs; do not mix the
 two representations in an existing warehouse. Rebuild marts from that raw baseline.
 The retained CSV format is unchanged, including its source `updated_at` fields.
 Removing those fields would require a new capture format, so they remain.
+
+Metadata cleanup: prepared Parquet and raw tables no longer persist `_source_lsn`.
+Original DMS CSVs retain their captured format; the parser checks the incoming log
+position but does not carry it into the warehouse. Six raw metadata fields remain.
+History bounds, deletion/snapshot flags and mart file ledgers remain because they
+support temporal joins, honest history interpretation and safe incremental builds.
+Use a fresh warehouse for this raw-column change; existing raw tables require
+rebuilding from the retained CSVs. No paid cloud run was performed for this change.

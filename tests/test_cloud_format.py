@@ -6,25 +6,26 @@ import pyarrow.parquet as pq
 import pytest
 
 from olist_cdc.cloud_load import snapshot_table
-from olist_cdc.events import Event, RAW_METADATA, parse_csv, source_columns
+from olist_cdc.events import Event, NULL, RAW_METADATA, parse_csv, source_columns
 from olist_cdc.parquet import normalized_parquet
 from test_events import csv_text, customer_row
 
 
 def test_parquet_preserves_null_empty_text_postal_sequence_and_utc_microseconds():
     row = customer_row(sequence='12345678901234567890123456789012345', city='São Paulo, "Centro"\nAndar 2')
+    row[4] = NULL
     row[7] = ''
     row[8] = '2026-01-01T03:00:00.123456+03:00'
     event = parse_csv(csv_text([row]), 's3://bucket/cdc/file.csv')[0]
-    event.values[-5] = None
     body = normalized_parquet([event], 'customers')
     table = pq.read_table(pa.BufferReader(body))
     restored = table.to_pylist()[0]
     assert table.column_names == source_columns('customers') + list(RAW_METADATA)
     assert restored['city'] == row[6]
     assert restored['state'] == ''
+    assert restored['customer_unique_id'] is None
     assert restored['postal_code'] == '00123'
-    assert restored['_source_lsn'] is None
+    assert '_source_lsn' not in restored
     assert restored['_source_order'] == Decimal(row[10])
     assert restored['updated_at'] == datetime(2026, 1, 1, 0, 0, 0, 123456, tzinfo=timezone.utc)
     assert restored['_is_snapshot'] is False
@@ -34,7 +35,7 @@ def test_parquet_preserves_null_empty_text_postal_sequence_and_utc_microseconds(
 
 def payment_event(value):
     return Event('order_payments', ['key','order',1,'credit_card',2,value,'2026-01-01T00:00:00Z',
-        'cdc:order_payments:123','I','0/123',123,'2026-01-01T00:00:00Z',False,'s3://bucket/file.csv'])
+        'cdc:order_payments:123','I',123,'2026-01-01T00:00:00Z',False,'s3://bucket/file.csv'])
 
 
 def test_decimal_money_is_exact_and_excess_scale_or_precision_is_rejected():

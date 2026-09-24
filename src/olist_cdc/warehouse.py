@@ -19,7 +19,7 @@ def raw_ddl():
          loaded_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP, row_count bigint NOT NULL)"""]
     for table in TABLES:
         fields = [f"{name} {TYPES.get(name, 'varchar(256)')}" for name in source_columns(table)]
-        fields += ["_event_id varchar(128) NOT NULL", "_op varchar(1) NOT NULL", "_source_lsn varchar(128)",
+        fields += ["_event_id varchar(128) NOT NULL", "_op varchar(1) NOT NULL",
                    "_source_order numeric(35,0) NOT NULL", "_commit_at timestamptz NOT NULL",
                    "_is_snapshot boolean NOT NULL", "_source_file varchar(2048) NOT NULL"]
         statements.append(f'CREATE TABLE IF NOT EXISTS "raw".{table} (' + ",".join(fields) + ")")
