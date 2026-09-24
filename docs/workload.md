@@ -26,11 +26,11 @@ Run the same steps as the DAG, with a distinct run ID:
 export BATCH_RUN_ID=benchmark__measured-250
 export BATCH_ATTEMPT=1
 uv run python scripts/run_cloud.py check
-uv run python scripts/run_microbatch.py pending
+uv run python scripts/run_cloud.py pending
 uv run python scripts/run_cloud.py load
 uv run python scripts/run_cloud.py build
 uv run python scripts/run_cloud.py report
-uv run python scripts/run_microbatch.py complete
+uv run python scripts/run_cloud.py complete
 uv run python scripts/benchmark_cloud.py verify --scenario measured-250
 uv run python scripts/reconcile_cloud.py
 ```

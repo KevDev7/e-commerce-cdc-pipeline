@@ -17,6 +17,10 @@ assert dag.schedule_interval == '*/5 * * * *'
 assert not dag.catchup and dag.max_active_runs == 1 and dag.is_paused_upon_creation
 expected = ['check', 'pending', 'load', 'build', 'report', 'complete']
 assert [task.task_id for task in dag.topological_sort()] == expected
+for step in expected:
+    task = dag.get_task(step)
+    assert task.bash_command.endswith('scripts/run_cloud.py ' + step)
+    assert task.skip_on_exit_code == ([99] if step == 'pending' else [])
 for first, second in zip(expected, expected[1:]):
     assert dag.get_task(first).downstream_task_ids == {second}
 

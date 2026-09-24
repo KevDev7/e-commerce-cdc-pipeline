@@ -13,18 +13,13 @@ with DAG(
     description="Every five minutes: check capture, process new files, build and test marts",
     tags=["olist", "cdc", "portfolio"],
 ) as dag:
+    steps = ("check", "pending", "load", "build", "report", "complete")
     tasks = {step: BashOperator(
         task_id=step,
         bash_command=f"/opt/pipeline/bin/python /opt/project/scripts/run_cloud.py {step}",
         env={"BATCH_RUN_ID": "{{ run_id }}", "BATCH_ATTEMPT": "{{ ti.try_number }}"}, append_env=True,
-        skip_on_exit_code=None,
-        execution_timeout=timedelta(minutes=10),
-    ) for step in ("check", "load", "build", "report")}
-    batch_tasks = {step: BashOperator(
-        task_id=step,
-        bash_command=f"/opt/pipeline/bin/python /opt/project/scripts/run_microbatch.py {step}",
-        env={"BATCH_RUN_ID": "{{ run_id }}", "BATCH_ATTEMPT": "{{ ti.try_number }}"}, append_env=True,
         skip_on_exit_code=99 if step == "pending" else None,
-        execution_timeout=timedelta(minutes=2),
-    ) for step in ("pending", "complete")}
-    tasks["check"] >> batch_tasks["pending"] >> tasks["load"] >> tasks["build"] >> tasks["report"] >> batch_tasks["complete"]
+        execution_timeout=timedelta(minutes=2 if step in ("pending", "complete") else 10),
+    ) for step in steps}
+    for first, second in zip(steps, steps[1:]):
+        tasks[first] >> tasks[second]

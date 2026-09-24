@@ -89,7 +89,7 @@ docker compose -f compose.airflow.yaml stop
 
 Skipping idle warehouse work reduces query activity, but RDS and DMS still cost money while provisioned. Delete the stack after each demo using the cleanup steps below.
 
-`scripts/run_cloud.py check|load|build|report` runs the exact same commands manually. The project virtual environment is separate from Airflow's dependencies inside the image. Only a temporary session for the project AWS profile is made available to the container; other AWS profiles are not mounted. It inherits the developer user's permissions for this portfolio test, not a production runtime role. Refresh that session after one hour if a later authorized demo needs it.
+`scripts/run_cloud.py check|pending|load|build|report|complete` runs the same six steps manually. For `pending` and `complete`, set the same `BATCH_RUN_ID`; a quiet `pending` exits 99 and the remaining steps should be skipped. The project virtual environment is separate from Airflow's dependencies inside the image. Only a temporary session for the project AWS profile is made available to the container; other AWS profiles are not mounted. It inherits the developer user's permissions for this portfolio test, not a production runtime role. Refresh that session after one hour if a later authorized demo needs it.
 
 After changing transformation logic that must apply to existing rows, pause scheduling and wait for any active run to finish, then run:
 
