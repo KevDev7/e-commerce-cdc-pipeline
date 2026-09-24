@@ -61,3 +61,27 @@ def test_restore_reuses_cloud_data_without_full_load_or_owning_retained_resource
     assert resources['Workgroup']['Properties']['NamespaceName'] == 'existing-warehouse'
     assert resources['TargetEndpoint']['Properties']['S3Settings']['BucketName'] == 'existing-bucket'
     assert 'Fn::GetAtt": ["Bucket"' not in json.dumps(body)
+
+
+@pytest.mark.parametrize('tamper', [False, True])
+def test_restored_teardown_keeps_external_data_and_checks_its_identity(monkeypatch, tmp_path, tamper):
+    from infra.restore import restore_template
+    retained = {'retained_bucket': 'existing-bucket', 'retained_namespace': 'existing-warehouse',
+                'retained_copy_role': 'existing-role', 'retained_source_snapshot': 'snapshot'}
+    body = restore_template(retained)
+    if tamper:
+        body['Metadata']['RetainedData']['bucket'] = 'different-bucket'
+    calls=[]
+    cf=SimpleNamespace(get_template=lambda **kw: {'TemplateBody':body}, delete_stack=lambda **kw:calls.append(kw))
+    session=SimpleNamespace(client=lambda name:{'cloudformation':cf,'dms':object()}[name])
+    monkeypatch.setattr('boto3.Session',lambda **kw:session)
+    spec=importlib.util.spec_from_file_location('restored_teardown',Path('scripts/cloud_stack.py'))
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    module.STATE=tmp_path/'state.json';module.STATE.write_text(json.dumps(dict(retained,mode='restored')))
+    module.stack=lambda:{'StackId':'restore-stack'}
+    module.outputs=lambda:{'S3Bucket':'existing-bucket','CopyRoleArn':'existing-role'}
+    if tamper:
+        with pytest.raises(RuntimeError,match='DeletionPolicy'):module.delete()
+        assert not calls
+    else:
+        module.delete();assert calls==[{'StackName':'restore-stack'}]

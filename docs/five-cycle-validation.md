@@ -1,14 +1,16 @@
 # Five consecutive scheduled cycles
 
-Status: preparation only; this is not evidence of an executed run.
+Status: execution tooling prepared; results are recorded only after the live run.
 
 Reuse the retained RDS snapshot, Redshift namespace and S3 bucket. The
 `infra.restore.restore_template` helper defines temporary compute referencing
-those existing resources and a CDC-only DMS task. It must not be submitted through
-the fresh-demo `create` command. Its retained resources are outside the new stack;
-the fresh-demo deletion helper also needs the restored-stack layout accounted for
-before provisioning. Restored source credentials must be reset privately because
-the old source passwords were removed during cleanup.
+those existing resources and a CDC-only DMS task. Use `scripts/restore_cloud.py create --allowance-usd 5`, with a newly approved
+allowance, instead of the fresh-demo command. Its retained resources are outside
+the new stack; the shared deletion helper verifies these external references and
+still requires a final RDS snapshot. After creation, `scripts/restore_cloud.py
+reset-password` resets the restored source owner password privately. Update the
+DMS reader password to the new protected environment value before testing the
+endpoint; old source passwords were removed during cleanup.
 
 Before generating business writes, reconcile the restored source against the
 retained warehouse, start a fresh logical capture position, and confirm DMS is
@@ -40,3 +42,9 @@ clean five-cycle sequence.
 After the test, preserve updated cloud data, create a final source snapshot,
 remove all temporary compute, and save the cleanup result. The original snapshot
 remains available unless its removal is separately authorized.
+
+The measurement command is `scripts/verify_five_cycles.py --prefix <unique-name>`.
+It expects available SQL endpoints, a running CDC-only task, a fresh paused
+Airflow instance, and temporary project AWS credentials valid for the run. It
+pauses the DAG on success or failure and saves a small report in
+`data/five-cycles.json`. It does not provision or clean up cloud resources.

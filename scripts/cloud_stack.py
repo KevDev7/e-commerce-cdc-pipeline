@@ -99,6 +99,8 @@ def sync_env():
 
 
 def enable_warehouse():
+    if json.loads(STATE.read_text()).get("mode") == "restored":
+        raise RuntimeError("Restored stacks already define warehouse compute; do not replace their template")
     current = stack()
     parameters = [{"ParameterKey": p["ParameterKey"], **({"ParameterValue": "true"} if p["ParameterKey"] == "EnableWarehouse" else {"UsePreviousValue": True})} for p in current["Parameters"]]
     CF.update_stack(StackName=current["StackId"], TemplateBody=template(), Parameters=parameters, Capabilities=["CAPABILITY_NAMED_IAM"])
@@ -160,8 +162,16 @@ def delete():
         deployed = CF.get_template(StackName=current["StackId"])["TemplateBody"]
         if isinstance(deployed, str):
             deployed = json.loads(deployed)
+        state = json.loads(STATE.read_text())
+        external = deployed.get("Metadata", {}).get("RetainedData", {})
         for logical_id, policy in (("Bucket", "Retain"), ("Source", "Snapshot"), ("Namespace", "Retain"), ("CopyRole", "Retain")):
-            if deployed["Resources"][logical_id].get("DeletionPolicy") != policy:
+            resource = deployed["Resources"].get(logical_id)
+            if resource is None and state.get("mode") == "restored" and logical_id != "Source":
+                field = {"Bucket": "bucket", "Namespace": "namespace", "CopyRole": "copy_role"}[logical_id]
+                expected = state.get("retained_" + field)
+                if expected and external.get(field) == expected:
+                    continue  # The restore stack does not own or delete this retained resource.
+            if resource is None or resource.get("DeletionPolicy") != policy:
                 raise RuntimeError(f"Update {logical_id} to DeletionPolicy={policy} before teardown; retained data must survive")
         bucket = result["S3Bucket"]
         state = json.loads(STATE.read_text())
