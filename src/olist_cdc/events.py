@@ -1,7 +1,6 @@
 """Parse the documented DMS CSV format into a small, explicit event contract."""
 import csv
 from dataclasses import dataclass
-import hashlib
 import io
 
 from olist_cdc.seed import TABLES
@@ -53,14 +52,13 @@ def parse_csv(text, source_file, *, snapshot_table=None):
             if operation != "I":
                 raise ValueError("Snapshot files must contain only inserts")
             sequence = "0"
-            identity = f"snapshot:{table}:{values[0]}"
+            event_id = f"snapshot:{table}:{values[0]}"
         else:
             if not sequence.isdigit() or len(sequence) > 35 or int(sequence) == 0 or not position:
                 raise ValueError(f"{source_file}:{line}: CDC requires source position and a positive change sequence")
-            identity = f"cdc:{table}:{sequence}"
+            event_id = f"cdc:{table}:{sequence}"
         if not commit_at or commit_at == NULL:
             raise ValueError(f"{source_file}:{line}: missing commit timestamp")
-        event_id = hashlib.sha256(identity.encode()).hexdigest()
         if event_id in seen:
             raise ValueError(f"{source_file}:{line}: repeated event identity inside file")
         seen.add(event_id)

@@ -23,6 +23,7 @@ def test_csv_handles_quotes_commas_and_null_without_losing_empty_strings():
     assert event.values[2] is None
     assert event.values[3] == 'sao paulo, "Central"'
     assert event.values[4] == ""
+    assert event.values[-7] == "cdc:customers:1"
 
 
 def test_missing_order_and_schema_changes_are_rejected():
@@ -55,3 +56,18 @@ def test_failed_file_does_not_leave_partial_rows_or_a_checkpoint(database):
         load_local(database,events,"bad.csv")
     assert database.execute("SELECT count(*) FROM raw.customers").fetchone()[0] == 0
     assert database.execute("SELECT count(*) FROM raw.loaded_files").fetchone()[0] == 0
+
+
+@pytest.mark.integration
+def test_readable_snapshot_identity_fits_long_composite_key(database):
+    initialize_raw(database)
+    order_id = 'a' * 32
+    key = order_id + ':2147483647'
+    timestamp = '2026-01-01T00:00:00Z'
+    body = csv_text([['I', key, order_id, '2147483647', 'credit_card', '1', '10.00',
+                      timestamp, '', '0', timestamp]])
+    events = parse_csv(body, 'payments/LOAD.csv', snapshot_table='order_payments')
+    identity = 'snapshot:order_payments:' + key
+    assert events[0].values[-7] == identity and len(identity) > 64
+    load_local(database, events, 'payments/LOAD.csv')
+    assert database.execute('SELECT _event_id FROM raw.order_payments').fetchone() == (identity,)

@@ -1,5 +1,28 @@
 # Olist validation history
 
+## September 24, 2026: second simplification pass
+
+Seven separately tested changes simplify immutable-file tracking/readable COPY paths,
+version-based seeding, direct row reconciliation, the cloud-only simulation CLI,
+optional row-count reporting, the consolidated customer-history scenario and readable
+event IDs. The `updated_at` columns/triggers remain to preserve the retained capture
+format; removing them would require a fresh format or compatibility handling.
+
+- 51 Python tests passed using small disposable fixtures, including real PostgreSQL
+  WAL, replay/rollback, incremental dbt recovery and the consolidated 15-change scenario.
+- The five-task Airflow smoke passed success, idle, failure and recovery cases.
+- Offline Redshift dbt parsing found 17 models and 49 data tests.
+- The retained bucket's 12 Parquet objects now have readable paths and event IDs.
+  All other fields were preserved and uploaded files were read back for verification.
+  See the [S3 layout](s3-layout.md).
+
+These checks do not constitute a new end-to-end AWS warehouse run. No RDS, DMS or
+Redshift compute was provisioned. The simplified source/raw ledgers and readable
+raw event IDs require fresh database state when upgrading older deployments;
+retained CSV captures can rebuild the warehouse. Earlier evidence below describes
+the revisions tested at those dates.
+
+
 These are dated results from the revisions tested at the time. Model/test counts,
 file paths and monitoring details may differ from the current implementation.
 Use the [README](../README.md) and [AWS runbook](run-cloud.md) for current behavior.

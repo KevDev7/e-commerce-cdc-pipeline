@@ -26,6 +26,12 @@ inside S3. Replacement sizes and ETags matched before old derived keys were remo
 The ZIP, original CSVs and Parquet contents were unchanged; no dataset was downloaded
 and no warehouse compute was started. Earlier reports retain their historical paths.
 
+A subsequent change regenerated those 12 Parquet objects with readable event IDs.
+All 415,418 snapshot rows and both 15-event CDC files were compared field by field
+against the prior Parquet; only `_event_id` changed. Every uploaded replacement was
+read back and verified. Original CSVs remain unchanged, and no local files were
+created. Replaying the extra CDC copy still deduplicates its events in raw.
+
 The simplified raw file ledger omits content checksums. Deploy against a fresh raw
 warehouse, then replay retained CSV files and rebuild marts. Existing raw ledgers
 from the older implementation must not be reused unchanged. No source reload is

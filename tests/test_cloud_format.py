@@ -34,7 +34,7 @@ def test_parquet_preserves_null_empty_text_postal_sequence_and_utc_microseconds(
 
 def payment_event(value):
     return Event('order_payments', ['key','order',1,'credit_card',2,value,'2026-01-01T00:00:00Z',
-        'a'*64,'I','0/123',123,'2026-01-01T00:00:00Z',False,'s3://bucket/file.csv'])
+        'cdc:order_payments:123','I','0/123',123,'2026-01-01T00:00:00Z',False,'s3://bucket/file.csv'])
 
 
 def test_decimal_money_is_exact_and_excess_scale_or_precision_is_rejected():

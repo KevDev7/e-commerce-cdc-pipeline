@@ -8,7 +8,7 @@ The same raw/staging/intermediate/marts structure targets local PostgreSQL for d
 
 | Metadata | Meaning |
 |---|---|
-| _event_id | Deterministic identity for deduplication |
+| _event_id | Readable `cdc:<table>:<source-sequence>` or `snapshot:<table>:<row-key>` identity for deduplication |
 | _op | I, U, or D |
 | _source_lsn | DMS source log position |
 | _source_order | DMS change sequence; snapshots use zero |
@@ -102,3 +102,10 @@ the current source contract. Additional tiers would require an explicit business
 definition and clearly labeled derived or simulated values.
 
 The 13 staging/intermediate models remain views. The six marts incrementally replace affected entities, using newly loaded files to identify work. Six `<mart>__files` metadata tables in `analytics_marts` each store `source_file varchar(2048)`; they are processing checkpoints, not additional business models. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
+
+Event IDs are readable strings rather than SHA-256 digests. The raw column is
+`varchar(128)` to fit composite snapshot keys. Source business IDs are unchanged.
+Replay into a fresh raw warehouse when upgrading from hashed IDs; do not mix the
+two representations in an existing warehouse. Rebuild marts from that raw baseline.
+The retained CSV format is unchanged, including its source `updated_at` fields.
+Removing those fields would require a new capture format, so they remain.

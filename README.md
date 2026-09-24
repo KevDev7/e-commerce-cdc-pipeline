@@ -38,7 +38,7 @@ ZIP is retained, while the selected tables contain 415,418 historical rows.
 ## What the pipeline demonstrates
 
 - Initial loading followed by log-based inserts, updates and hard deletes.
-- Source ordering, duplicate-event handling, atomic raw loads and safe retries.
+- Source ordering, readable event IDs, duplicate-event handling, atomic raw loads and safe retries.
 - Six incremental dbt marts with per-model checkpoints and affected-entity updates.
 - Customer SCD Type 2 behavior and order-status history derived from captured events.
 - Customer-version joins for new captured orders; pre-capture history stays unknown.
