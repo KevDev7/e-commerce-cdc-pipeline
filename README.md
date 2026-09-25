@@ -27,6 +27,22 @@ The Redshift icons represent layers within one Redshift Serverless warehouse.
 dbt builds customer SCD Type 2 history during transformation and runs data-quality
 tests across the models.
 
+## Simplified marts schema
+
+![Simplified Olist marts: current customers linked to orders, order items and payments, with separate SCD Type 2 customer history](docs/images/simplified-marts-schema.png)
+
+This scoped dimensional model draws on **star-schema** fact/dimension separation
+and the multiple fact grains found in **galaxy (fact constellation)** designs:
+orders, order items and payments. It is not a textbook implementation of either
+pattern: item and payment facts connect through orders, rather than each directly
+sharing a set of dimensions. Selected columns and logical relationships are shown;
+keys are not enforced warehouse constraints.
+
+`dim_customer_history` stores SCD Type 2 versions separately, identified by
+`customer_id`, and retains history after deletion from the current customer table.
+Orders join to current customer details, not historical versions. See the
+[warehouse model definitions](docs/warehouse.md) for the full columns and grains.
+
 ## What is real and what is simulated
 
 The starting data is the real, anonymized [Brazilian E-Commerce Public Dataset
