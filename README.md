@@ -19,6 +19,14 @@ compute is temporary. Between demos, data stays in S3, an RDS snapshot and the
 Redshift namespace; restoring source access or recreating a warehouse workgroup
 is required before querying again.
 
+## Vendor architecture
+
+![Olist CDC vendor architecture: RDS PostgreSQL, AWS DMS, S3, Redshift, dbt, and Airflow running in Docker](docs/images/vendor-architecture.png)
+
+The Redshift icons represent layers within one Redshift Serverless warehouse.
+dbt builds customer SCD Type 2 history during transformation and runs data-quality
+tests across the models.
+
 ## What is real and what is simulated
 
 The starting data is the real, anonymized [Brazilian E-Commerce Public Dataset
