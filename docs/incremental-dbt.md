@@ -36,28 +36,21 @@ Incremental here means mart writes are limited to affected entities. Intermediat
 
 The real 415,418-row Olist fixture also upgrades and reconciles locally. The live Olist AWS demonstration also verifies Redshift execution, rollback, replay and scheduled batches; see [validation evidence](validation.md). Neither demonstration establishes sustained production throughput.
 
-## Customer version dependencies
+## Model scope and upgrades
 
-Order facts also revisit orders linked to customers with newly loaded events.
-This handles late customer history even when the order itself did not change.
-Creation anchors come only from non-snapshot INSERT events; key reuse selects
-the latest INSERT. Canonical observed history provides stable version IDs shared
-with dim_customer_history. A full build orders that dimension before the fact.
-The fact reads the intermediate history view so an isolated fact run does not
-silently use an older materialized dimension. Run the complete graph before
-claiming all mart relationships have passed.
+All mart inputs use intermediate views directly. Incremental materialization
+reduces writes, not necessarily upstream scans. The simpler queries need a new
+Redshift timing check before claiming earlier cloud run durations apply.
 
-The customer join adds columns to fct_orders. Existing warehouses must run
-`python scripts/run_cloud.py build --full-refresh` once
-after this upgrade. Retained raw events rebuild the assignments; no source reload
-or capture reset is needed. Normal runs afterward remain incremental.
+The graph has 16 models: four staging views, six intermediate views and six marts.
+Order facts reference current customers; a customer-only change does not rewrite
+order facts. Customer SCD Type 2 history remains a separate dimension.
 
-All mart inputs now use intermediate views directly. Incremental materialization reduces writes, not necessarily upstream scans. The simplification needs a new Redshift timing check before claiming the earlier cloud run durations apply.
-
-The current graph has 17 models: four staging views, seven intermediate views
-and six incremental marts. Two unused intermediate aggregate views were removed;
-`fct_orders` continues to calculate its existing affected-order totals internally.
-Earlier cloud reports retain the model counts from those tested revisions.
+When upgrading a retained warehouse, pause Airflow and run a full dbt build with
+`--full-refresh` to remove the former order-version columns. Retained raw events
+are sufficient; no source backfill or capture reset is needed. See the runbook
+for retiring the unused view after rebuilding. Dated cloud evidence describes
+the earlier implementation.
 
 ## Shared checkpoint table
 

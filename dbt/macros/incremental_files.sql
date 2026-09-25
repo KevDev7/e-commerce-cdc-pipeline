@@ -47,11 +47,6 @@
                 select distinct order_id from {{ source('raw', detail) }}
                 where {{ detail_key }} in ({{ cdc_changed_keys(detail, detail_key) }})
                 {% endfor %}
-                union
-                -- Late customer history can change an existing order's version assignment.
-                -- Include old observed customer links as well as the current link.
-                select distinct order_id from {{ source('raw', 'orders') }}
-                where customer_id in ({{ cdc_changed_keys('customers', 'customer_id') }})
             {% endif %}
         ;
         -- delete+insert alone cannot remove a deleted entity with no replacement row,

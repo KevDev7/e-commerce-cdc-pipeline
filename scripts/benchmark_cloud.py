@@ -115,14 +115,14 @@ def verify(result):
             assert cursor.fetchone()[0]==remaining
         placeholders=','.join(['%s']*len(keys['orders']))
         cursor.execute(f'''SELECT count(*),sum(o.order_total),sum(o.payment_total)
-            FROM marts.fct_orders o JOIN marts.dim_customer_history h
-            ON o.customer_version_id=h.customer_version_id
-            WHERE o.order_id IN ({placeholders}) AND o.status='delivered' AND h.city='sao paulo' ''',tuple(keys['orders']))
+            FROM marts.fct_orders o JOIN marts.dim_customers c
+            ON o.customer_id=c.customer_id
+            WHERE o.order_id IN ({placeholders}) AND o.status='delivered' AND c.city='campinas' ''',tuple(keys['orders']))
         assert tuple(cursor.fetchone())==(remaining,55*remaining,55*remaining)
         connection.commit()
     assert ops==result['expected_operations']
     result.update(verified_at=datetime.now(timezone.utc).isoformat(),actual_operations=ops,
-                  current_rows_per_table=remaining,totals_and_creation_versions_verified=True)
+                  current_rows_per_table=remaining,totals_and_current_customers_verified=True)
 
 
 def main():

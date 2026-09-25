@@ -43,7 +43,7 @@ ZIP is retained, while the selected tables contain 415,418 historical rows.
 - Source ordering, readable event IDs, duplicate-event handling, atomic raw loads and safe retries.
 - Six incremental dbt marts with per-model checkpoints and affected-entity updates.
 - Customer SCD Type 2 behavior and order-status history derived from captured events.
-- Customer-version joins for new captured orders; pre-capture history stays unknown.
+- Orders linked to current customers, with customer attribute history stored separately.
 - Separate item/payment aggregation, source reconciliation and data-quality tests.
 - Scheduled batches, idle skipping and completion only after successful builds/tests.
 
@@ -81,13 +81,15 @@ and marts are warehouse layers, not S3 folders. [Path details](docs/s3-layout.md
 
 ## Verification and limits
 
-The September 24, 2026 restored-baseline test completed **five consecutive
+The September 24, 2026 test of the earlier model graph completed **five consecutive
 five-minute Airflow cycles**, processing 90 simulated changes without a new
 warehouse backfill or manual warehouse loads. Every cycle passed 17 models,
 49 tests and comparison of all four current tables against RDS. The test also
 followed one order across batches and verified customer-version joins, hard
 deletes and rollback exclusion. [Results and the initial idle-cycle finding](docs/five-cycle-validation.md)
-include actual run IDs, load counts and startup limitations.
+include actual run IDs, load counts and startup limitations. Historical customer-to-order
+links have since been removed to keep the learning scope small; those results do
+not validate the simplified graph on Redshift.
 
 Current changes are checked in [GitHub CI](https://github.com/KevDev7/synthea-cdc/actions).
 The [validation history](docs/validation.md) distinguishes cloud runs, local fixtures

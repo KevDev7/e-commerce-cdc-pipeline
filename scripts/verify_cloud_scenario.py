@@ -36,18 +36,11 @@ def verify(cursor, scenario):
                    WHERE customer_id=%s ORDER BY source_order_from''', (key['delete-customer'],)) == [(False,), (True,)]
     assert rows('''SELECT count(*) FROM "raw".orders WHERE order_id=%s AND status='ROLLBACK_SENTINEL' ''',
                 (key['order'],)) == [(0,)]
-    versions = {row[0]: row[1:] for row in rows(
-        """SELECT o.order_id,o.customer_history_status,h.city,h.customer_version_id
-           FROM marts.fct_orders o
-           LEFT JOIN marts.dim_customer_history h
-           ON o.customer_version_id=h.customer_version_id
+    customers = {row[0]: row[1] for row in rows(
+        """SELECT o.order_id,c.city FROM marts.fct_orders o
+           JOIN marts.dim_customers c ON o.customer_id=c.customer_id
            WHERE o.order_id IN (%s,%s)""", (key['order'], key['repeat-order']))}
-    assert versions[key['order']][:2] == ('matched', 'sao paulo'), versions
-    assert versions[key['repeat-order']][:2] == ('matched', 'campinas'), versions
-    assert versions[key['order']][2] != versions[key['repeat-order']][2]
-    assert rows("""SELECT count(*) FROM marts.fct_orders
-                   WHERE customer_history_status='creation_not_captured'
-                     AND customer_version_id IS NOT NULL""") == [(0,)]
+    assert customers == {key['order']: 'campinas', key['repeat-order']: 'campinas'}
     operations = {}
     for table, column, identities in (
         ('customers', 'customer_id', (key['customer'], key['delete-customer'])),
@@ -63,8 +56,7 @@ def verify(cursor, scenario):
     assert operations == {'I': 9, 'U': 4, 'D': 2}, operations
     return dict(scenario=scenario, operations=operations, lifecycle_and_totals=True,
                 hard_deletes=True, rollback_excluded=True, unique_event_ids=True,
-                original_order_city='sao paulo', followup_order_city='campinas',
-                distinct_observed_versions=True)
+                current_customer_city='campinas', customer_attribute_history=True)
 
 
 def main():

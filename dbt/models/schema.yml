@@ -101,7 +101,7 @@ models:
   - name: customer_unique_id
     description: Cross-order customer identity; several customer_id records can share this value. Use it for distinct-customer analysis within the selected population.
   - name: city
-    description: Latest observed city for this customer record; historical order attributes come from dim_customer_history instead.
+    description: Latest observed city for this customer record, including when joined to older orders.
   - name: state
     description: Latest observed state for this customer record.
   - name: postal_code
@@ -115,7 +115,7 @@ models:
     and does not reconstruct attributes at historical Olist purchase times.
   columns:
   - name: customer_version_id
-    description: Primary key of a version, derived from customer_id and its starting source sequence; referenced by fct_orders.customer_version_id.
+    description: Primary key of a version, derived from customer_id and its starting source sequence.
     data_tests:
     - unique
     - not_null
@@ -124,7 +124,7 @@ models:
   - name: customer_unique_id
     description: Cross-order identity observed in this version. Histories of separate customer_id records are not combined into one person-level timeline.
   - name: city
-    description: City observed in this version; used by historical order joins.
+    description: City observed in this version.
   - name: state
     description: State observed in this version.
   - name: postal_code
@@ -138,7 +138,7 @@ models:
   - name: source_order_to
     description: Exclusive source sequence of the next version; NULL for the latest version.
   - name: is_deleted
-    description: True for a retained deletion marker; such a version cannot supply an order's historical customer attributes.
+    description: True for a retained deletion marker; excluded from the current customer dimension.
   - name: is_initial_snapshot
     description: True when this version originates in the initial load. An ambiguous snapshot overlapping CDC is excluded from history.
   - name: is_current
@@ -146,10 +146,8 @@ models:
 - name: fct_orders
   description: >-
     One row per currently present order_id, with current order state and separately
-    aggregated item/payment totals. customer_id links to current customer attributes;
-    customer_version_id links to the customer on the latest captured order INSERT.
-    A later customer change or reassignment does not replace that creation-time
-    association. Snapshot-only orders have unknown pre-capture customer history.
+    aggregated item/payment totals. customer_id links to current customer attributes.
+    This fact does not assign orders to historical customer versions.
   columns:
   - name: order_id
     description: Primary key of the current order; a captured reinsert starts a new lifecycle for a reused key.
@@ -157,33 +155,13 @@ models:
     - unique
     - not_null
   - name: customer_id
-    description: Current customer-record reference from the order. Join dim_customers for current attributes; use customer_version_id for creation-time attributes.
+    description: Current customer-record reference from the order. Join dim_customers for current attributes.
     data_tests:
     - not_null
     - relationships:
         arguments:
           to: ref('dim_customers')
           field: customer_id
-  - name: customer_version_id
-    description: Observed customer version at the latest captured order INSERT; NULL if history is unknown.
-    data_tests:
-    - relationships:
-        arguments:
-          to: ref('dim_customer_history')
-          field: customer_version_id
-  - name: customer_history_status
-    description: >-
-      matched means a customer version covers the captured creation;
-      creation_not_captured means no order INSERT was captured;
-      customer_history_unavailable means an INSERT exists but no eligible customer
-      version covers it. The latter two have NULL customer_version_id.
-    data_tests:
-    - not_null
-    - accepted_values:
-        arguments:
-          values: [matched, creation_not_captured, customer_history_unavailable]
-  - name: captured_created_at
-    description: Commit time of the latest captured order INSERT; NULL for snapshot-only orders. Distinct from the source's purchased_at business timestamp.
   - name: purchased_at
     description: Source purchase timestamp, preserved without a timezone; it does not establish historical customer attributes.
   - name: item_total

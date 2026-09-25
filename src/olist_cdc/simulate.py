@@ -60,7 +60,7 @@ def run_phase(connection, scenario, phase):
         elif phase == 'correct':
             connection.execute("UPDATE ecommerce.customers SET city='campinas',postal_code='13000' WHERE customer_id=%s", (key['customer'],))
         elif phase == 'repeat-order':
-            # The later order should use the corrected customer version.
+            # A second order shares the same current customer record.
             connection.execute("""INSERT INTO ecommerce.orders (order_id,customer_id,status,purchased_at)
                 VALUES (%s,%s,'created',CURRENT_TIMESTAMP AT TIME ZONE 'America/Sao_Paulo')""",
                 (key['repeat-order'],key['customer']))

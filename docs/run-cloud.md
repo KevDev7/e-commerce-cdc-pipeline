@@ -100,9 +100,9 @@ uv run python scripts/verify_cloud_scenario.py aws-001
 uv run python scripts/reconcile_cloud.py
 ```
 
-The main scenario includes a follow-up order after the address correction: its
-customer version must differ from the original order. Both are checked by the
-same verifier. The scenario produces 9 inserts, 4 updates and 2 deletes. Use a new
+The main scenario includes a follow-up order after an address correction. Both
+orders join to the current customer city; the customer history dimension retains
+the two observed cities separately. The same verifier checks both behaviors. The scenario produces 9 inserts, 4 updates and 2 deletes. Use a new
 scenario name for this expanded demonstration; older completed scenarios did not
 include this phase.
 
@@ -127,6 +127,21 @@ and removes the compute stack. It does not export sample rows or download data
 to the workstation. It refuses to delete a legacy stack unless the deployed bucket, namespace and COPY role use `Retain` and RDS uses `Snapshot`; update those policies first. The small `data/cloud-state.json` records `retained_bucket`, region and capture prefix before deletion. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS log group. Verify no project RDS/DMS instances or Redshift workgroups remain. Verify the final RDS snapshot is available, the Redshift namespace remains, and the retained bucket is private and readable. Record the snapshot identifier and retained namespace in `data/cloud-state.json`. Remove expired `.aws/credentials`; keep any necessary warehouse credentials only in the ignored, permission-restricted `.env.cloud`. Keep deployment metadata before approving another session. Never modify other projects' resources.
 
 The retained bucket incurs S3 storage/request charges until deliberately removed. It remains accessible through the project AWS profile; the COPY role is retained for future warehouse access. A fresh warehouse rebuild can reuse the retained COPY role scoped to that bucket, with the matching capture prefix and a fresh raw database/ledger; load the original CSV captures to regenerate Parquet and rebuild dbt. The retained namespace already contains the loaded tables, so recreating its workgroup does not require a rebuild. Retention is not an automated cross-session restore service.
+
+## Upgrade after the modeling simplification
+
+For a retained warehouse from before this simplification, keep the scheduler
+paused, run `scripts/run_cloud.py build --full-refresh`, then execute:
+
+```sql
+DROP VIEW IF EXISTS intermediate.int_order_creations;
+```
+
+The full refresh removes `captured_created_at`, `customer_version_id` and
+`customer_history_status` from `marts.fct_orders`. It preserves raw data and
+rebuilds the model checkpoints. dbt does not automatically drop retired models.
+Apply this during the next authorized AWS session; the retained cloud warehouse
+has not been changed by the local code simplification.
 
 ## Local data retention
 

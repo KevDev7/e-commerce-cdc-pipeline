@@ -48,8 +48,8 @@ uv run python scripts/reconcile_cloud.py
 The scenario check requires all nine simulation phases. It verifies 9 inserts,
 4 updates and 2 deletes, unique event identities, the four observed order statuses,
 independent item/payment totals, customer address history, hard-delete application
-exclusion of the rolled-back update, and different customer versions for the original
-and follow-up orders. Reconciliation compares every current
+exclusion of the rolled-back update, and current-customer joins for the original
+and follow-up orders, alongside separate customer history. Reconciliation compares every current
 source field after the source is quiet. Saved reports remain in ignored `data/`.
 
 

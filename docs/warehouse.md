@@ -26,14 +26,12 @@ retain the previous `analytics_` names.
 
 `stg_customers` and `stg_orders` expose typed source fields and event ID, operation, sequence, timestamp and snapshot flag. Item/payment staging keeps source fields and only event ID, operation and sequence; those tables do not build temporal history. Tests check event uniqueness, required identifiers and supported operations. This is the only staging layer.
 
-## Intermediate: seven views
+## Intermediate: six views
 
 - Four `int_*_current` views rank each source row key by source sequence, select its latest state and exclude tombstones. Late snapshots never overwrite newer changes. These four views expose only source columns (including `updated_at` for reconciliation); event metadata and the internal ranking helper stay inside the calculation.
 - `int_customer_history` records observed attribute changes with version IDs, observed_from/to, source_order_from/to, is_deleted and is_initial_snapshot. A snapshot that overlaps already captured CDC cannot establish an earlier history version; it stays in raw/current processing, but ambiguous history begins with CDC. This preserves the preceding project's overlap fix.
 
 `int_order_status_history` applies the same overlapping-snapshot safeguard to orders, retains status transitions and deletion markers, and suppresses repeated same-status updates. It uses source sequence to order versions even when commit timestamps match.
-
-`int_order_creations` identifies the latest captured INSERT for each order key. It records customer_id_at_creation, creation_source_order and captured_created_at. Snapshot-only orders have no captured creation; a reinsert begins a new lifecycle.
 
 ## Marts: six incremental tables
 
@@ -58,36 +56,19 @@ also allows another order to reference an existing customer record.
 
 - **dim_customers:** one current customer record, with customer_id, customer_unique_id, postal_code, city, state.
 - **dim_customer_history:** those attributes plus customer_version_id, observed_from/to, source_order_from/to, is_deleted, is_initial_snapshot and is_current.
-- **fct_orders:** source order fields excluding updated_at, plus item_total, freight_total, order_total, item_count, payment_total, payment_count, has_items, has_payments, captured_created_at, customer_version_id and customer_history_status.
+- **fct_orders:** source order fields excluding updated_at, plus item_total, freight_total, order_total, item_count, payment_total, payment_count, has_items, has_payments.
 - **fct_order_status_history:** order_status_version_id, order_id, status, observed_from/to, source_order_from/to, is_deleted, is_initial_snapshot, is_current and observed_duration_seconds. Closed non-deleted intervals measure observed time; open versions and deletion markers have NULL duration. Historical snapshots do not reconstruct earlier lifecycle transitions.
 - **fct_order_items:** source item fields excluding updated_at; one row per order and item sequence.
 - **fct_order_payments:** source payment fields excluding updated_at; one row per order and payment sequence.
 
 The order fact reads the intermediate views and aggregates affected current items and payments separately before joining orders; no separate aggregate views are built. Payment value is not multiplied by installment count. Two items and two payments therefore remain two of each, not four duplicated combinations. Orders lacking details survive left joins, with explicit presence flags and zero aggregate counts.
 
-Customer history begins at capture observation, years after most historical purchases. For captured new orders, fct_orders links to the customer version covering the captured INSERT's source sequence and whose observation time is no later than that commit. Source sequence resolves changes sharing a commit timestamp. The assignment uses the customer on that INSERT; later reassignment of the current order does not rewrite who created it. `customer_id` remains the current source value.
-
-`customer_history_status` is `matched`, `creation_not_captured`, or `customer_history_unavailable`. The latter two have NULL customer_version_id. Original historical snapshot orders therefore remain explicitly unknown, rather than borrowing a present-day address. The anchor is captured creation time, not reconstructed purchase-time attributes. `customer_unique_id` remains available for repeat-customer analysis.
-
-The fact reads the canonical intermediate history view so selected builds can see all loaded events. The materialized dimension uses exactly the same version IDs and precedes the fact in a full build. Build the complete graph for tested, consistent published marts; an isolated model run does not synchronize its dependencies.
-
-### Current attributes versus attributes at order creation
-
-The simulated repeat-order scenario demonstrates the two join meanings:
-
-1. A customer record is created with city `sao paulo`, then places the first order.
-2. Its city changes to `campinas`, then it places a follow-up order.
-
-| Order | Join through customer_id to dim_customers | Join through customer_version_id to dim_customer_history |
-|---|---|---|
-| First order | campinas: current city | sao paulo: observed city at captured creation |
-| Follow-up order | campinas: current city | campinas: observed city at captured creation |
-
-The [AWS check](evidence/olist-parquet-validation.json) verified the historical
-joins and that all 99,441 original snapshot orders have unknown pre-capture
-customer versions. Use the historical join to attribute captured orders to their
-creation-time city; use the current join to describe the order's current customer
-record. A later reassignment can make these references point to different records.
+Orders reference current customer attributes through
+`fct_orders.customer_id = dim_customers.customer_id`. For example, after a customer
+moves from sao paulo to campinas, both their old and new orders join to campinas.
+`dim_customer_history` separately retains both observed cities. Orders are not
+assigned to historical customer versions, and we do not claim to reconstruct
+addresses at historical purchase times.
 
 ### Modeling scope and history implementation
 
@@ -98,14 +79,14 @@ timestamp. Observation timestamps are deliberately named `observed_from` and
 `observed_to` because the original export cannot supply earlier business-effective
 dates. Retained events also let late files correct previously built intervals.
 
-Customer history, historical order joins and order-status history demonstrate
+Customer history and order-status history demonstrate
 how captured changes become useful warehouse state. Product/seller dimensions
 would broaden dimensional-modeling coverage but require additional source tables;
 they remain optional extensions. Customer tier has no field or business rule in
 the current source contract. Additional tiers would require an explicit business
 definition and clearly labeled derived or simulated values.
 
-The 11 staging/intermediate models remain views. The six marts incrementally replace affected entities, using newly loaded files to identify work. One `marts.processed_files` tracking table stores `model_name varchar(128)` and `source_file varchar(2048)`; each pair records one model's completed input file. It is not an additional business model. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
+The 10 staging/intermediate models remain views. The six marts incrementally replace affected entities, using newly loaded files to identify work. One `marts.processed_files` tracking table stores `model_name varchar(128)` and `source_file varchar(2048)`; each pair records one model's completed input file. It is not an additional business model. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
 
 Event IDs are readable strings rather than SHA-256 digests. The raw column is
 `varchar(128)` to fit composite snapshot keys. Source business IDs are unchanged.
@@ -118,6 +99,6 @@ Metadata cleanup: prepared Parquet and raw tables no longer persist `_source_lsn
 Original DMS CSVs retain their captured format; the parser checks the incoming log
 position but does not carry it into the warehouse. Six raw metadata fields remain.
 History bounds, deletion/snapshot flags and mart file ledgers remain because they
-support temporal joins, honest history interpretation and safe incremental builds.
+support ordered history, honest history interpretation and safe incremental builds.
 Use a fresh warehouse for this raw-column change; existing raw tables require
 rebuilding from the retained CSVs. No paid cloud run was performed for this change.

@@ -20,7 +20,7 @@ from test_incremental_marts import event
 
 
 @pytest.mark.integration
-def test_standard_scenario_includes_both_customer_versions(database, tmp_path):
+def test_standard_scenario_checks_current_joins_and_customer_history(database, tmp_path):
     initialize_raw(database)
     previous = {table: {} for table in TABLES}
     changes = []
@@ -53,4 +53,5 @@ def test_standard_scenario_includes_both_customer_versions(database, tmp_path):
     assert result.returncode == 0, result.stdout[-8000:] + result.stderr[-2000:]
     checked = verify(database.cursor(), 'combined-demo')
     assert checked['operations'] == {'I': 9, 'U': 4, 'D': 2}
-    assert checked['distinct_observed_versions']
+    assert checked['customer_attribute_history']
+    assert checked['current_customer_city'] == 'campinas'

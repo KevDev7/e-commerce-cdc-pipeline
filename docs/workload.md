@@ -36,9 +36,9 @@ uv run python scripts/reconcile_cloud.py
 
 Stop if any step fails. Completion is only appropriate after build/tests
 succeed. `verify` checks operation counts, unique event IDs, 225 current rows per
-table, order/payment totals and customer versions at order creation. The 25
-deleted orders disappear from current marts. All surviving orders keep their
-original sao paulo version, while current customers have moved to campinas.
+table, order/payment totals and current customer joins. The 25 deleted orders
+disappear from current marts. Current customers have moved to campinas; the
+order fact no longer links to historical customer versions.
 
 The capture report records S3 object delivery time separately from when a manual
 poll observed completion. Task summaries log loader and dbt durations. This

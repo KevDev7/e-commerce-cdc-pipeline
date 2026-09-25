@@ -1,5 +1,15 @@
 # Olist validation history
 
+## September 25: current-customer joins (local fixtures)
+
+Removed historical customer assignments from order facts and the order-creation
+view. Customer SCD Type 2 history remains independent. All 61 local tests passed.
+The replacement join test checks customer-only updates without rewriting order
+facts, current customer reassignment, and removal of the three former columns by
+full refresh. No retained AWS data was changed; the runbook documents the next
+warehouse upgrade. Prior cloud reports retain their original model claims.
+
+
 ## September 25: simpler model flow (local fixtures)
 
 Marts now read intermediate views directly instead of expanding their SQL through

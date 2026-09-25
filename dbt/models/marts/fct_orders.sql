@@ -2,11 +2,7 @@
     pre_hook="{{ cdc_prepare('orders', 'order_id', true) }}",
     post_hook="{{ cdc_acknowledge() }}") }}
 
--- Build the materialized customer history before testing the fact's version links.
--- depends_on: {{ ref('dim_customer_history') }}
-with creations as (
-    select * from {{ ref('int_order_creations') }}
-), orders as (
+with orders as (
     select * from {{ ref('int_orders_current') }}
     {{ cdc_filter('order_id') }}
 ), current_items as (
@@ -31,21 +27,7 @@ select o.order_id, o.customer_id, o.status, o.purchased_at, o.approved_at,
        coalesce(i.item_total,0)+coalesce(i.freight_total,0) as order_total,
        coalesce(i.item_count,0) as item_count,
        coalesce(p.payment_total,0) as payment_total, coalesce(p.payment_count,0) as payment_count,
-       i.order_id is not null as has_items, p.order_id is not null as has_payments,
-       c.captured_created_at, h.customer_version_id,
-       case when c.order_id is null then 'creation_not_captured'
-            when h.customer_version_id is null then 'customer_history_unavailable'
-            else 'matched' end as customer_history_status
+       i.order_id is not null as has_items, p.order_id is not null as has_payments
 from orders o
 left join items i on o.order_id=i.order_id
 left join payments p on o.order_id=p.order_id
-left join creations c on o.order_id=c.order_id
--- Use the canonical history view so a selected fact build sees all loaded events,
--- even when the materialized dimension has not yet processed its own checkpoint.
--- The dimension uses the same version IDs and precedes this fact in a full build.
-left join {{ ref('int_customer_history') }} h
-    on c.customer_id_at_creation=h.customer_id
-   and h.source_order_from <= c.creation_source_order
-   and (h.source_order_to is null or c.creation_source_order < h.source_order_to)
-   and h.observed_from <= c.captured_created_at
-   and not h.is_deleted
