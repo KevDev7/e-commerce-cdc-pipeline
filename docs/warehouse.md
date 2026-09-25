@@ -3,9 +3,8 @@
 The same raw/staging/intermediate/marts structure targets local PostgreSQL for development and Redshift for cloud demonstrations. DMS writes original transaction-preserving CSVs to S3 under `raw/`. They are retained unchanged; explicitly typed Zstandard Parquet inputs for Redshift COPY are derived under `copy-ready/`.
 
 The database schemas are `raw`, `staging`, `intermediate`, and `marts`.
-The dbt schema-naming macro uses each configured layer name directly. This
-configuration applies to the next warehouse build; historical validation reports
-retain the previous `analytics_` names.
+The dbt schema-naming macro uses each configured layer name directly. Historical
+validation reports may retain the previous `analytics_` names.
 
 ## Raw: four append-only event tables
 
@@ -29,7 +28,7 @@ retain the previous `analytics_` names.
 ## Intermediate: five views
 
 - Four `int_*_current` views rank each source row key by source sequence, select its latest state and exclude tombstones. Late snapshots never overwrite newer changes. These four views expose only source columns (including `updated_at` for reconciliation); event metadata and the internal ranking helper stay inside the calculation.
-- `int_customer_history` records observed attribute changes with version IDs, observed_from/to, source_order_from/to, is_deleted and is_initial_snapshot. A snapshot that overlaps already captured CDC cannot establish an earlier history version; it stays in raw/current processing, but ambiguous history begins with CDC. This preserves the preceding project's overlap fix.
+- `int_customer_history` records observed attribute changes with version IDs, observed_from/to, source_order_from/to, is_deleted and is_initial_snapshot. A snapshot that overlaps already captured CDC cannot establish an earlier history version; it stays in raw/current processing, but ambiguous history begins with CDC.
 
 ## Marts: five incremental tables
 
@@ -76,7 +75,8 @@ timestamp. Observation timestamps are deliberately named `observed_from` and
 dates. Retained events also let late files correct previously built intervals.
 
 Customer history is the single SCD Type 2 example. Order facts show current
-status; original order changes remain in raw, without a separate status-history mart. Product/seller dimensions
+status; original order changes remain in raw, without a separate status-history mart.
+Product/seller dimensions
 would broaden dimensional-modeling coverage but require additional source tables;
 they remain optional extensions. Customer tier has no field or business rule in
 the current source contract. Additional tiers would require an explicit business
@@ -84,17 +84,8 @@ definition and clearly labeled derived or simulated values.
 
 The nine staging/intermediate models remain views. The five marts incrementally replace affected entities, using newly loaded files to identify work. One `marts.processed_files` tracking table stores `model_name varchar(128)` and `source_file varchar(2048)`; each pair records one model's completed input file. It is not an additional business model. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
 
-Event IDs are readable strings rather than SHA-256 digests. The raw column is
-`varchar(128)` to fit composite snapshot keys. Source business IDs are unchanged.
-Replay into a fresh raw warehouse when upgrading from hashed IDs; do not mix the
-two representations in an existing warehouse. Rebuild marts from that raw baseline.
-The retained CSV format is unchanged, including its source `updated_at` fields.
-Removing those fields would require a new capture format, so they remain.
-
-Metadata cleanup: prepared Parquet and raw tables no longer persist `_source_lsn`.
-Original DMS CSVs retain their captured format; the parser checks the incoming log
-position but does not carry it into the warehouse. Six raw metadata fields remain.
-History bounds, deletion/snapshot flags and mart file ledgers remain because they
-support ordered history, honest history interpretation and safe incremental builds.
-Use a fresh warehouse for this raw-column change; existing raw tables require
-rebuilding from the retained CSVs. No paid cloud run was performed for this change.
+The raw event contract is unchanged by the modeling simplification. Six raw
+metadata fields still support ordering, deduplication and history; original DMS
+captures retain their source format. Retained raw data can rebuild the simpler
+marts without a source backfill. Follow the [upgrade steps](run-cloud.md#upgrade-after-the-modeling-simplification)
+when the retained warehouse is next brought online.

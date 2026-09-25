@@ -53,7 +53,7 @@ and follow-up orders, alongside separate customer history. Reconciliation compar
 source field after the source is quiet. Saved reports remain in ignored `data/`.
 
 
-## Bootstrap, raw rollback and freshness
+## Bootstrap and raw rollback
 
 - `scripts/verify_bootstrap.py write --seconds 120 --padding-customers 0`, then
   `verify` after capture and warehouse catch-up, checks commits strictly inside
@@ -61,17 +61,17 @@ source field after the source is quiet. Saved reports remain in ignored `data/`.
   Synthetic padding is an optional timing fixture, not real Olist volume.
 - `scripts/verify_load_failure.py <unloaded-CDC-S3-key>` injects failure after raw
   writes and verifies rollback and a successful retry. Use an unseen file with new events.
-- `scripts/check_freshness.py --timeout 300` writes a simulated customer and measures
-  its arrival through S3 and tested marts. It runs load/build itself and excludes
-  the scheduler's waiting interval.
 
 The scripts' `--help` output documents their arguments. A new capture lineage
 needs fresh raw state; never combine source sequences from independent runs.
 
-## Measured workload and completed experiments
+## Completed experiments
 
-The [small measured workload](workload.md) is optional. It verifies a larger
-simulated batch and records timings; it is not a throughput or latency guarantee.
+The [five-cycle demonstration](five-cycle-validation.md) records scheduled runs,
+source reconciliation and safe retained-data cleanup. Its dated results describe
+the model graph used at the time; new code needs its own validation.
+
+The standalone workload benchmark and active freshness probe have been retired.
+Their [historical results](workload.md) are evidence, not required setup steps.
 The [completed Parquet comparison](archive/parquet-evaluation/README.md) and
-[earlier Synthea implementation](archive/synthea/README.md) are historical archives.
-Keep dated results as evidence of the revision tested, not claims about a new run.
+[earlier Synthea implementation](archive/synthea/README.md) are also historical.

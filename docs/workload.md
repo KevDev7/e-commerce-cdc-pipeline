@@ -1,49 +1,18 @@
-# Small measured CDC workload
+# Historical measurement experiments
 
-This is a reproducible demonstration on an already initialized warehouse, not a
-capacity test or a claim about 500K daily events. Airflow is paused while these
-manual commands own the warehouse. Use an authorized, temporary AWS session from
-the [runbook](run-cloud.md), with its existing spending and usage limits.
+The standalone workload benchmark and active freshness probe were retired on
+September 25, 2026 to keep the student project focused. Their code remains in Git
+history; they are not part of the current demonstration workflow.
 
-```sh
-uv run python scripts/benchmark_cloud.py write --scenario measured-250 --orders 250
-uv run python scripts/benchmark_cloud.py capture --scenario measured-250
-```
+The September 22 workload report remains unchanged in
+[the original evidence](evidence/olist-workload.json). It measured a simulated
+batch on the earlier model graph; its historical customer-order join checks no
+longer describe the current marts. It was not a sustained-throughput benchmark.
 
-`capture` returns exit code 2 until all expected event identities are present in
-S3. Wait and repeat it before proceeding. The writer commits three transactions:
-insert 250 customers/orders/items/payments; update order status and customer city;
-delete all four records for 25 disposable orders. That produces 1,000 inserts,
-500 updates and 100 hard deletes. These are synthetic SQL transactions on the
-reconstructed database; DMS captures real PostgreSQL WAL. Use a fresh scenario
-for each measurement. Previously committed phases are rejected, not replayed as
-new changes. If a write is interrupted between phases, use a new scenario and do
-not present the incomplete run as a successful measurement.
+The former freshness probe manually invoked warehouse loading and dbt, excluding
+the scheduler's waiting time. Its measurements were not end-to-end scheduled
+latency guarantees.
 
-Run the same steps as the DAG, with a distinct run ID:
-
-```sh
-export BATCH_RUN_ID=benchmark__measured-250
-export BATCH_ATTEMPT=1
-uv run python scripts/run_cloud.py check
-uv run python scripts/run_cloud.py pending
-uv run python scripts/run_cloud.py load
-uv run python scripts/run_cloud.py build
-uv run python scripts/run_cloud.py complete
-uv run python scripts/benchmark_cloud.py verify --scenario measured-250
-uv run python scripts/reconcile_cloud.py
-```
-
-Stop if any step fails. Completion is only appropriate after build/tests
-succeed. `verify` checks operation counts, unique event IDs, 225 current rows per
-table, order/payment totals and current customer joins. The 25 deleted orders
-disappear from current marts. Current customers have moved to campinas; the
-order fact no longer links to historical customer versions.
-
-The capture report records S3 object delivery time separately from when a manual
-poll observed completion. Task summaries log loader and dbt durations. This
-manual batch does not include waiting for a five-minute schedule. Results depend
-on source transaction size, file layout, existing raw history, warehouse warmth
-and the full test graph; one run must not be extrapolated to sustained throughput.
-
-Live results for the 2026-09-22 run are recorded in [the workload evidence](evidence/olist-workload.json).
+For current use, follow the [normal demonstration](run-cloud.md), verify the
+simulated scenario and reconcile source rows. The [five-cycle report](five-cycle-validation.md)
+records the completed September 24 scheduled experiment, with its own limits.

@@ -34,7 +34,7 @@ Incremental here means mart writes are limited to affected entities. Intermediat
 
 `tests/test_incremental_marts.py` compares successive builds against a full refresh across all five marts, checks that unrelated rows retain their PostgreSQL row identities, and injects a failure after checkpoint insertion to verify transaction rollback. It covers detail-only changes, deleting the last item/payment, reinsertion, late changes that remove old history boundaries, duplicate delivery, no-input runs and independent model checkpoints. `tests/test_marts.py` additionally loads stable or overlapping snapshots after the first mart build.
 
-The real 415,418-row Olist fixture also upgrades and reconciles locally. The live Olist AWS demonstration also verifies Redshift execution, rollback, replay and scheduled batches; see [validation evidence](validation.md). Neither demonstration establishes sustained production throughput.
+Earlier revisions were checked against the real 415,418-row Olist seed and in AWS; see the dated [validation evidence](validation.md). The simplified graph has been tested with generated local fixtures and still needs a new cloud run. None of these demonstrations establishes sustained production throughput.
 
 ## Model scope and upgrades
 
@@ -61,9 +61,6 @@ safe retries over parallel mart throughput for this small portfolio workload.
 No extra uniqueness constraint is assumed: model-scoped pending-file selection
 and the transaction lock prevent duplicate checkpoint pairs in a supported run.
 
-There is no active warehouse to migrate. The next fresh build creates only the
-shared table; old evidence retains the former `<mart>__files` names. Existing
-older warehouses would require a planned full rebuild and retirement of the old
-checkpoint tables. No paid Redshift validation was performed for this change;
-CI checks first builds with two dbt threads, selected-model rollback/retry,
-selected full refresh isolation, no-input runs, and full rebuild equivalence.
+The retained warehouse already uses this shared checkpoint table. Older evidence
+may refer to separate `<mart>__files` tables. The runbook describes the current
+upgrade; do not reset raw data or model checkpoints independently.

@@ -91,6 +91,11 @@ include actual run IDs, load counts and startup limitations. Historical customer
 links and the separate order-status history mart have since been removed; those results do
 not validate the simplified graph on Redshift.
 
+The simplified graph has **14 models and 39 dbt data tests**: four staging views,
+five intermediate views and five incremental marts. Local fixture checks passed;
+the retained AWS warehouse still has the earlier graph until the documented
+[upgrade](docs/run-cloud.md#upgrade-after-the-modeling-simplification) is run.
+
 Current changes are checked in [GitHub CI](https://github.com/KevDev7/synthea-cdc/actions).
 The [validation history](docs/validation.md) distinguishes cloud runs, local fixtures
 and earlier implementations. The five-minute schedule is a trigger interval,

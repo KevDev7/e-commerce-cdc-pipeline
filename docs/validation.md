@@ -1,5 +1,25 @@
 # Olist validation history
 
+## September 25: optional utilities retired; final local checks
+
+The standalone workload benchmark and active freshness probe were removed from
+the active workflow. Dated reports remain unchanged; only tests specific to the
+retired utilities were removed. **56 tests passed** with disposable PostgreSQL
+fixtures. The final graph has **14 models and 39 dbt data tests**, and parsing with
+the Redshift adapter succeeded without connecting to AWS.
+
+The supported demonstration remains setup → simulate → scheduled processing →
+scenario verification and source reconciliation → cleanup. All five marts retain
+incremental writes, hard-delete handling, duplicate protection and transactional
+checkpoints. Current-customer joins and separate customer SCD Type 2 history are
+tested; order-version assignments and the order-status history mart are retired.
+
+These changes have not been applied to retained cloud tables. The next authorized
+AWS session needs the documented full refresh and retirement of unused derived
+relations; no source backfill is needed. No AWS resources or full Olist downloads
+were used for this simplification.
+
+
 ## September 25: one history example (local fixtures)
 
 Removed the order-status history view and mart. The graph now contains four
