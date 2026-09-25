@@ -210,18 +210,3 @@ models:
     description: Installment count recorded for this payment entry; do not multiply payment_value by this count.
   - name: payment_value
     description: Total value of this source payment entry; sum entries separately before joining order-item aggregates.
-- name: fct_order_status_history
-  description: >-
-    One row per observed status version or deletion/reinsertion transition for an
-    order_id. Repeated same-status updates are suppressed. Initial snapshots show
-    the observed starting state, not the order's earlier lifecycle.
-  columns:
-  - name: order_status_version_id
-    description: Primary key derived from order_id and the source sequence starting this status version.
-    data_tests: [unique, not_null]
-  - name: order_id
-    data_tests: [not_null]
-  - name: status
-    data_tests: [not_null]
-  - name: observed_duration_seconds
-    description: Elapsed observation time for a closed, non-deleted interval; NULL for open intervals and deletion markers. This is not the historical purchase-to-delivery duration.

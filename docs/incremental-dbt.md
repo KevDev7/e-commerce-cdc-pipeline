@@ -1,16 +1,16 @@
 # Incremental dbt processing
 
-Capture still reads PostgreSQL WAL through DMS. This change affects the warehouse transformation stage: all six marts use dbt `incremental` materialization, a `unique_key`, and `delete+insert`. Staging and intermediate remain views. There is no new scheduler or service.
+Capture still reads PostgreSQL WAL through DMS. This change affects the warehouse transformation stage: all five marts use dbt `incremental` materialization, a `unique_key`, and `delete+insert`. Staging and intermediate remain views. There is no new scheduler or service.
 
 ## How one model processes a batch
 
 1. A run-start hook creates `marts.processed_files` before dbt workers start. Each model's transactional pre-hook locks this table and freezes its unprocessed files from `raw.loaded_files` into a temporary table. A first build or full refresh resets only that model's entries within the transaction.
-2. On incremental runs, raw events from those files identify affected entity keys. Customer marts use customer_id, order history uses order_id, and detail facts use their row keys. `fct_orders` also includes orders referenced by changed items/payments, including deleted details and any previously observed parent.
+2. On incremental runs, raw events from those files identify affected entity keys. Customer marts use customer_id, orders use order_id, and detail facts use their row keys. `fct_orders` also includes orders referenced by changed items/payments, including deleted details and any previously observed parent.
 3. The hook removes the affected entities from the target. This explicit removal handles hard deletes that produce no replacement row and history versions made obsolete by a late event; ordinary `delete+insert` only removes keys present in its incoming result.
 4. Marts read the intermediate views directly, then select the affected entities. Those views reconstruct current state and history from all retained events. dbt applies its standard `delete+insert` strategy with the model's unique key. This keeps the SQL aligned with the layer diagram; view calculations may scan more history than the rows written to the marts.
 5. A transactional post-hook acknowledges only the frozen file list. The mart writes and checkpoint commit together. Failure rolls both back.
 
-All six marts share `marts.processed_files`, with `model_name varchar(128)` and `source_file varchar(2048)`. Every checkpoint lookup, reset and insert is scoped to the model name. A successful selected model cannot consume another model's work. First deployment over existing tables processes all retained files because these ledgers are initially empty. A full refresh rebuilds every row, including after transformation logic changes.
+All five marts share `marts.processed_files`, with `model_name varchar(128)` and `source_file varchar(2048)`. Every checkpoint lookup, reset and insert is scoped to the model name. A successful selected model cannot consume another model's work. First deployment over existing tables processes all retained files because these ledgers are initially empty. A full refresh rebuilds every row, including after transformation logic changes.
 
 An arrival checkpoint answers “which files have I processed?” Source sequence answers “which event is newer?” Keeping those separate prevents a late, lower-sequence file from being skipped. A file redelivering only known event IDs has no new raw rows, so it advances the model checkpoints without rewriting mart rows.
 
@@ -32,7 +32,7 @@ Incremental here means mart writes are limited to affected entities. Intermediat
 
 ## Evidence
 
-`tests/test_incremental_marts.py` compares successive builds against a full refresh across all six marts, checks that unrelated rows retain their PostgreSQL row identities, and injects a failure after checkpoint insertion to verify transaction rollback. It covers detail-only changes, deleting the last item/payment, reinsertion, late changes that remove old history boundaries, duplicate delivery, no-input runs and independent model checkpoints. `tests/test_marts.py` additionally loads stable or overlapping snapshots after the first mart build.
+`tests/test_incremental_marts.py` compares successive builds against a full refresh across all five marts, checks that unrelated rows retain their PostgreSQL row identities, and injects a failure after checkpoint insertion to verify transaction rollback. It covers detail-only changes, deleting the last item/payment, reinsertion, late changes that remove old history boundaries, duplicate delivery, no-input runs and independent model checkpoints. `tests/test_marts.py` additionally loads stable or overlapping snapshots after the first mart build.
 
 The real 415,418-row Olist fixture also upgrades and reconciles locally. The live Olist AWS demonstration also verifies Redshift execution, rollback, replay and scheduled batches; see [validation evidence](validation.md). Neither demonstration establishes sustained production throughput.
 
@@ -42,14 +42,14 @@ All mart inputs use intermediate views directly. Incremental materialization
 reduces writes, not necessarily upstream scans. The simpler queries need a new
 Redshift timing check before claiming earlier cloud run durations apply.
 
-The graph has 16 models: four staging views, six intermediate views and six marts.
+The graph has 14 models: four staging views, five intermediate views and five marts.
 Order facts reference current customers; a customer-only change does not rewrite
 order facts. Customer SCD Type 2 history remains a separate dimension.
 
 When upgrading a retained warehouse, pause Airflow and run a full dbt build with
 `--full-refresh` to remove the former order-version columns. Retained raw events
 are sufficient; no source backfill or capture reset is needed. See the runbook
-for retiring the unused view after rebuilding. Dated cloud evidence describes
+for retiring the unused views and status-history table after rebuilding. Dated cloud evidence describes
 the earlier implementation.
 
 ## Shared checkpoint table

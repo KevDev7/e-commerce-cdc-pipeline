@@ -21,8 +21,9 @@ def verify(cursor, scenario):
     assert rows('''SELECT status,item_total,freight_total,payment_total,item_count,payment_count
                    FROM marts.fct_orders WHERE order_id=%s''', (key['order'],)) == [
                        ('delivered', 100, 10, 110, 2, 2)]
-    assert rows('''SELECT status FROM marts.fct_order_status_history
-                   WHERE order_id=%s ORDER BY source_order_from''', (key['order'],)) == [
+    assert rows('''SELECT status FROM "raw".orders
+                   WHERE order_id=%s AND NOT _is_snapshot AND _op IN ('I','U')
+                   ORDER BY _source_order''', (key['order'],)) == [
                        ('created',), ('approved',), ('shipped',), ('delivered',)]
     assert rows('''SELECT city FROM marts.dim_customer_history
                    WHERE customer_id=%s ORDER BY source_order_from''', (key['customer'],)) == [
@@ -54,7 +55,7 @@ def verify(cursor, scenario):
             assert count == unique
             operations[op] = operations.get(op, 0) + count
     assert operations == {'I': 9, 'U': 4, 'D': 2}, operations
-    return dict(scenario=scenario, operations=operations, lifecycle_and_totals=True,
+    return dict(scenario=scenario, operations=operations, captured_status_updates_and_totals=True,
                 hard_deletes=True, rollback_excluded=True, unique_event_ids=True,
                 current_customer_city='campinas', customer_attribute_history=True)
 

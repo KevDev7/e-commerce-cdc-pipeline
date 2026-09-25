@@ -34,9 +34,7 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     later += [row('orders',{**order,'status':'delivered','approved_at':'2017-01-01'},13,'U',time1),
               row('orders',{**order,'order_id':'o3'},14,'I',time0),
               row('orders',{**order,'order_id':'o3'},15,'D',time1),
-              row('orders',{**order,'order_id':'o3'},16,'I',time1),
-              row('orders',{**order,'order_id':'o5'},17,'I','2026-03-08T01:30:00-05:00'),
-              row('orders',{**order,'order_id':'o5','status':'delivered'},18,'U','2026-03-08T03:30:00-04:00')]
+              row('orders',{**order,'order_id':'o3'},16,'I',time1)]
     for name,rows in [('later.csv',later),('earlier.csv',earlier),('replayed.csv',earlier)]:
         text=csv_text(rows);load_local(database,parse_csv(text,name),name)
     profiles=tmp_path/'profiles';profiles.mkdir();shutil.copyfile(ROOT/'dbt/profiles.yml.example',profiles/'profiles.yml')
@@ -59,7 +57,7 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     for snapshot in snapshots:snapshot[-1]='2026-01-03T00:00:00Z' if overlap_snapshot else '2025-12-31T00:00:00Z'
     text=csv_text(snapshots)
     load_local(database,parse_csv(text,'customers/LOAD.csv',snapshot_table='customers'),'customers/LOAD.csv')
-    # Older stable or later overlapping order snapshots must not invent transitions.
+    # Late order snapshots must not overwrite a more recent captured state.
     order_snapshot = row('orders',{**order,'status':'delivered' if overlap_snapshot else 'created'},0)
     order_snapshot = [order_snapshot[0],*order_snapshot[3:]]
     order_snapshot[-1]='2026-01-03T00:00:00Z' if overlap_snapshot else '2025-12-31T00:00:00Z'
@@ -75,10 +73,7 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     assert database.execute("SELECT count(*) FROM marts.dim_customer_history WHERE customer_id='c2' AND is_current").fetchone()[0]==0
     assert database.execute('SELECT count(*) FROM raw.order_payments').fetchone()[0]==2
     assert database.execute('SELECT count(*) FROM raw.customers WHERE _is_snapshot').fetchone()[0]==2
-    history=database.execute("SELECT status,is_current,observed_duration_seconds FROM marts.fct_order_status_history WHERE order_id='o1' ORDER BY source_order_from").fetchall()
-    assert [r[:2] for r in history]==[('created',False),('approved',False),('delivered',True)]
-    assert history[1][2]==86400 and history[2][2] is None
-    assert database.execute("SELECT is_deleted,is_current FROM marts.fct_order_status_history WHERE order_id='o3' ORDER BY source_order_from").fetchall()==[(False,False),(True,False),(False,True)]
-    assert database.execute("SELECT status,is_initial_snapshot,observed_duration_seconds FROM marts.fct_order_status_history WHERE order_id='o4'").fetchall()==[('delivered',True,None)]
-
-    assert database.execute("SELECT observed_duration_seconds FROM marts.fct_order_status_history WHERE order_id='o5' ORDER BY source_order_from").fetchall()==[(3600,),(None,)]
+    # Current orders still reflect reinsertion and late snapshots; all changes remain raw.
+    assert database.execute("SELECT order_id,status FROM marts.fct_orders ORDER BY order_id").fetchall() == [
+        ('o1','delivered'), ('o2','canceled'), ('o3','created'), ('o4','delivered')]
+    assert database.execute("SELECT _op FROM raw.orders WHERE order_id='o3' AND NOT _is_snapshot ORDER BY _source_order").fetchall() == [('I',),('D',),('I',)]

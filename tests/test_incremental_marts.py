@@ -12,7 +12,7 @@ from olist_cdc.warehouse import initialize_raw, load_local
 from test_events import csv_text
 
 MARTS = ('dim_customers', 'dim_customer_history', 'fct_orders',
-         'fct_order_status_history', 'fct_order_items', 'fct_order_payments')
+         'fct_order_items', 'fct_order_payments')
 
 
 def event(table, data, sequence, op='I'):
@@ -98,7 +98,7 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
     # Other customers/orders and their history retain their original physical rows.
     now = contents(physical=True)
     for mart, key, index in [('dim_customers', 'c3', 0), ('dim_customer_history', 'c3', 1),
-                             ('fct_orders', 'o2', 0), ('fct_order_status_history', 'o2', 1)]:
+                             ('fct_orders', 'o2', 0)]:
         assert [r for r in now[mart] if r[index] == key] == [r for r in initial[mart] if r[index] == key]
 
     # Lower-sequence files arriving later can remove an old history boundary and add others.
@@ -106,7 +106,7 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
                       event('customers', changed_customer, 31, 'U'),
                       event('customers', {**customer, 'city': 'santos'}, 51, 'U')])
     build('build')
-    assert database.execute("SELECT source_order_from FROM marts.fct_order_status_history WHERE order_id='o1' ORDER BY 1").fetchall() == [(10,), (20,), (30,)]
+    assert database.execute("SELECT status FROM marts.fct_orders WHERE order_id='o1'").fetchone() == ('delivered',)
     assert database.execute("SELECT city,source_order_from FROM marts.dim_customer_history WHERE customer_id='c1' ORDER BY source_order_from").fetchall() == [('sao paulo', 1), ('campinas', 31), ('santos', 51), ('campinas', 61)]
 
     # Duplicate delivery under a new filename acknowledges that file without rewriting marts.

@@ -1,5 +1,15 @@
 # Olist validation history
 
+## September 25: one history example (local fixtures)
+
+Removed the order-status history view and mart. The graph now contains four
+staging views, five intermediate views and five incremental marts. All 61 local
+tests passed. Current order status, deletion/reinsertion, late snapshots and
+captured status changes in raw remain verified. Customer SCD Type 2 is unchanged.
+Retiring the old cloud relations is documented for the next authorized session;
+no retained AWS data has been modified.
+
+
 ## September 25: current-customer joins (local fixtures)
 
 Removed historical customer assignments from order facts and the order-creation

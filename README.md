@@ -28,7 +28,7 @@ version 2, licensed CC BY-NC-SA 4.0. We load four of its nine CSV files:
 | Source table | Historical rows | Warehouse marts |
 |---|---:|---|
 | customers | 99,441 | dim_customers; dim_customer_history |
-| orders | 99,441 | fct_orders; fct_order_status_history |
+| orders | 99,441 | fct_orders |
 | order_items | 112,650 | fct_order_items |
 | order_payments | 103,886 | fct_order_payments |
 
@@ -41,8 +41,8 @@ ZIP is retained, while the selected tables contain 415,418 historical rows.
 
 - Initial loading followed by log-based inserts, updates and hard deletes.
 - Source ordering, readable event IDs, duplicate-event handling, atomic raw loads and safe retries.
-- Six incremental dbt marts with per-model checkpoints and affected-entity updates.
-- Customer SCD Type 2 behavior and order-status history derived from captured events.
+- Five incremental dbt marts with per-model checkpoints and affected-entity updates.
+- Customer SCD Type 2 history derived from captured events; order facts show current status.
 - Orders linked to current customers, with customer attribute history stored separately.
 - Separate item/payment aggregation, source reconciliation and data-quality tests.
 - Scheduled batches, idle skipping and completion only after successful builds/tests.
@@ -88,7 +88,7 @@ warehouse backfill or manual warehouse loads. Every cycle passed 17 models,
 followed one order across batches and verified customer-version joins, hard
 deletes and rollback exclusion. [Results and the initial idle-cycle finding](docs/five-cycle-validation.md)
 include actual run IDs, load counts and startup limitations. Historical customer-to-order
-links have since been removed to keep the learning scope small; those results do
+links and the separate order-status history mart have since been removed; those results do
 not validate the simplified graph on Redshift.
 
 Current changes are checked in [GitHub CI](https://github.com/KevDev7/synthea-cdc/actions).

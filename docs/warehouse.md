@@ -26,14 +26,12 @@ retain the previous `analytics_` names.
 
 `stg_customers` and `stg_orders` expose typed source fields and event ID, operation, sequence, timestamp and snapshot flag. Item/payment staging keeps source fields and only event ID, operation and sequence; those tables do not build temporal history. Tests check event uniqueness, required identifiers and supported operations. This is the only staging layer.
 
-## Intermediate: six views
+## Intermediate: five views
 
 - Four `int_*_current` views rank each source row key by source sequence, select its latest state and exclude tombstones. Late snapshots never overwrite newer changes. These four views expose only source columns (including `updated_at` for reconciliation); event metadata and the internal ranking helper stay inside the calculation.
 - `int_customer_history` records observed attribute changes with version IDs, observed_from/to, source_order_from/to, is_deleted and is_initial_snapshot. A snapshot that overlaps already captured CDC cannot establish an earlier history version; it stays in raw/current processing, but ambiguous history begins with CDC. This preserves the preceding project's overlap fix.
 
-`int_order_status_history` applies the same overlapping-snapshot safeguard to orders, retains status transitions and deletion markers, and suppresses repeated same-status updates. It uses source sequence to order versions even when commit timestamps match.
-
-## Marts: six incremental tables
+## Marts: five incremental tables
 
 The grain defines what one row represents and which key identifies it:
 
@@ -44,7 +42,6 @@ The grain defines what one row represents and which key identifies it:
 | fct_orders | A currently present order | order_id |
 | fct_order_items | A currently present order-item record | order_item_key, derived from order_id + order_item_id |
 | fct_order_payments | A currently present order-payment entry | payment_key, derived from order_id + payment_sequential |
-| fct_order_status_history | An observed order-status version or deletion/reinsertion transition | order_status_version_id |
 
 In the historical export, `customer_id` identifies an order-associated customer
 record. `customer_unique_id` links the same customer across those records. Counting
@@ -57,7 +54,6 @@ also allows another order to reference an existing customer record.
 - **dim_customers:** one current customer record, with customer_id, customer_unique_id, postal_code, city, state.
 - **dim_customer_history:** those attributes plus customer_version_id, observed_from/to, source_order_from/to, is_deleted, is_initial_snapshot and is_current.
 - **fct_orders:** source order fields excluding updated_at, plus item_total, freight_total, order_total, item_count, payment_total, payment_count, has_items, has_payments.
-- **fct_order_status_history:** order_status_version_id, order_id, status, observed_from/to, source_order_from/to, is_deleted, is_initial_snapshot, is_current and observed_duration_seconds. Closed non-deleted intervals measure observed time; open versions and deletion markers have NULL duration. Historical snapshots do not reconstruct earlier lifecycle transitions.
 - **fct_order_items:** source item fields excluding updated_at; one row per order and item sequence.
 - **fct_order_payments:** source payment fields excluding updated_at; one row per order and payment sequence.
 
@@ -79,14 +75,14 @@ timestamp. Observation timestamps are deliberately named `observed_from` and
 `observed_to` because the original export cannot supply earlier business-effective
 dates. Retained events also let late files correct previously built intervals.
 
-Customer history and order-status history demonstrate
-how captured changes become useful warehouse state. Product/seller dimensions
+Customer history is the single SCD Type 2 example. Order facts show current
+status; original order changes remain in raw, without a separate status-history mart. Product/seller dimensions
 would broaden dimensional-modeling coverage but require additional source tables;
 they remain optional extensions. Customer tier has no field or business rule in
 the current source contract. Additional tiers would require an explicit business
 definition and clearly labeled derived or simulated values.
 
-The 10 staging/intermediate models remain views. The six marts incrementally replace affected entities, using newly loaded files to identify work. One `marts.processed_files` tracking table stores `model_name varchar(128)` and `source_file varchar(2048)`; each pair records one model's completed input file. It is not an additional business model. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
+The nine staging/intermediate models remain views. The five marts incrementally replace affected entities, using newly loaded files to identify work. One `marts.processed_files` tracking table stores `model_name varchar(128)` and `source_file varchar(2048)`; each pair records one model's completed input file. It is not an additional business model. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
 
 Event IDs are readable strings rather than SHA-256 digests. The raw column is
 `varchar(128)` to fit composite snapshot keys. Source business IDs are unchanged.

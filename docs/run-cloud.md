@@ -135,11 +135,16 @@ paused, run `scripts/run_cloud.py build --full-refresh`, then execute:
 
 ```sql
 DROP VIEW IF EXISTS intermediate.int_order_creations;
+DROP TABLE IF EXISTS marts.fct_order_status_history;
+DROP VIEW IF EXISTS intermediate.int_order_status_history;
+DELETE FROM marts.processed_files WHERE model_name='fct_order_status_history';
 ```
 
 The full refresh removes `captured_created_at`, `customer_version_id` and
 `customer_history_status` from `marts.fct_orders`. It preserves raw data and
-rebuilds the model checkpoints. dbt does not automatically drop retired models.
+rebuilds the model checkpoints. The SQL removes only retired derived models and
+their checkpoint entries; original raw events and customer history are preserved.
+dbt does not automatically drop retired models.
 Apply this during the next authorized AWS session; the retained cloud warehouse
 has not been changed by the local code simplification.
 
