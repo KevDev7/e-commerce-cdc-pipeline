@@ -28,3 +28,11 @@ All four natural keys are unique. All orders reference existing customers; every
 - Use fresh local databases, capture prefix and checkpoints; never mix Olist events with archived Synthea events.
 - Preserve old AWS evidence as historical Synthea evidence. Olist needs its own paid AWS validation before claiming end-to-end cloud verification.
 - Retain the existing `synthea-cdc` AWS profile/resource ownership labels and GitHub repository identity for continuity; changing those is separate from changing the data source. No paid infrastructure is provisioned by this migration.
+
+## Repository rename
+
+On September 25, 2026, the project was renamed to **E-commerce CDC Pipeline**
+with repository `KevDev7/e-commerce-cdc-pipeline`. The `olist-cdc` Python package
+and CLI still identify the implemented Olist dataset. AWS profile, stack and
+resource ownership names remain `synthea-cdc` so existing cloud resources stay
+accessible. Historical evidence retains the original repository URLs.

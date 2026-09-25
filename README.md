@@ -1,4 +1,4 @@
-# Olist CDC
+# E-commerce CDC Pipeline
 
 A student portfolio project demonstrating real PostgreSQL log-based change data
 capture, incremental ingestion, and fully rebuilt warehouse marts.
@@ -21,7 +21,7 @@ is required before querying again.
 
 ## Vendor architecture
 
-![Olist CDC vendor architecture: RDS PostgreSQL, AWS DMS, S3, Redshift, dbt, and Airflow running in Docker](docs/images/vendor-architecture.png)
+![E-commerce CDC Pipeline vendor architecture: RDS PostgreSQL, AWS DMS, S3, Redshift, dbt, and Airflow running in Docker](docs/images/vendor-architecture.png)
 
 The Redshift icons represent layers within one Redshift Serverless warehouse.
 dbt builds customer SCD Type 2 history during transformation and runs data-quality
@@ -124,7 +124,7 @@ five intermediate views and five fully rebuilt marts. Local fixture checks passe
 the retained AWS warehouse still has the earlier graph until the documented
 [upgrade](docs/run-cloud.md#upgrade-after-the-modeling-simplification) is run.
 
-Current changes are checked in [GitHub CI](https://github.com/KevDev7/synthea-cdc/actions).
+Current changes are checked in [GitHub CI](https://github.com/KevDev7/e-commerce-cdc-pipeline/actions).
 The [validation history](docs/validation.md) distinguishes cloud runs, local fixtures
 and earlier implementations. The five-minute schedule is a trigger interval,
 not a latency guarantee. dbt tests block batch acknowledgement but do not publish
