@@ -18,10 +18,7 @@ from olist_cdc.microbatch import complete_batch, prepare_batch
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('step', choices=['check','pending','load','build','report','complete'])
-    parser.add_argument('--full-refresh', action='store_true', help='Rebuild all marts from retained raw events (build only)')
     args = parser.parse_args(argv)
-    if args.full_refresh and args.step != 'build':
-        parser.error('--full-refresh is only valid with build')
     if args.step in ('pending', 'complete') and not os.environ.get('BATCH_RUN_ID'):
         parser.error('BATCH_RUN_ID is required for pending/complete; use the same ID for both')
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
@@ -36,10 +33,10 @@ def main(argv=None):
             else:
                 complete_batch(directory, run_id)
         elif args.step == 'build':
-            details['full_refresh'] = args.full_refresh
+            details['mart_materialization'] = 'table'
             subprocess.run([str(Path(sys.executable).with_name('dbt')), 'build', '--target', 'redshift',
                             '--project-dir', str(ROOT/'dbt'), '--profiles-dir', str(ROOT/'dbt'),
-                            '--no-send-anonymous-usage-stats', *(['--full-refresh'] if args.full_refresh else [])], check=True)
+                            '--no-send-anonymous-usage-stats'], check=True)
         elif args.step == 'load':
             load_pending(metrics=details)
         elif args.step == 'report':

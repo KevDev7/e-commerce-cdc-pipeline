@@ -1,24 +1,13 @@
-{{ config(unique_key='order_id',
-    pre_hook="{{ cdc_prepare('orders', 'order_id', true) }}",
-    post_hook="{{ cdc_acknowledge() }}") }}
-
 with orders as (
     select * from {{ ref('int_orders_current') }}
-    {{ cdc_filter('order_id') }}
-), current_items as (
-    select * from {{ ref('int_order_items_current') }}
-), current_payments as (
-    select * from {{ ref('int_order_payments_current') }}
 ), items as (
     select order_id, sum(price) as item_total, sum(freight_value) as freight_total,
            count(*) as item_count
-    from current_items
-    {{ cdc_filter('order_id') }}
+    from {{ ref('int_order_items_current') }}
     group by order_id
 ), payments as (
     select order_id, sum(payment_value) as payment_total, count(*) as payment_count
-    from current_payments
-    {{ cdc_filter('order_id') }}
+    from {{ ref('int_order_payments_current') }}
     group by order_id
 )
 select o.order_id, o.customer_id, o.status, o.purchased_at, o.approved_at,

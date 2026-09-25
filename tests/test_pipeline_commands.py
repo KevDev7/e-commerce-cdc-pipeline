@@ -28,15 +28,12 @@ def test_shared_runner_retries_failed_build_and_skips_completed_batch(monkeypatc
     assert run_cloud.main(['pending']) == 99
 
 
-def test_shared_runner_preserves_full_refresh_build(monkeypatch):
+def test_shared_runner_uses_standard_dbt_build(monkeypatch):
     calls = []
     monkeypatch.setattr(run_cloud.subprocess, 'run', lambda *a, **kw: calls.append((a, kw)))
-    run_cloud.main(['build', '--full-refresh'])
-    assert '--full-refresh' in calls[0][0][0]
+    run_cloud.main(['build'])
     assert 'build' in calls[0][0][0] and calls[0][1]['check']
-    with pytest.raises(SystemExit) as error:
-        run_cloud.main(['complete', '--full-refresh'])
-    assert error.value.code == 2 and len(calls) == 1
+    assert '--full-refresh' not in calls[0][0][0]
 
 
 @pytest.mark.parametrize('step', ['pending', 'complete'])

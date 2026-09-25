@@ -5,8 +5,6 @@ profile: olist_cdc
 model-paths: [models]
 test-paths: [tests]
 macro-paths: [macros]
-on-run-start:
-  - "{{ cdc_initialize_ledger() }}"
 models:
   olist_cdc:
     staging:
@@ -17,7 +15,5 @@ models:
       +materialized: view
     marts:
       +schema: marts
-      +materialized: incremental
-      +incremental_strategy: delete+insert
-      +on_schema_change: fail
+      +materialized: table
 

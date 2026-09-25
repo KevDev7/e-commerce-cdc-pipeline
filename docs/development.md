@@ -14,8 +14,9 @@ uv run pytest -q
 ```
 
 Tests requiring PostgreSQL are skipped unless `--integration` is supplied.
-The offline suite covers CSV/Parquet conversion, command routing, batch
-checkpoints, task logs and validation helpers.
+The offline suite covers CSV/Parquet conversion, command routing, the Airflow
+batch completion marker, task logs and validation helpers. Integration tests
+exercise rebuilt marts, history, deletes, replay and SQL failure/retry.
 
 ## Disposable integration fixtures
 

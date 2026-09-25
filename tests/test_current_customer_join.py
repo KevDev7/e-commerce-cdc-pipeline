@@ -8,11 +8,11 @@ from olist_cdc.db import ROOT
 from olist_cdc.events import parse_csv
 from olist_cdc.warehouse import initialize_raw, load_local
 from test_events import csv_text
-from test_incremental_marts import event
+from test_mart_rebuilds import event
 
 
 @pytest.mark.integration
-def test_current_customer_join_updates_without_rewriting_orders(database, tmp_path):
+def test_current_customer_join_survives_rebuilds(database, tmp_path):
     initialize_raw(database)
     shutil.copyfile(ROOT/'dbt/profiles.yml.example', tmp_path/'profiles.yml')
 
@@ -34,7 +34,7 @@ def test_current_customer_join_updates_without_rewriting_orders(database, tmp_pa
             JOIN marts.dim_customers c ON o.customer_id=c.customer_id ORDER BY 1''').fetchall()
 
     def stored_orders():
-        return database.execute('SELECT *,xmin::text,ctid::text FROM marts.fct_orders ORDER BY order_id').fetchall()
+        return database.execute('SELECT * FROM marts.fct_orders ORDER BY order_id').fetchall()
 
     customer = dict(customer_id='c1', customer_unique_id='p1', city='sao paulo', state='SP')
     order = dict(order_id='o1', customer_id='c1', status='created', purchased_at='2017-01-01')
@@ -46,7 +46,7 @@ def test_current_customer_join_updates_without_rewriting_orders(database, tmp_pa
     assert joined_cities() == [('historical','sao paulo'),('o1','sao paulo')]
     before = stored_orders()
 
-    # Changing only customer attributes changes both joins without rewriting facts.
+    # Changing customer attributes changes the joins while fact values stay the same.
     load('customer-change.csv', [event('customers', {**customer,'city':'campinas'}, 40, 'U')])
     build()
     assert joined_cities() == [('historical','campinas'),('o1','campinas')]
@@ -59,10 +59,10 @@ def test_current_customer_join_updates_without_rewriting_orders(database, tmp_pa
     assert joined_cities() == [('historical','campinas'),('o1','recife')]
     expected = database.execute('SELECT * FROM marts.fct_orders ORDER BY order_id').fetchall()
 
-    # The documented upgrade rebuild removes the three former history-link columns.
+    # An ordinary build removes the three former history-link columns.
     for column, kind in [('captured_created_at','timestamp'),('customer_version_id','varchar(32)'),('customer_history_status','varchar(40)')]:
         database.execute(f'ALTER TABLE marts.fct_orders ADD COLUMN {column} {kind}')
-    build('--full-refresh')
+    build()
     cursor = database.execute('SELECT * FROM marts.fct_orders ORDER BY order_id')
     assert not {'captured_created_at','customer_version_id','customer_history_status'} & {c.name for c in cursor.description}
     assert cursor.fetchall() == expected

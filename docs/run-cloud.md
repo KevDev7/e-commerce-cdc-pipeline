@@ -66,7 +66,7 @@ DMS captures continuously while the stack exists. The Airflow schedule processes
 
 The pending-file task compares S3 CSV keys, ETags and sizes with the last completed batch. When unchanged, it exits with Airflow's skip code and **load, build and acknowledgement are skipped without connecting to Redshift**. Capture health is still checked. Empty or inaccessible capture fails visibly rather than being treated as a quiet batch.
 
-The local checkpoint is under ignored `data/olist-microbatch/` in the bind-mounted project directory. It advances only after loading and dbt build/tests succeed. If loading succeeds but dbt fails, the next run still builds the marts even though the raw file ledger already contains those files. Files arriving after the pending check are picked up again next run if necessary. Missing checkpoint state causes a safe extra load/build. Keep one scheduler for this checkout, do not run manual warehouse commands concurrently, and clear this checkpoint directory while paused if resetting the warehouse or restoring a baseline. Transformation changes also require the explicit full-refresh procedure below; clearing only the local checkpoint does not reset dbt model checkpoints. Per-run manifests are small local demo artifacts and may also be cleared while paused.
+The local checkpoint is under ignored `data/olist-microbatch/` in the bind-mounted project directory. It advances only after loading and dbt build/tests succeed. If loading succeeds but dbt fails, the next run still builds the marts even though the raw file ledger already contains those files. Files arriving after the pending check are picked up again next run if necessary. Missing checkpoint state causes a safe extra load/build. Keep one scheduler for this checkout, do not run manual warehouse commands concurrently, and clear this checkpoint directory while paused if resetting the warehouse or restoring a baseline. After transformation changes, run the manual build command below even if S3 is unchanged; no per-model checkpoints exist. Per-run manifests are small local demo artifacts and may also be cleared while paused.
 
 Inspect run status, durations and retries in Airflow. Each task also emits a JSON summary in its logs, including committed-file input counts for loads. Counts describe incoming records, not new rows after deduplication. Failed attempts log any files already committed before the failure. No separate audit database is used. The completion checkpoint remains separate from monitoring.
 
@@ -85,10 +85,13 @@ Skipping idle warehouse work reduces query activity, but RDS and DMS still cost 
 After changing transformation logic that must apply to existing rows, pause scheduling and wait for any active run to finish, then run:
 
 ```sh
-.venv/bin/python scripts/run_cloud.py build --full-refresh
+.venv/bin/python scripts/run_cloud.py build
 ```
 
-This rebuilds marts from retained raw events and resets each model's file checkpoint in its transaction. It runs tests and uses Redshift compute within the agreed session budget. Normal scheduled builds remain incremental. See [incremental recovery](incremental-dbt.md).
+Every build reconstructs the five marts from retained raw events and runs data tests.
+Source capture and raw ingestion remain incremental; dbt transformations do not.
+This uses Redshift compute within the agreed session budget. See [dbt processing
+and retries](dbt-processing.md).
 
 ## Check the result
 
@@ -131,19 +134,20 @@ The retained bucket incurs S3 storage/request charges until deliberately removed
 ## Upgrade after the modeling simplification
 
 For a retained warehouse from before this simplification, keep the scheduler
-paused, run `scripts/run_cloud.py build --full-refresh`, then execute:
+paused, run `scripts/run_cloud.py build`, then execute:
 
 ```sql
 DROP VIEW IF EXISTS intermediate.int_order_creations;
 DROP TABLE IF EXISTS marts.fct_order_status_history;
 DROP VIEW IF EXISTS intermediate.int_order_status_history;
-DELETE FROM marts.processed_files WHERE model_name='fct_order_status_history';
+DROP TABLE IF EXISTS marts.processed_files;
 ```
 
-The full refresh removes `captured_created_at`, `customer_version_id` and
-`customer_history_status` from `marts.fct_orders`. It preserves raw data and
-rebuilds the model checkpoints. The SQL removes only retired derived models and
-their checkpoint entries; original raw events and customer history are preserved.
+The normal table rebuild removes `captured_created_at`, `customer_version_id` and
+`customer_history_status` from `marts.fct_orders`. The cleanup SQL removes the
+retired models and custom mart checkpoint table. Keep `raw.loaded_files`: it
+still prevents duplicate raw ingestion. Original raw events and customer history
+are preserved. No source backfill is needed.
 dbt does not automatically drop retired models.
 Apply this during the next authorized AWS session; the retained cloud warehouse
 has not been changed by the local code simplification.

@@ -16,7 +16,7 @@ from olist_cdc.simulate import PHASES, run_phase
 from olist_cdc.warehouse import initialize_raw, load_local
 from scripts.verify_cloud_scenario import verify
 from test_events import csv_text
-from test_incremental_marts import event
+from test_mart_rebuilds import event
 
 
 @pytest.mark.integration

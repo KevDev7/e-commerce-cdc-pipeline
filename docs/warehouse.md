@@ -30,7 +30,7 @@ validation reports may retain the previous `analytics_` names.
 - Four `int_*_current` views rank each source row key by source sequence, select its latest state and exclude tombstones. Late snapshots never overwrite newer changes. These four views expose only source columns (including `updated_at` for reconciliation); event metadata and the internal ranking helper stay inside the calculation.
 - `int_customer_history` records observed attribute changes with version IDs, observed_from/to, source_order_from/to, is_deleted and is_initial_snapshot. A snapshot that overlaps already captured CDC cannot establish an earlier history version; it stays in raw/current processing, but ambiguous history begins with CDC.
 
-## Marts: five incremental tables
+## Marts: five rebuilt tables
 
 The grain defines what one row represents and which key identifies it:
 
@@ -56,7 +56,7 @@ also allows another order to reference an existing customer record.
 - **fct_order_items:** source item fields excluding updated_at; one row per order and item sequence.
 - **fct_order_payments:** source payment fields excluding updated_at; one row per order and payment sequence.
 
-The order fact reads the intermediate views and aggregates affected current items and payments separately before joining orders; no separate aggregate views are built. Payment value is not multiplied by installment count. Two items and two payments therefore remain two of each, not four duplicated combinations. Orders lacking details survive left joins, with explicit presence flags and zero aggregate counts.
+The order fact reads the intermediate views and aggregates current items and payments separately before joining orders; no separate aggregate views are built. Payment value is not multiplied by installment count. Two items and two payments therefore remain two of each, not four duplicated combinations. Orders lacking details survive left joins, with explicit presence flags and zero aggregate counts.
 
 Orders reference current customer attributes through
 `fct_orders.customer_id = dim_customers.customer_id`. For example, after a customer
@@ -82,7 +82,12 @@ they remain optional extensions. Customer tier has no field or business rule in
 the current source contract. Additional tiers would require an explicit business
 definition and clearly labeled derived or simulated values.
 
-The nine staging/intermediate models remain views. The five marts incrementally replace affected entities, using newly loaded files to identify work. One `marts.processed_files` tracking table stores `model_name varchar(128)` and `source_file varchar(2048)`; each pair records one model's completed input file. It is not an additional business model. Temporary pending-file and affected-key tables exist only during dbt connections. See [incremental processing](incremental-dbt.md) for deletion, history and recovery semantics. Raw ingestion is also incremental. Five-minute scheduling does not imply streaming joins, exactly-once transport, historical address reconstruction or a five-minute latency guarantee.
+The nine staging/intermediate models remain views. Each active batch rebuilds
+the five marts with dbt's standard `table` materialization. `raw.loaded_files`
+still tracks incremental ingestion; there is no mart checkpoint table. Repeated
+builds reproduce the same business rows and history from the retained events.
+See [dbt processing](dbt-processing.md) for retries and publication limits.
+Five-minute scheduling is a trigger interval, not a latency guarantee.
 
 The raw event contract is unchanged by the modeling simplification. Six raw
 metadata fields still support ordering, deduplication and history; original DMS

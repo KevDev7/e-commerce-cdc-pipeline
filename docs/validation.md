@@ -1,5 +1,31 @@
 # Olist validation history
 
+## September 25: standard dbt table rebuilds
+
+All five marts now use standard `table` materialization. Removed the custom
+per-model checkpoint hooks, affected-key filters and checkpoint-specific cloud
+failure utility. Capture, raw file tracking, event deduplication and the Airflow
+idle/completion gate are unchanged. **56 local tests passed**, including ordinary
+rebuilds after updates/deletes, late events, repeated builds, raw replay, preserved
+customer history, and failure after a replacement table was built followed by a
+successful retry. Standard builds also remove obsolete columns from prior marts.
+
+Offline Redshift parsing confirmed **14 models and 39 data tests**, with all five
+marts configured as tables and no run-start ledger hook. No AWS resources were
+provisioned. The retained warehouse still requires the runbook's normal build and
+retirement of `marts.processed_files` during the next authorized session.
+
+A one-run local comparison used 8,000 generated baseline events and two changes.
+The old incremental version took 3.57s for the initial build and 1.66s for the
+changed batch. The rebuilt version took 3.21s and 2.55s respectively. This small
+PostgreSQL fixture check demonstrates the extra per-batch work, not Redshift
+cost, Olist-scale performance or an end-to-end latency guarantee. The temporary
+fixture database is disposable; no Olist download or full local database is used.
+
+Earlier sections below describe the implementation tested at their revision,
+including the now-retired incremental mart checkpoints.
+
+
 ## September 25: optional utilities retired; final local checks
 
 The standalone workload benchmark and active freshness probe were removed from

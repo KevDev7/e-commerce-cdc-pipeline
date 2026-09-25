@@ -1,4 +1,4 @@
-"""Compare successive incremental builds with full rebuilds, using DMS-format fixtures."""
+"""Rebuild marts from retained events across changes, replay and SQL failure."""
 from datetime import datetime, timedelta, timezone
 import os
 import shutil
@@ -22,14 +22,14 @@ def event(table, data, sequence, op='I'):
 
 
 @pytest.mark.integration
-def test_incremental_batches_match_full_rebuild_and_recover_atomically(database, tmp_path):
+def test_mart_rebuilds_preserve_history_and_recover_after_failure(database, tmp_path):
     initialize_raw(database)
     profiles = tmp_path / 'profiles'
     profiles.mkdir()
     shutil.copyfile(ROOT / 'dbt/profiles.yml.example', profiles / 'profiles.yml')
 
     def build(*args, project=ROOT / 'dbt', success=True):
-        database.commit()  # Release read locks before dbt replaces relations on full refresh.
+        database.commit()  # Release read locks before dbt replaces table relations.
         result = subprocess.run(
             [str(ROOT / '.venv/bin/dbt'), *args, '--project-dir', str(project),
              '--profiles-dir', str(profiles), '--target', 'local'], capture_output=True, text=True,
@@ -46,13 +46,8 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
         text = csv_text(rows)
         load_local(database, parse_csv(text, name), name)
 
-    def contents(physical=False):
-        extra = ', xmin::text, ctid::text' if physical else ''
-        return {m: sorted(database.execute(f'SELECT *{extra} FROM marts.{m}').fetchall(), key=repr)
-                for m in MARTS}
-
-    def checkpoints():
-        return {m: database.execute('SELECT source_file FROM marts.processed_files WHERE model_name=%s ORDER BY 1', (m,)).fetchall()
+    def contents():
+        return {m: sorted(database.execute(f'SELECT * FROM marts.{m}').fetchall(), key=repr)
                 for m in MARTS}
 
     customer = dict(customer_id='c1', customer_unique_id='person1', city='sao paulo', state='SP', postal_code='00123')
@@ -72,13 +67,12 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
                 event('orders', {**order, 'status': 'approved'}, 20)]
     load('baseline.csv', baseline)
     build('build')
-    initial = contents(physical=True)
-    assert database.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='marts' AND table_type='BASE TABLE' ORDER BY 1").fetchall() == [(m,) for m in sorted((*MARTS, 'processed_files'))]
-    assert all(files == [('baseline.csv',)] for files in checkpoints().values())
+    initial = contents()
+    assert database.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='marts' AND table_type='BASE TABLE' ORDER BY 1").fetchall() == [(m,) for m in sorted(MARTS)]
 
-    # A no-input build must leave every stored row untouched, not silently rebuild tables.
+    # A manual repeat rebuild must produce the same business rows and history.
     build('build')
-    assert contents(physical=True) == initial
+    assert contents() == initial
 
     changed_customer = {**customer, 'city': 'campinas'}
     changes = [event('orders', {**order, 'status': 'delivered'}, 40, 'U'),
@@ -95,8 +89,8 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
     assert database.execute("SELECT item_total,freight_total,payment_total,item_count,payment_count FROM marts.fct_orders WHERE order_id='o1'").fetchone() == (80, 5, 85, 1, 1)
     assert database.execute("SELECT count(*) FROM marts.dim_customers WHERE customer_id='c2'").fetchone() == (0,)
     assert database.execute("SELECT count(*) FROM marts.fct_orders WHERE order_id='o3'").fetchone() == (0,)
-    # Other customers/orders and their history retain their original physical rows.
-    now = contents(physical=True)
+    # Unchanged customers/orders and their histories retain their business values.
+    now = contents()
     for mart, key, index in [('dim_customers', 'c3', 0), ('dim_customer_history', 'c3', 1),
                              ('fct_orders', 'o2', 0)]:
         assert [r for r in now[mart] if r[index] == key] == [r for r in initial[mart] if r[index] == key]
@@ -109,12 +103,11 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
     assert database.execute("SELECT status FROM marts.fct_orders WHERE order_id='o1'").fetchone() == ('delivered',)
     assert database.execute("SELECT city,source_order_from FROM marts.dim_customer_history WHERE customer_id='c1' ORDER BY source_order_from").fetchall() == [('sao paulo', 1), ('campinas', 31), ('santos', 51), ('campinas', 61)]
 
-    # Duplicate delivery under a new filename acknowledges that file without rewriting marts.
-    before_replay = contents(physical=True)
+    # Duplicate delivery under a new filename must not duplicate rows or history.
+    before_replay = contents()
     load('redelivery.csv', changes)
     build('build')
-    assert contents(physical=True) == before_replay
-    assert all(('redelivery.csv',) in files for files in checkpoints().values())
+    assert contents() == before_replay
 
     # Details alone must refresh order totals; delete the final remaining detail rows.
     # Reinsert previously deleted parent/customer keys in a later batch.
@@ -122,41 +115,23 @@ def test_incremental_batches_match_full_rebuild_and_recover_atomically(database,
                                     event('order_payments', {**payment, 'payment_value': 85}, 71, 'D'),
                                     event('customers', spare_customer, 72),
                                     event('orders', {**order, 'order_id': 'o3'}, 73)])
-    before_failure = contents(physical=True)
-    before_checkpoint = checkpoints()
+    before_failure = contents()
     broken = tmp_path / 'broken_project'
     shutil.copytree(ROOT / 'dbt', broken, ignore=shutil.ignore_patterns('target', 'logs', 'dbt_packages', 'profiles.yml'))
-    hook = broken / 'macros/incremental_files.sql'
-    # Inject an actual SQL failure after checkpoint insertion, within the model transaction.
-    hook.write_text(hook.read_text().replace(
-        "select '{{ this.identifier }}', source_file from {{ cdc_temp('pending') }};",
-        "select '{{ this.identifier }}', source_file from {{ cdc_temp('pending') }};\n    select 1/0;"))
+    model = broken / 'models/marts/fct_orders.sql'
+    # Fail after dbt has built/swapped the replacement, within its transaction.
+    model.write_text("{{ config(post_hook='select 1/0') }}\n" + model.read_text())
     build('run', '--select', 'fct_orders', project=broken, success=False)
-    assert contents(physical=True) == before_failure
-    assert checkpoints() == before_checkpoint
-    # A successful selected model advances only its own checkpoint. Other marts
-    # must still process these files when the entire graph is built next.
-    build('run', '--select', 'fct_orders')
-    partial = checkpoints()
-    assert ('details-and-reinsert.csv',) in partial['fct_orders']
-    for mart in MARTS:
-        if mart != 'fct_orders':
-            assert partial[mart] == before_checkpoint[mart]
+    assert contents() == before_failure
+    # A normal retry rebuilds from all raw events; no model checkpoint is needed.
     build('build')
     assert database.execute("SELECT item_count,payment_count,has_items,has_payments,order_total,payment_total FROM marts.fct_orders WHERE order_id='o1'").fetchone() == (0, 0, False, False, 0, 0)
     assert database.execute('SELECT count(*) FROM marts.fct_order_items').fetchone() == (0,)
     assert database.execute('SELECT count(*) FROM marts.fct_order_payments').fetchone() == (0,)
     assert database.execute("SELECT is_deleted,is_current FROM marts.dim_customer_history WHERE customer_id='c2' ORDER BY source_order_from").fetchall() == [(False, False), (True, False), (False, True)]
 
-    incremental = contents()
-    ledger = checkpoints()
-    # A selected full refresh cannot erase another model's progress.
-    build('run', '--select', 'fct_orders', '--full-refresh')
-    assert contents() == incremental
-    assert checkpoints() == ledger
-    build('build', '--full-refresh')
-    assert contents() == incremental
-    assert checkpoints() == ledger
-    rebuilt = contents(physical=True)
+    rebuilt = contents()
+    raw_before = database.execute('SELECT source_file,row_count FROM raw.loaded_files ORDER BY source_file').fetchall()
     build('build')
-    assert contents(physical=True) == rebuilt
+    assert contents() == rebuilt
+    assert database.execute('SELECT source_file,row_count FROM raw.loaded_files ORDER BY source_file').fetchall() == raw_before

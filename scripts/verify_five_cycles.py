@@ -72,7 +72,7 @@ def main(prefix):
     original=inventory();evidence={'started_at':now(),'prefix':prefix,'baseline':baseline,
         'baseline_reconciliation':json.loads((ROOT/'data/cloud-reconciliation.json').read_text()),
         'original_raw_files':original,'previous_run_ids':[r['run_id'] for r in previous_runs],
-        'cycles':[],'manual_warehouse_loads':0,'full_refreshes':0}
+        'cycles':[],'manual_warehouse_loads':0,'source_backfills':0,'mart_materialization':'table'}
     def save():path.write_text(json.dumps(evidence,indent=2)+'\n')
     save();progress=prefix+'-progress';observed={r['run_id'] for r in previous_runs};cumulative=0;deadline=time.monotonic()+2400
     try:

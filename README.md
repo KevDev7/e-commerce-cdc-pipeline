@@ -1,7 +1,7 @@
 # Olist CDC
 
 A student portfolio project demonstrating real PostgreSQL log-based change data
-capture, reliable incremental processing, and tested warehouse marts.
+capture, incremental ingestion, and fully rebuilt warehouse marts.
 
 ```text
 Olist ZIP → PostgreSQL on RDS → DMS reads WAL → S3 CSV captures
@@ -49,7 +49,7 @@ ZIP is retained, while the selected tables contain 415,418 historical rows.
 
 - Initial loading followed by log-based inserts, updates and hard deletes.
 - Source ordering, readable event IDs, duplicate-event handling, atomic raw loads and safe retries.
-- Five incremental dbt marts with per-model checkpoints and affected-entity updates.
+- Five dbt marts rebuilt from retained raw events on each active batch.
 - Customer SCD Type 2 history derived from captured events; order facts show current status.
 - Orders linked to current customers, with customer attribute history stored separately.
 - Separate item/payment aggregation, source reconciliation and data-quality tests.
@@ -57,7 +57,11 @@ ZIP is retained, while the selected tables contain 415,418 historical rows.
 
 The deliverable ends at populated, tested marts. Product/seller dimensions,
 dashboards, Spark and Kafka are outside this scope. See the [source contract](docs/source.md),
-[warehouse models](docs/warehouse.md) and [incremental recovery rules](docs/incremental-dbt.md).
+[warehouse models](docs/warehouse.md) and [dbt processing and retries](docs/dbt-processing.md).
+
+Source capture and raw loading process new changes only. dbt uses ordinary table
+builds for the marts; the pipeline is not incremental at every layer. Customer
+history survives each rebuild because its input events remain in raw.
 
 ## Run a demonstration
 
@@ -100,7 +104,7 @@ links and the separate order-status history mart have since been removed; those 
 not validate the simplified graph on Redshift.
 
 The simplified graph has **14 models and 39 dbt data tests**: four staging views,
-five intermediate views and five incremental marts. Local fixture checks passed;
+five intermediate views and five fully rebuilt marts. Local fixture checks passed;
 the retained AWS warehouse still has the earlier graph until the documented
 [upgrade](docs/run-cloud.md#upgrade-after-the-modeling-simplification) is run.
 
