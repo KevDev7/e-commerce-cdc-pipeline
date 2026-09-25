@@ -2,19 +2,17 @@
     pre_hook="{{ cdc_prepare('orders', 'order_id', true) }}",
     post_hook="{{ cdc_acknowledge() }}") }}
 
--- Canonical intermediate views remain in the tested graph. Shared SQL filters
--- complete entity histories before ranking; merely filtering a view can rank all rows.
--- depends_on: {{ ref('int_order_creations') }}
+-- Build the materialized customer history before testing the fact's version links.
 -- depends_on: {{ ref('dim_customer_history') }}
--- depends_on: {{ ref('int_orders_current') }}
 with creations as (
-    {{ order_creations() }}
+    select * from {{ ref('int_order_creations') }}
 ), orders as (
-    {{ current_state('stg_orders', 'order_id') }}
+    select * from {{ ref('int_orders_current') }}
+    {{ cdc_filter('order_id') }}
 ), current_items as (
-    {{ current_state('stg_order_items', 'order_item_key', order_details=true) }}
+    select * from {{ ref('int_order_items_current') }}
 ), current_payments as (
-    {{ current_state('stg_order_payments', 'payment_key', order_details=true) }}
+    select * from {{ ref('int_order_payments_current') }}
 ), items as (
     select order_id, sum(price) as item_total, sum(freight_value) as freight_total,
            count(*) as item_count

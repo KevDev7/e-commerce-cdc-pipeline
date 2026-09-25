@@ -7,7 +7,7 @@ Capture still reads PostgreSQL WAL through DMS. This change affects the warehous
 1. A run-start hook creates `marts.processed_files` before dbt workers start. Each model's transactional pre-hook locks this table and freezes its unprocessed files from `raw.loaded_files` into a temporary table. A first build or full refresh resets only that model's entries within the transaction.
 2. On incremental runs, raw events from those files identify affected entity keys. Customer marts use customer_id, order history uses order_id, and detail facts use their row keys. `fct_orders` also includes orders referenced by changed items/payments, including deleted details and any previously observed parent.
 3. The hook removes the affected entities from the target. This explicit removal handles hard deletes that produce no replacement row and history versions made obsolete by a late event; ordinary `delete+insert` only removes keys present in its incoming result.
-4. Shared SQL macros place the affected-key filter before current-state/history window functions, rather than depending on the optimizer to push a predicate through a view. The intermediate views use those same definitions without an incremental filter. All retained events for those entities remain available to resolve source order, history intervals and aggregate totals. dbt applies its standard `delete+insert` strategy with the model's unique key.
+4. Marts read the intermediate views directly, then select the affected entities. Those views reconstruct current state and history from all retained events. dbt applies its standard `delete+insert` strategy with the model's unique key. This keeps the SQL aligned with the layer diagram; view calculations may scan more history than the rows written to the marts.
 5. A transactional post-hook acknowledges only the frozen file list. The mart writes and checkpoint commit together. Failure rolls both back.
 
 All six marts share `marts.processed_files`, with `model_name varchar(128)` and `source_file varchar(2048)`. Every checkpoint lookup, reset and insert is scoped to the model name. A successful selected model cannot consume another model's work. First deployment over existing tables processes all retained files because these ledgers are initially empty. A full refresh rebuilds every row, including after transformation logic changes.
@@ -28,7 +28,7 @@ uv run python scripts/run_cloud.py build --full-refresh
 
 This command runs `dbt build --full-refresh`, including data tests. A schema change deliberately fails normal incremental builds (`on_schema_change: fail`); update the model and rebuild intentionally. Keep raw events for replay and history reconstruction. Do not reset raw data while retaining mart checkpoints; a new capture lineage requires fresh warehouse state.
 
-Incremental here means window calculations use the affected entities' histories and mart writes are limited to those entities. Views, key discovery and tests can still scan retained raw data; this is not a guarantee of constant query cost as history grows. No scale or Redshift performance benchmark is claimed. The shared ledger also grows with retained files; partitioning and retention tuning are outside this small demonstration.
+Incremental here means mart writes are limited to affected entities. Intermediate views, key discovery and tests can scan retained raw data; this is not a guarantee of constant query cost as history grows. No scale or Redshift performance benchmark is claimed. The shared ledger also grows with retained files; partitioning and retention tuning are outside this small demonstration.
 
 ## Evidence
 
@@ -52,7 +52,7 @@ The customer join adds columns to fct_orders. Existing warehouses must run
 after this upgrade. Retained raw events rebuild the assignments; no source reload
 or capture reset is needed. Normal runs afterward remain incremental.
 
-The customer-version lookup reads the canonical history view; unlike the fact's order/detail calculations, its customer window scan is not guaranteed to be limited to affected customers. Incremental materialization reduces fact writes, not necessarily every upstream scan.
+All mart inputs now use intermediate views directly. Incremental materialization reduces writes, not necessarily upstream scans. The simplification needs a new Redshift timing check before claiming the earlier cloud run durations apply.
 
 The current graph has 17 models: four staging views, seven intermediate views
 and six incremental marts. Two unused intermediate aggregate views were removed;

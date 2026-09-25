@@ -1,5 +1,19 @@
 # Olist validation history
 
+## September 25: simpler model flow (local fixtures)
+
+Marts now read intermediate views directly instead of expanding their SQL through
+performance-oriented macros. All 61 local tests passed, including incremental
+versus full-refresh equivalence, unchanged-row checks, deletes, late events and
+checkpoint rollback/retry.
+
+A disposable PostgreSQL comparison used 8,000 generated baseline events and two
+changes, without downloading Olist. Initial build wall time was 12.43s before and
+11.91s after; incremental build wall time was 2.23s before and 2.12s after. This
+single small comparison found no material slowdown; it is not a Redshift benchmark
+or a throughput guarantee. No AWS resources were provisioned for this change.
+
+
 ## September 24, 2026: five consecutive microbatches
 
 The [five-cycle report](five-cycle-validation.md) and
