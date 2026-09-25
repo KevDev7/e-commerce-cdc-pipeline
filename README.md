@@ -5,10 +5,12 @@ marts in Redshift. It uses the [Olist dataset](docs/source.md) to demonstrate
 change data capture (CDC), orchestration, dimensional modeling, and recovery
 from failures.
 
-The source has **415,418 historical rows** in four tables: customers, orders,
-order items, and payments. Python simulates new business transactions.
-PostgreSQL generates real write-ahead logs (WAL), which AWS DMS reads to capture
-the changes.
+The pipeline starts with **415,418 rows of real, anonymized historical data from
+Olist's Brazilian e-commerce marketplace**. The dataset is a static export of
+actual business records across four tables: customers, orders, order items, and
+payments. Python then simulates new orders, updates, and deletes to demonstrate
+ongoing change capture. PostgreSQL generates real write-ahead logs (WAL), which
+AWS DMS reads to capture these changes.
 
 ## Technical highlights
 
