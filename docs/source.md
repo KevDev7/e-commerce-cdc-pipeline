@@ -4,6 +4,18 @@ Source: [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/da
 
 This is real, anonymized historical business data, not a live API or event stream. The application database is a portfolio reconstruction. New source activity is simulated through real SQL transactions; PostgreSQL produces the WAL read by DMS.
 
+## Historical dataset size
+
+The four selected CSVs contain **415,418 historical rows** before simulated
+activity. The complete original Olist ZIP is retained in S3.
+
+| Source table | Historical rows | Warehouse marts |
+|---|---:|---|
+| customers | 99,441 | dim_customers; dim_customer_history |
+| orders | 99,441 | fct_orders |
+| order_items | 112,650 | fct_order_items |
+| order_payments | 103,886 | fct_order_payments |
+
 ## Selected tables
 
 - **customers:** customer_id, customer_unique_id, postal_code, city, state.

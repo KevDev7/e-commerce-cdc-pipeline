@@ -67,6 +67,14 @@ addresses at historical purchase times.
 
 ### Modeling scope and history implementation
 
+The simplified diagram draws on star-schema fact/dimension separation and the
+multiple fact grains found in galaxy (fact constellation) designs. It is not a
+textbook implementation of either pattern: item and payment facts connect through
+orders, rather than each directly sharing a set of dimensions. Diagram keys and
+relationships are logical, not enforced warehouse constraints. Customer history
+retains versions after deletion from the current customer table, so it has no
+mandatory foreign key to that table.
+
 These are scoped dimensional marts. Customer versions implement SCD Type 2
 behavior using retained CDC events and dbt SQL; there are no `dbt snapshot`
 models. Sequence bounds preserve separate changes even when they share a commit
