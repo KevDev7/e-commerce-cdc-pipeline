@@ -385,7 +385,7 @@
         <mxCell id="rule-STAGING-0" value="No Business Rules" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="300.0" y="604.0" width="240" height="22" />
         </mxCell>
-        <mxCell id="rule-STAGING-1" value="Column Selection" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
+        <mxCell id="rule-STAGING-1" value="Preserve Source Events" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="300.0" y="626.0" width="240" height="22" />
         </mxCell>
         <mxCell id="rule-STAGING-3" value="No Cross-Table Joins" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
@@ -400,11 +400,14 @@
         <mxCell id="rules-title-INTERMEDIATE" value="Rules" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#252525;strokeWidth=1.2;fontStyle=5;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="580.0" y="568.0" width="230" height="28" />
         </mxCell>
-        <mxCell id="rule-INTERMEDIATE-0" value="Apply Source Changes" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
+        <mxCell id="rule-INTERMEDIATE-0" value="State Reconstruction" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="575.0" y="604.0" width="240" height="22" />
         </mxCell>
-        <mxCell id="rule-INTERMEDIATE-1" value="Change Ordering" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
+        <mxCell id="rule-INTERMEDIATE-1" value="History Reconstruction" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="575.0" y="626.0" width="240" height="22" />
+        </mxCell>
+        <mxCell id="rule-INTERMEDIATE-2" value="Change Ordering" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
+          <mxGeometry as="geometry" x="575.0" y="648.0" width="240" height="22" />
         </mxCell>
         <mxCell id="rule-INTERMEDIATE-3" value="No Cross-Table Joins" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="575.0" y="670.0" width="240" height="22" />
@@ -417,6 +420,9 @@
         </mxCell>
         <mxCell id="rule-MARTS-0" value="Business Transformations" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="850.0" y="604.0" width="240" height="22" />
+        </mxCell>
+        <mxCell id="rule-MARTS-1" value="No CDC Reconstruction" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
+          <mxGeometry as="geometry" x="850.0" y="626.0" width="240" height="22" />
         </mxCell>
         <mxCell id="rule-MARTS-4" value="Dimensional Modeling" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="850.0" y="692.0" width="240" height="22" />
