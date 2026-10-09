@@ -1,5 +1,25 @@
 # Olist validation history
 
+## October 9: layer boundaries and focused validation fixes
+
+Staging preserves all source columns and event metadata. Intermediate owns
+complete customer history, including current-version flags; marts publishes
+those versions unchanged. Capture conversion and source setup share a
+driver-independent schema contract.
+
+**84 local tests passed** against disposable PostgreSQL fixtures. New regression
+checks confirm that the history-consistency query compares all four tracked
+attributes and distinguishes null from an empty string. Stubbed AWS responses
+verify that the compute-limit helper checks the usage type, monthly period,
+deactivation action and amount before reporting protection. A stricter existing
+limit is accepted; an incorrect existing limit requires inspection rather than
+being silently replaced.
+
+Offline Redshift parsing confirmed **14 models and 39 data tests**, with all five
+marts configured as tables. No AWS resources were contacted or changed. These
+latest changes still need a new end-to-end Redshift run; earlier cloud reports
+and historical test counts below describe the code tested at those revisions.
+
 ## September 25: standard dbt table rebuilds
 
 All five marts now use standard `table` materialization. Removed the custom

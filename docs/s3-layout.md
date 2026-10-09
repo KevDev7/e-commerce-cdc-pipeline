@@ -80,5 +80,6 @@ Future demo stacks also create buckets with the `olist-cdc-` prefix.
 The retained snapshots have been moved to `initial-load/` in both layers. All
 19 objects were verified: CSV bytes and Parquet data values are unchanged; only
 the snapshot Parquet `_source_file` paths were updated. Dataset and CDC files
-were untouched. Offline checks passed; the new DMS target-schema mapping still
-needs confirmation during the next fresh cloud run.
+were untouched. Offline checks passed. The September 24 cloud run subsequently
+verified the DMS target-schema mapping: new baseline files use
+`raw/initial-load/<table>/`, while CDC files remain under `raw/cdc/`.

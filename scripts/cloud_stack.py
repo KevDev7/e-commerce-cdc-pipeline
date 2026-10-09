@@ -113,11 +113,16 @@ def usage_limit():
     if workgroup["baseCapacity"] != 4 or workgroup["maxCapacity"] != 4:
         raise RuntimeError("Unexpected Redshift capacity; inspect before running queries")
     arn = workgroup["workgroupArn"]
-    existing = rs.list_usage_limits(resourceArn=arn)["usageLimits"]
+    existing = rs.list_usage_limits(resourceArn=arn).get("usageLimits", [])
     if not existing:
-        rs.create_usage_limit(resourceArn=arn, usageType="serverless-compute", amount=6,
-                              period="monthly", breachAction="deactivate")
-    print("Redshift limited to 4 RPUs and 6 RPU-hours/month ($2.25 compute at the checked rate). Other charges are additional.")
+        existing = [rs.create_usage_limit(resourceArn=arn, usageType="serverless-compute", amount=6,
+                                          period="monthly", breachAction="deactivate")["usageLimit"]]
+    if not any(limit.get("usageType") == "serverless-compute"
+               and limit.get("period") == "monthly"
+               and limit.get("breachAction") == "deactivate"
+               and 0 < limit.get("amount", 7) <= 6 for limit in existing):
+        raise RuntimeError("No monthly compute usage limit deactivates at or below 6 RPU-hours; inspect existing usage limits before querying")
+    print("Redshift verified at 4 RPUs with monthly compute deactivation at or below 6 RPU-hours. Other AWS charges are additional.")
 
 
 def status():

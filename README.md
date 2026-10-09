@@ -62,7 +62,7 @@ history. The diagram shows selected columns and logical relationships.
 |---|---|
 | Earlier AWS runs | Loaded the historical dataset and verified replay, deletes, recovery, and source-to-target reconciliation. |
 | September 24 scheduled AWS run | Five Airflow runs in a row processed 90 simulated changes. All four current warehouse tables matched RDS after each run. |
-| Current simplified code | 56 local tests passed. Parsing with the Redshift adapter confirmed 14 models and 39 dbt data tests. The current code still needs a new end-to-end Redshift test. |
+| Current code (October 9) | 84 local tests passed. Parsing with the Redshift adapter confirmed 14 models and 39 dbt data tests. The current code still needs a new end-to-end Redshift test. |
 
 The AWS results are from earlier code versions, before the latest model changes.
 See the [test results](docs/validation.md),
