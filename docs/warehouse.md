@@ -6,6 +6,21 @@ The database schemas are `raw`, `staging`, `intermediate`, and `marts`.
 The dbt schema-naming macro uses each configured layer name directly. Historical
 validation reports may retain the previous `analytics_` names.
 
+## Responsibility boundaries
+
+- **Ingestion:** parse the capture format, validate the event contract and convert
+  values to their declared types before loading RAW. It does not calculate business
+  measures or reconstruct current records. The shared source/event schema lives in
+  `src/olist_cdc/schema.py`, independent of source seeding and warehouse drivers.
+- **RAW:** retain captured events, deduplicate redelivery by event identity and
+  commit each file's events atomically with its load ledger entry.
+- **STAGING:** expose a consistent source-event interface, including the complete
+  raw metadata envelope. Do not apply source changes or calculate business measures.
+- **INTERMEDIATE:** reconstruct source records and observed history, including
+  ordering, deletes, version intervals and current-version flags.
+- **MARTS:** define analytical grains, joins and measures, and publish facts and
+  dimensions. Do not repeat CDC reconstruction or recalculate history flags.
+
 ## Raw: four append-only event tables
 
 `raw.customers`, `raw.orders`, `raw.order_items`, `raw.order_payments` retain [all source columns](source.md), including `updated_at`, plus:
@@ -23,12 +38,20 @@ validation reports may retain the previous `analytics_` names.
 
 ## Staging: four views
 
-`stg_customers` and `stg_orders` expose typed source fields and event ID, operation, sequence, timestamp and snapshot flag. Item/payment staging keeps source fields and only event ID, operation and sequence; those tables do not build temporal history. Tests check event uniqueness, required identifiers and supported operations. This is the only staging layer.
+All four staging views expose typed source fields and the same six raw metadata
+fields: event ID, operation, sequence, commit timestamp, snapshot flag and source
+file. The views preserve captured values; they do not cast, clean, join or collapse
+events. Tests check event uniqueness, required identifiers and supported operations.
+This is the only staging layer.
 
 ## Intermediate: five views
 
 - Four `int_*_current` views rank each source row key by source sequence, select its latest state and exclude tombstones. Late snapshots never overwrite newer changes. These four views expose only source columns (including `updated_at` for reconciliation); event metadata and the internal ranking helper stay inside the calculation.
-- `int_customer_history` records observed attribute changes with version IDs, observed_from/to, source_order_from/to, is_deleted and is_initial_snapshot. A snapshot that overlaps already captured CDC cannot establish an earlier history version; it stays in raw/current processing, but ambiguous history begins with CDC.
+- `int_customer_history` records observed attribute changes with version IDs,
+  observed_from/to, source_order_from/to, is_deleted, is_initial_snapshot and
+  is_current. The current flag is true only for the latest non-deleted version.
+  A snapshot that overlaps already captured CDC cannot establish an earlier history
+  version; it stays in raw/current processing, but ambiguous history begins with CDC.
 
 ## Marts: five rebuilt tables
 
@@ -51,7 +74,9 @@ are not merged into an inferred person-level address history. The simulated sour
 also allows another order to reference an existing customer record.
 
 - **dim_customers:** one current customer record, with customer_id, customer_unique_id, postal_code, city, state.
-- **dim_customer_history:** those attributes plus customer_version_id, observed_from/to, source_order_from/to, is_deleted, is_initial_snapshot and is_current.
+- **dim_customer_history:** publishes the reconstructed history from INTERMEDIATE,
+  with those attributes plus customer_version_id, observed_from/to,
+  source_order_from/to, is_deleted, is_initial_snapshot and is_current.
 - **fct_orders:** source order fields excluding updated_at, plus item_total, freight_total, order_total, item_count, payment_total, payment_count, has_items, has_payments.
 - **fct_order_items:** source item fields excluding updated_at; one row per order and item sequence.
 - **fct_order_payments:** source payment fields excluding updated_at; one row per order and payment sequence.

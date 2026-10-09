@@ -24,7 +24,7 @@ with timed_events as (
     from fingerprints
 ), changes as (
     select * from previous where previous_hash is null or previous_hash <> attribute_hash
-)
+), versions as (
 select md5(customer_id || ':' || cast(_source_order as varchar(35))) as customer_version_id,
        customer_id, customer_unique_id, city, state, postal_code,
        _commit_at as observed_from,
@@ -34,3 +34,6 @@ select md5(customer_id || ':' || cast(_source_order as varchar(35))) as customer
        _op = 'D' as is_deleted,
        _is_snapshot as is_initial_snapshot
 from changes
+)
+select *, observed_to is null and not is_deleted as is_current
+from versions

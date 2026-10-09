@@ -9,7 +9,7 @@ from psycopg import sql
 
 from olist_cdc.events import parse_csv
 from olist_cdc.parquet import normalized_parquet
-from olist_cdc.seed import TABLES
+from olist_cdc.schema import SOURCE_COLUMNS
 from olist_cdc.warehouse import raw_ddl
 
 log = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def warehouse_connection():
 
 def snapshot_table(key, prefix):
     parts = key.removeprefix(prefix.rstrip("/") + "/").split("/")
-    if len(parts) == 3 and parts[0] == "initial-load" and parts[1] in TABLES and parts[2].startswith("LOAD"):
+    if len(parts) == 3 and parts[0] == "initial-load" and parts[1] in SOURCE_COLUMNS and parts[2].startswith("LOAD"):
         return parts[1]
     if len(parts) == 2 and parts[0] == "cdc":
         return None
@@ -54,7 +54,7 @@ def check_capture():
         log.info("CDC-only capture running; no full load is performed by this task")
         return
     completed = {t["TableName"] for t in tables if t["SchemaName"] == "ecommerce" and t["TableState"] == "Table completed"}
-    if completed != set(TABLES):
+    if completed != set(SOURCE_COLUMNS):
         raise RuntimeError(f"Initial load is not complete: {sorted(completed)}")
     log.info("Capture running; initial load complete for all four source tables")
 
@@ -74,7 +74,7 @@ def load_file(connection, s3, bucket, key, role, *, metrics=None):
         body = s3.get_object(Bucket=bucket, Key=key)["Body"].read()
         snapshot = snapshot_table(key, os.environ.get("CAPTURE_PREFIX", "raw"))
         events = parse_csv(body.decode(), source, snapshot_table=snapshot)
-        for table in TABLES:
+        for table in SOURCE_COLUMNS:
             batch = [e for e in events if e.table == table]
             if not batch:
                 continue

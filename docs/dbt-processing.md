@@ -10,8 +10,10 @@ intermediate views. Staging and intermediate remain views.
    If unchanged, it skips warehouse work without connecting to Redshift.
 2. The raw loader loads only new files. `raw.loaded_files` and event identities
    prevent duplicate ingestion; raw rows and the file entry commit together.
-3. `dbt build` reconstructs current state and customer history through the views,
-   rebuilds all five marts, and runs data tests.
+3. `dbt build` exposes consistent source events through STAGING, reconstructs current
+   state and complete customer history (including current flags) in INTERMEDIATE,
+   rebuilds all five analytical marts, and runs data tests. MARTS publishes the
+   history flags rather than recalculating them.
 4. Only a successful build and tests advance Airflow's batch completion marker.
 
 There is no `marts.processed_files` table, per-model checkpoint, affected-key

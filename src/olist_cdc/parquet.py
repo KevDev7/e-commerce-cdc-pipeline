@@ -5,8 +5,7 @@ from decimal import Decimal
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from olist_cdc.events import RAW_METADATA, source_columns
-from olist_cdc.warehouse import TYPES
+from olist_cdc.schema import RAW_METADATA, TYPES, source_columns
 
 
 def field_type(name):

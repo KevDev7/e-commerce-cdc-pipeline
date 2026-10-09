@@ -22,7 +22,7 @@ def archive(tmp_path):
         }
         path = tmp_path / 'olist.zip'
         with zipfile.ZipFile(path, 'w') as z:
-            for table, mapping in seed.TABLES.items():
+            for table, mapping in seed.CSV_COLUMNS.items():
                 if missing_payment_file and table == 'order_payments':
                     continue
                 stream = io.StringIO(newline=''); writer = csv.writer(stream)
@@ -35,7 +35,7 @@ def archive(tmp_path):
 @pytest.mark.integration
 def test_seed_preserves_nulls_keys_and_retries_without_resetting_source(database, archive):
     path = archive()
-    assert seed.load(database,path)['row_counts'] == dict.fromkeys(seed.TABLES,1)
+    assert seed.load(database,path)['row_counts'] == dict.fromkeys(seed.CSV_COLUMNS,1)
     database.execute("UPDATE ecommerce.customers SET city='campinas'"); database.commit()
     assert seed.load(database,path)['status'] == 'already_loaded'
     assert database.execute('SELECT city,postal_code FROM ecommerce.customers').fetchone() == ('campinas','00123')

@@ -6,7 +6,8 @@ import pyarrow.parquet as pq
 import pytest
 
 from olist_cdc.cloud_load import snapshot_table
-from olist_cdc.events import Event, NULL, RAW_METADATA, parse_csv, source_columns
+from olist_cdc.events import Event, NULL, parse_csv
+from olist_cdc.schema import RAW_METADATA, source_columns
 from olist_cdc.parquet import normalized_parquet
 from test_events import csv_text, customer_row
 

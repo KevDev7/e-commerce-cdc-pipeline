@@ -8,8 +8,7 @@ from dotenv import load_dotenv
 
 from olist_cdc.cloud_load import warehouse_connection
 from olist_cdc.db import connect
-from olist_cdc.events import source_columns
-from olist_cdc.seed import TABLES
+from olist_cdc.schema import SOURCE_COLUMNS, source_columns
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -38,7 +37,7 @@ def main():
     with connect() as source, warehouse_connection() as target:
         source.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
         result = {}
-        for table in TABLES:
+        for table in SOURCE_COLUMNS:
             columns = ','.join(source_columns(table))
             source_rows = source.execute(f'SELECT {columns} FROM ecommerce.{table} ORDER BY 1')
             cursor = target.cursor()

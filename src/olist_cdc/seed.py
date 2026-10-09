@@ -7,10 +7,12 @@ import zipfile
 from psycopg import sql
 from psycopg.types.json import Jsonb
 
+from olist_cdc.schema import SOURCE_COLUMNS
+
 URL = "https://www.kaggle.com/api/v1/datasets/download/olistbr/brazilian-ecommerce?datasetVersionNumber=2"
 SEED_ID = "olist-kaggle-v2"
 # Derived row keys are first in source column order; all natural-key parts remain.
-TABLES = {
+CSV_COLUMNS = {
     "customers": {"customer_id": "customer_id", "customer_unique_id": "customer_unique_id",
                   "postal_code": "customer_zip_code_prefix", "city": "customer_city", "state": "customer_state"},
     "orders": {"order_id": "order_id", "customer_id": "customer_id", "status": "order_status",
@@ -26,7 +28,8 @@ TABLES = {
 
 
 def mapped_values(table, row):
-    values = [row[source] or None for source in TABLES[table].values() if source]
+    values = [row[CSV_COLUMNS[table][column]] or None
+              for column in SOURCE_COLUMNS[table] if CSV_COLUMNS[table][column]]
     if table in ("order_items", "order_payments"):
         part = "order_item_id" if table == "order_items" else "payment_sequential"
         values.insert(0, row["order_id"] + ":" + str(int(row[part])))
@@ -55,13 +58,13 @@ def load(connection, archive: Path):
         ).fetchone()
         if previous:
             return {"status": "already_loaded", "row_counts": previous[0]}
-        for table in TABLES:
+        for table in SOURCE_COLUMNS:
             count = connection.execute(sql.SQL("SELECT count(*) FROM ecommerce.{}").format(sql.Identifier(table))).fetchone()[0]
             if count:
                 raise ValueError("Source tables are not empty. Seed once into a fresh database; no records were changed.")
         counts = {}
         with zipfile.ZipFile(archive) as zipped:
-            for table, columns in TABLES.items():
+            for table, columns in SOURCE_COLUMNS.items():
                 filename = "olist_" + table + "_dataset.csv"
                 matches = [name for name in zipped.namelist() if Path(name).name == filename]
                 if len(matches) != 1:
@@ -72,7 +75,7 @@ def load(connection, archive: Path):
                 counts[table] = 0
                 with zipped.open(matches[0]) as raw, io.TextIOWrapper(raw, encoding="utf-8-sig", newline="") as stream:
                     reader = csv.DictReader(stream)
-                    missing = {v for v in columns.values() if v} - set(reader.fieldnames or [])
+                    missing = {v for v in CSV_COLUMNS[table].values() if v} - set(reader.fieldnames or [])
                     if missing:
                         raise ValueError(f"{filename} missing columns: {sorted(missing)}")
                     with connection.cursor().copy(query) as copy:

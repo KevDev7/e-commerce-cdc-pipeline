@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT / ".env.cloud", override=True)
 from olist_cdc.cloud_load import aws_session, load_pending, warehouse_connection
-from olist_cdc.seed import TABLES
+from olist_cdc.schema import SOURCE_COLUMNS
 
 
 def counts():
@@ -16,7 +16,7 @@ def counts():
     try:
         cursor = connection.cursor()
         result = {}
-        for table in TABLES:
+        for table in SOURCE_COLUMNS:
             cursor.execute(f'SELECT count(*), count(distinct _event_id) FROM "raw".{table}')
             result[table] = list(cursor.fetchone())
         connection.commit()

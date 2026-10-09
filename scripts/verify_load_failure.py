@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).resolve().parents[1]
 from olist_cdc.cloud_load import aws_session, load_file, warehouse_connection
 from olist_cdc.events import parse_csv
-from olist_cdc.seed import TABLES
+from olist_cdc.schema import SOURCE_COLUMNS
 from olist_cdc.warehouse import raw_ddl
 
 
@@ -51,7 +51,7 @@ def counts(connection):
     cursor = connection.cursor()
     try:
         result = {}
-        for table in TABLES:
+        for table in SOURCE_COLUMNS:
             cursor.execute(f'SELECT count(*),count(DISTINCT _event_id) FROM "raw".{table}')
             result[table] = list(cursor.fetchone())
         cursor.execute('SELECT count(*) FROM "raw".loaded_files')
@@ -88,8 +88,8 @@ def main():
         if cursor.fetchone()[0]:
             raise ValueError("File already loaded; choose an unseen file")
         # Establish the expected number of new event identities before injection.
-        expected = {table: 0 for table in TABLES}
-        for table in TABLES:
+        expected = {table: 0 for table in SOURCE_COLUMNS}
+        for table in SOURCE_COLUMNS:
             ids = [e.values[-6] for e in events if e.table == table]
             if ids:
                 placeholders = ','.join(['%s'] * len(ids))
@@ -110,7 +110,7 @@ def main():
         assert after_failure == before, (before, after_failure)
         load_file(connection, s3, bucket, args.key, os.environ["REDSHIFT_COPY_ROLE"])
         after_retry = counts(connection)
-        for table in TABLES:
+        for table in SOURCE_COLUMNS:
             assert after_retry[table] == [x + expected[table] for x in before[table]]
         assert after_retry['loaded_files'] == before['loaded_files'] + 1
         assert load_file(connection, s3, bucket, args.key, os.environ["REDSHIFT_COPY_ROLE"]) == 0

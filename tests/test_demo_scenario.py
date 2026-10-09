@@ -10,8 +10,8 @@ import subprocess
 import pytest
 
 from olist_cdc.db import ROOT
-from olist_cdc.events import parse_csv, source_columns
-from olist_cdc.seed import TABLES
+from olist_cdc.events import parse_csv
+from olist_cdc.schema import SOURCE_COLUMNS, source_columns
 from olist_cdc.simulate import PHASES, run_phase
 from olist_cdc.warehouse import initialize_raw, load_local
 from scripts.verify_cloud_scenario import verify
@@ -22,11 +22,11 @@ from test_mart_rebuilds import event
 @pytest.mark.integration
 def test_standard_scenario_checks_current_joins_and_customer_history(database, tmp_path):
     initialize_raw(database)
-    previous = {table: {} for table in TABLES}
+    previous = {table: {} for table in SOURCE_COLUMNS}
     changes = []
     for phase in PHASES:
         run_phase(database, 'combined-demo', phase)
-        for table in TABLES:
+        for table in SOURCE_COLUMNS:
             columns = source_columns(table)
             current = {row[0]: dict(zip(columns, row)) for row in database.execute(
                 f"SELECT {','.join(columns)} FROM ecommerce.{table} ORDER BY 1")}

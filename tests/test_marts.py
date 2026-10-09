@@ -6,7 +6,8 @@ import subprocess
 import pytest
 
 from olist_cdc.db import ROOT
-from olist_cdc.events import NULL, parse_csv, source_columns
+from olist_cdc.events import NULL, parse_csv
+from olist_cdc.schema import RAW_METADATA, source_columns
 from olist_cdc.warehouse import initialize_raw, load_local
 from test_events import csv_text
 
@@ -49,9 +50,11 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     for table in ('customers', 'orders', 'order_items', 'order_payments'):
         cursor = database.execute(f'SELECT * FROM intermediate.int_{table}_current LIMIT 0')
         assert [c.name for c in cursor.description] == source_columns(table)
-    for table in ('order_items', 'order_payments'):
+    for table in ('customers', 'orders', 'order_items', 'order_payments'):
         cursor = database.execute(f'SELECT * FROM staging.stg_{table} LIMIT 0')
-        assert [c.name for c in cursor.description] == source_columns(table) + ['_event_id', '_op', '_source_order']
+        assert [c.name for c in cursor.description] == source_columns(table) + list(RAW_METADATA)
+        assert database.execute(f'SELECT * FROM staging.stg_{table} ORDER BY _event_id').fetchall() == \
+            database.execute(f'SELECT * FROM raw.{table} ORDER BY _event_id').fetchall()
     snapshots=[[r[0],*r[3:]] for r in earlier[:2]]
     if overlap_snapshot:snapshots[0][4]='campinas'
     for snapshot in snapshots:snapshot[-1]='2026-01-03T00:00:00Z' if overlap_snapshot else '2025-12-31T00:00:00Z'
@@ -70,6 +73,8 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     assert database.execute("SELECT item_count,payment_count,has_items,has_payments FROM marts.fct_orders WHERE order_id='o2'").fetchone()==(0,0,False,False)
     assert database.execute('SELECT customer_id,city FROM marts.dim_customers').fetchall()==[('c1','campinas')]
     assert database.execute("SELECT city,is_current FROM marts.dim_customer_history WHERE customer_id='c1' ORDER BY source_order_from").fetchall()==[('sao paulo',False),('campinas',True)]
+    assert database.execute('SELECT * FROM intermediate.int_customer_history ORDER BY customer_version_id').fetchall() == \
+        database.execute('SELECT * FROM marts.dim_customer_history ORDER BY customer_version_id').fetchall()
     assert database.execute("SELECT count(*) FROM marts.dim_customer_history WHERE customer_id='c2' AND is_current").fetchone()[0]==0
     assert database.execute('SELECT count(*) FROM raw.order_payments').fetchone()[0]==2
     assert database.execute('SELECT count(*) FROM raw.customers WHERE _is_snapshot').fetchone()[0]==2

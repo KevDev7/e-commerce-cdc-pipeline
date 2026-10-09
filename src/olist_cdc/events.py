@@ -3,17 +3,11 @@ import csv
 from dataclasses import dataclass
 import io
 
-from olist_cdc.seed import TABLES
+from olist_cdc.schema import DMS_METADATA, SOURCE_COLUMNS, source_columns
 
 # DMS transformations append these columns after the original source columns.
 # Olist source/metadata ordering was verified against real DMS files; see docs/validation.md.
-DMS_METADATA = ("_source_lsn", "_source_order", "_commit_at")
-RAW_METADATA = ("_event_id", "_op", "_source_order", "_commit_at", "_is_snapshot", "_source_file")
 NULL = "__OLIST_NULL__"
-
-
-def source_columns(table):
-    return [*TABLES[table], "updated_at"]
 
 
 @dataclass
@@ -39,7 +33,7 @@ def parse_csv(text, source_file, *, snapshot_table=None):
         else:
             operation, *fields = row
             table = snapshot_table
-        if table not in TABLES or operation not in ("I", "U", "D"):
+        if table not in SOURCE_COLUMNS or operation not in ("I", "U", "D"):
             raise ValueError(f"{source_file}:{line}: unsupported table or operation")
         expected = len(source_columns(table)) + len(DMS_METADATA)
         if len(fields) != expected:

@@ -7,7 +7,8 @@ import subprocess
 import pytest
 
 from olist_cdc.db import ROOT
-from olist_cdc.events import NULL, parse_csv, source_columns
+from olist_cdc.events import NULL, parse_csv
+from olist_cdc.schema import source_columns
 from olist_cdc.warehouse import initialize_raw, load_local
 from test_events import csv_text
 
@@ -39,6 +40,9 @@ def test_mart_rebuilds_preserve_history_and_recover_after_failure(database, tmp_
             timeout=120)
         if success:
             assert result.returncode == 0, result.stdout[-12000:] + result.stderr[-2000:]
+            # INTERMEDIATE owns complete history; MARTS publishes the same versions/flags.
+            assert database.execute('SELECT * FROM intermediate.int_customer_history ORDER BY customer_version_id').fetchall() == \
+                database.execute('SELECT * FROM marts.dim_customer_history ORDER BY customer_version_id').fetchall()
         else:
             assert result.returncode != 0 and 'division by zero' in result.stdout, result.stdout
 
