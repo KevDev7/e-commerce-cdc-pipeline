@@ -32,6 +32,10 @@ AWS DMS reads to capture these changes.
   matches the source. dbt tests check the models. GitHub CI uses temporary
   PostgreSQL test databases and checks Airflow task states.
 
+## Data architecture
+
+![E-commerce CDC data architecture: PostgreSQL sources, change capture and ingestion, and raw, staging, intermediate, and marts layers in Redshift](docs/images/data-architecture.png)
+
 ## Vendor architecture
 
 ![E-commerce CDC Pipeline vendor architecture: RDS PostgreSQL, AWS DMS, S3, Redshift, dbt, and Airflow running in Docker](docs/images/vendor-architecture.png)

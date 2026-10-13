@@ -45,20 +45,20 @@
         <mxCell id="capture-csv-next" edge="1" parent="ingest-zone" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=0.5;exitY=1.0;exitPerimeter=0;entryX=0.5;entryY=0.0;entryPerimeter=0;" source="capture-csv" target="python-ingestion">
           <mxGeometry as="geometry" relative="1">
             <mxPoint as="sourcePoint" x="132.5" y="209.0" />
-            <mxPoint as="targetPoint" x="132.5" y="236.0" />
+            <mxPoint as="targetPoint" x="132.5" y="260.0" />
             <Array as="points" />
           </mxGeometry>
         </mxCell>
         <mxCell id="python-ingestion-next" edge="1" parent="ingest-zone" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=0.5;exitY=1.0;exitPerimeter=0;entryX=0.5;entryY=0.0;entryPerimeter=0;" source="python-ingestion" target="copy-parquet">
           <mxGeometry as="geometry" relative="1">
-            <mxPoint as="sourcePoint" x="132.5" y="301.0" />
-            <mxPoint as="targetPoint" x="132.5" y="328.0" />
+            <mxPoint as="sourcePoint" x="132.5" y="325.0" />
+            <mxPoint as="targetPoint" x="132.5" y="340.0" />
             <Array as="points" />
           </mxGeometry>
         </mxCell>
         <mxCell id="copy-parquet-next" edge="1" parent="ingest-zone" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=0.5;exitY=1.0;exitPerimeter=0;entryX=0.5;entryY=0.0;entryPerimeter=0;" source="copy-parquet" target="copy-load">
           <mxGeometry as="geometry" relative="1">
-            <mxPoint as="sourcePoint" x="132.5" y="393.0" />
+            <mxPoint as="sourcePoint" x="132.5" y="405.0" />
             <mxPoint as="targetPoint" x="132.5" y="420.0" />
             <Array as="points" />
           </mxGeometry>
@@ -241,7 +241,7 @@
         <mxCell id="output-contract" value="DATA CONTRACT&lt;br&gt;My Platform → Analytical Datasets" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=19;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="1030" y="35" width="785" height="72" />
         </mxCell>
-        <mxCell id="cdc-category" value="CDC&lt;br&gt;Sources" style="shape=document;fillColor=#dcecff;strokeColor=#7399bf;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
+        <mxCell id="cdc-category" value="OLTP&lt;br&gt;Sources" style="shape=document;fillColor=#dcecff;strokeColor=#7399bf;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="20" y="421" width="105" height="80" />
         </mxCell>
         <mxCell id="oltp-header" value="E-commerce Database&lt;br&gt;RDS · PostgreSQL" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="oltp-system">
@@ -265,11 +265,11 @@
         <mxCell id="wal-label" value="PostgreSQL WAL" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="oltp-system">
           <mxGeometry as="geometry" x="17.0" y="381.0" width="174" height="27" />
         </mxCell>
-        <mxCell id="capture-schedule" value="Change Capture:&lt;br&gt;Continuous" style="shape=rectangle;fillColor=#fff4c8;strokeColor=#d3ae53;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="159" y="754" width="207" height="66" />
+        <mxCell id="capture-schedule" value="Change Capture:&lt;br&gt;Continuous" style="shape=rectangle;fillColor=#fff4c8;strokeColor=#d3ae53;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="ingest-zone">
+          <mxGeometry as="geometry" x="16" y="6" width="233" height="40" />
         </mxCell>
-        <mxCell id="batch-schedule" value="Downstream Batches:&lt;br&gt;Every 5 Minutes" style="shape=rectangle;fillColor=#fff4c8;strokeColor=#d3ae53;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="441" y="850" width="243" height="76" />
+        <mxCell id="batch-schedule" value="Batch Schedule:&lt;br&gt;Every 5 Minutes" style="shape=rectangle;fillColor=#fff4c8;strokeColor=#d3ae53;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="ingest-zone">
+          <mxGeometry as="geometry" x="16" y="215" width="110" height="40" />
         </mxCell>
         <mxCell id="dms-capture" value="AWS DMS&lt;br&gt;Initial Load + CDC" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
           <mxGeometry as="geometry" x="16.0" y="52.0" width="233" height="65" />
@@ -284,13 +284,13 @@
           <mxGeometry as="geometry" x="10.0" y="18.5" width="28" height="28" />
         </mxCell>
         <mxCell id="python-ingestion" value="Python Ingestion&lt;br&gt;Validation + Typing" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
-          <mxGeometry as="geometry" x="16.0" y="236.0" width="233" height="65" />
+          <mxGeometry as="geometry" x="16.0" y="260.0" width="233" height="65" />
         </mxCell>
         <mxCell id="python-ingestion-icon" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23252525%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M10%207L2%2016l8%209M22%207l8%209-8%209M19%204l-6%2024%22/%3E%3C/g%3E%3C/svg%3E;imageAspect=0;" vertex="1" parent="python-ingestion">
           <mxGeometry as="geometry" x="10.0" y="18.5" width="28" height="28" />
         </mxCell>
         <mxCell id="copy-parquet" value="Amazon S3&lt;br&gt;COPY-ready · Parquet" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
-          <mxGeometry as="geometry" x="16.0" y="328.0" width="233" height="65" />
+          <mxGeometry as="geometry" x="16.0" y="340.0" width="233" height="65" />
         </mxCell>
         <mxCell id="copy-parquet-icon" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d96a28%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cellipse%20cx%3D%2216%22%20cy%3D%226%22%20rx%3D%2212%22%20ry%3D%224%22/%3E%3Cpath%20d%3D%22M4%206l3%2022c2%203%2016%203%2018%200l3-22M8%2016h16%22/%3E%3C/g%3E%3C/svg%3E;imageAspect=0;" vertex="1" parent="copy-parquet">
           <mxGeometry as="geometry" x="10.0" y="18.5" width="28" height="28" />
