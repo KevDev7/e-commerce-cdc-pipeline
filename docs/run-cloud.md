@@ -16,7 +16,7 @@ From the repository root, with `.venv` installed:
 
 `create` makes one CloudFormation stack. It uses three existing default public subnets, new project security groups, no NAT gateway, one RDS PostgreSQL micro instance, one DMS small instance, and one private S3 bucket named `olist-cdc-<unique suffix>`. Database access is restricted to your current public IPv4 address and the DMS security group. RDS/DMS use encrypted connections. A changed home IP requires updating the stack's ClientCidr parameter. Do not open database ports to everyone.
 
-The stack creates DMS's standard service roles only when absent; existing roles are left alone. All other resources belong to this stack. The source is a reproducible copy of historical Olist data plus simulated activity. Cleanup now takes a final RDS snapshot and retains the Redshift namespace and COPY role.
+The stack creates DMS's standard service roles only when absent; existing roles are left alone. All other resources belong to this stack. The source is a reproducible copy of historical Olist data plus simulated activity. Cleanup takes a final RDS snapshot and retains the Redshift namespace and COPY role.
 
 The S3 bucket and Redshift namespace have CloudFormation `Retain` policies. RDS has `Snapshot` policies. They preserve cloud data after stack deletion; the DMS instance, RDS instance and Redshift workgroup are deleted. Each new demo creates a fresh capture lineage in a new bucket; do not merge unrelated source sequences.
 
@@ -30,7 +30,9 @@ After CREATE_COMPLETE:
 
 `prepare_cloud_source.py` downloads the pinned ZIP into a temporary directory, uploads a copy as `dataset/original-olist-brazilian-ecommerce.zip`, loads RDS and removes the temporary directory on exit. It never creates a local source database. This is the only full-dataset setup command; `olist-cdc` only simulates business changes against the prepared RDS source.
 
-Repeat `connections` until both endpoints report `successful`, then start the task. Starting is deliberate: the source must be seeded first. Wait for all four tables to complete their full load; inspect real files before accepting the CSV contract. The September 24 cloud run verified the `initial-load` target-schema mapping: baseline files use `raw/initial-load/<table>/`, while CDC records carry the renamed schema label and remain under `raw/cdc/`. Do not apply this mapping change by resuming an older task with existing file checkpoints.
+Repeat `connections` until both endpoints report `successful`, then start the task. Starting is deliberate: the source must be seeded first. Wait for all four tables to complete their full load. Baseline files use
+`raw/initial-load/<table>/`; transaction-ordered CDC files remain under `raw/cdc/`.
+See the [S3 layout](warehouse.md#s3-files) for original and prepared paths.
 
 ```sh
 .venv/bin/python scripts/capture.py start
@@ -90,8 +92,8 @@ After changing transformation logic that must apply to existing rows, pause sche
 
 Every build reconstructs the five marts from retained raw events and runs data tests.
 Source capture and raw ingestion remain incremental; dbt transformations do not.
-This uses Redshift compute within the agreed session budget. See [dbt processing
-and retries](dbt-processing.md).
+This uses Redshift compute within the agreed session budget. See
+[batch processing and retries](warehouse.md#batch-processing-and-retries).
 
 ## Check the result
 
@@ -109,8 +111,8 @@ the two observed cities separately. The same verifier checks both behaviors. The
 scenario name for this expanded demonstration; older completed scenarios did not
 include this phase.
 
-Replay, failure injection, bootstrap timing and measured workloads
-are [optional verification scenarios](verification.md). They are separate from the
+Replay, failure injection, and bootstrap timing are
+[additional verification checks](testing.md#additional-cloud-checks). They are separate from the
 normal setup → simulate → process → verify → cleanup flow.
 
 ## Cleanup
@@ -120,8 +122,6 @@ version only until the replacement passes tests and reconciliation. Then verify
 ownership and replacement availability before deleting the superseded buckets,
 warehouse namespace and source snapshots. If validation fails, preserve the
 previous reference instead of deleting the fallback.
-
-The loader stores original DMS files unchanged, derives per-table CSV COPY inputs with unchanged source strings under `copy-ready/`, and commits the raw records with the file ledger in one transaction. A retry skips previously loaded keys without downloading them; capture files must remain immutable. Events redelivered under another file name are retained again in raw and deduplicated by event identity in staging. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
 
 ```sh
 .venv/bin/python scripts/cloud_stack.py delete
@@ -135,28 +135,7 @@ Before deletion, stop simulated writes. Deletion retains the bucket and its data
 and removes the compute stack. It does not export sample rows or download data
 to the workstation. It refuses to delete a legacy stack unless the deployed bucket, namespace and COPY role use `Retain` and RDS uses `Snapshot`; update those policies first. The small `data/cloud-state.json` records `retained_bucket`, region and capture prefix before deletion. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS log group. Verify no project RDS/DMS instances or Redshift workgroups remain. Verify the final RDS snapshot is available, the Redshift namespace remains, and the retained bucket is private and readable. Record the snapshot identifier and retained namespace in `data/cloud-state.json`. Remove expired `.aws/credentials`; keep any necessary warehouse credentials only in the ignored, permission-restricted `.env.cloud`. Keep deployment metadata before approving another session. Never modify other projects' resources.
 
-The retained bucket incurs S3 storage/request charges until deliberately removed. It remains accessible through the project AWS profile; the COPY role is retained for future warehouse access. A fresh warehouse rebuild can reuse the retained COPY role scoped to that bucket, with the matching capture prefix and a fresh raw database/ledger; load the original CSV captures to regenerate COPY-ready CSV files and rebuild dbt. The earlier typed raw tables require a fresh baseline; see the [upgrade guide](warehouse.md#upgrade-to-string-based-raw). Recreating the retained namespace's workgroup exposes its existing tables; it does not migrate them to the current design. Retention is not an automated cross-session restore service.
-
-## Upgrade after the modeling simplification
-
-For a retained warehouse from before this simplification, keep the scheduler
-paused, run `scripts/run_cloud.py build`, then execute:
-
-```sql
-DROP VIEW IF EXISTS intermediate.int_order_creations;
-DROP TABLE IF EXISTS marts.fct_order_status_history;
-DROP VIEW IF EXISTS intermediate.int_order_status_history;
-DROP TABLE IF EXISTS marts.processed_files;
-```
-
-The normal table rebuild removes `captured_created_at`, `customer_version_id` and
-`customer_history_status` from `marts.fct_orders`. The cleanup SQL removes the
-retired models and custom mart checkpoint table. Keep `raw.loaded_files`: it
-still prevents loading the same file key twice. Original raw events and customer history
-are preserved. No source backfill is needed.
-dbt does not automatically drop retired models.
-This applies to older retained warehouses. The October 14 validation
-rebuilt a fresh baseline and removed the superseded warehouse.
+The retained bucket incurs S3 storage/request charges until deliberately removed. It remains accessible through the project AWS profile; the COPY role is retained for future warehouse access. A fresh warehouse rebuild can reuse the retained COPY role scoped to that bucket, with the matching capture prefix and a fresh raw database/ledger; load the original CSV captures to regenerate COPY-ready CSV files and rebuild dbt. Recreating the retained namespace's workgroup exposes its existing tables; it does not migrate them to the current design. Retention is not an automated cross-session restore service.
 
 ## Local data retention
 
@@ -171,8 +150,7 @@ containers or volumes. Future local tests recreate disposable databases.
 ## Retained databases after this run
 
 The latest verified reference is in namespace `synthea-cdc-20261013` and bucket
-`olist-cdc-d801223c9215`, with one final source snapshot. The older namespace,
-two older buckets and two older source snapshots have been deleted. Consult the
+`olist-cdc-d801223c9215`, with one final source snapshot. Consult the
 ignored `data/cloud-state.json` for current identifiers and credentials in
 `.env.cloud`; do not infer the namespace name from the workgroup's default name.
 [Latest inventory](evidence/olist-20261014-cleanup.json).
@@ -187,6 +165,8 @@ before querying. Do not delete the namespace to recreate a compute endpoint.
 Retained data incurs ongoing storage charges; the approved one-time run allowance
 is separate. Existing namespace names must be inspected before another stack
 creation; the normal fresh-demo command is not a retained-warehouse restore tool.
-Historical evidence remains in Git; superseded S3 lineages were removed after verification.
+[Testing and results](testing.md) records completed verification and cleanup.
 
-For an older typed warehouse, follow the [string-based raw upgrade](warehouse.md#upgrade-to-string-based-raw) before replay testing. The latest retained reference already uses the current raw schema.
+The retained reference already uses the current CSV/string-based raw schema.
+A new capture lineage needs a fresh baseline and cannot reuse another task's
+sequence history or file checkpoints.

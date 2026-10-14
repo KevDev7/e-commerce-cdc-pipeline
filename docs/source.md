@@ -35,7 +35,35 @@ The archive's business timestamps have no timezone offset. Store them as `timest
 
 Empty CSV values become SQL NULL. Zip-code prefixes remain strings, preserving leading zeroes. Money uses decimal types. Missing delivery/approval dates and orders without item/payment records are retained. No rule forces payment totals to equal item plus freight totals: they differ in the actual data.
 
-Source seeding is atomic and recorded once under `olist-kaggle-v2`. Retrying never overwrites subsequent changes. Start a fresh database for a different seed or source schema. The inspected counts and anomalies are in [the migration record](olist-migration.md).
+Source seeding is atomic and recorded once under `olist-kaggle-v2`. Retrying never overwrites subsequent changes. Start a fresh database for a different seed or source schema.
 
-The seed ledger now uses `seed_id` instead of an archive hash. This source setup
-is for a fresh demo database; an older source ledger is not migrated in place.
+The seed ledger records `seed_id` and simulation progress is stored separately
+from business tables in `project_meta`.
+
+The selected export contains 96,096 distinct `customer_unique_id` values.
+It includes 775 orders without items and one without a payment; these gaps are
+preserved rather than repaired.
+
+## Simulated workload
+
+The simulator executes real SQL against RDS; it does not generate CDC files.
+Each scenario has stable IDs and records phase completion in the same transaction
+as its business writes. Retrying a completed phase changes nothing. A new scenario
+name creates independent activity; phases run in the following order.
+
+| Phase | Source activity |
+|---|---|
+| `open` | Create a customer, an order, and two items priced at 50 each with 5 freight each |
+| `approve` | Add payments of 60 by credit card and 50 by voucher; approve the order |
+| `ship` | Change the order status to shipped |
+| `deliver` | Change the order status to delivered |
+| `correct` | Change the customer city from sao paulo to campinas and update the postal code |
+| `repeat-order` | Create another order for the same current customer record |
+| `create-delete-test` | Create a separate disposable customer and order |
+| `delete-test` | Hard-delete only those disposable records, order before customer |
+| `rollback-test` | Attempt a sentinel status update inside a transaction that is deliberately rolled back |
+
+A complete scenario commits 9 inserts, 4 updates, and 2 deletes. The rolled-back
+status must not enter the captured events. Historical Olist seed records are not
+modified. Hard deletion represents disposable-record cleanup, not order cancellation.
+The two items and two payments test that joins do not double-count the 110 total.

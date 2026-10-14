@@ -35,4 +35,4 @@ is required. Stop and remove the disposable PostgreSQL instance when done.
 
 The production source loader and COPY-ready CSV preparation are shared with these tests.
 The local raw loader is a test implementation for PostgreSQL; actual cloud capture
-and Redshift COPY are verified separately in the dated [AWS results](validation.md).
+and Redshift COPY are verified separately in the dated [AWS results](testing.md#latest-completed-aws-run).

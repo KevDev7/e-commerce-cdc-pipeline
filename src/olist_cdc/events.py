@@ -7,7 +7,7 @@ import io
 from olist_cdc.schema import DMS_METADATA, SOURCE_COLUMNS, source_columns
 
 # DMS transformations append these columns after the original source columns.
-# Olist source/metadata ordering was verified against real DMS files; see docs/validation.md.
+# Olist source/metadata ordering was verified against real DMS files; see docs/testing.md.
 NULL = "__OLIST_NULL__"
 
 
