@@ -61,17 +61,6 @@ microbatches every five minutes.
 Orders join to current customer details. A separate table keeps SCD Type 2
 history. The diagram shows selected columns and logical relationships.
 
-## Validation
-
-| Evidence | Result |
-|---|---|
-| October 14 AWS revalidation (UTC) | Backfilled all 415,418 historical rows. All 14 models and 40 dbt tests passed after the backfill, CDC updates, and replay. Field-by-field reconciliation and failed-load recovery passed. |
-| Local checks (October 13) | 93 tests passed with small disposable PostgreSQL fixtures. |
-
-The October 14 run validates the current CSV loader, raw strings, staging checks,
-and rebuilt marts. See [Test results](docs/validation.md) for detailed evidence
-and earlier runs.
-
 ## Run the project
 
 AWS compute runs during demonstrations and is deleted afterward. Verified data
