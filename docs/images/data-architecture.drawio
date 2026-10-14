@@ -241,10 +241,7 @@
         <mxCell id="output-contract" value="DATA CONTRACT&lt;br&gt;My Platform → Analytical Datasets" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=19;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="1030" y="35" width="785" height="72" />
         </mxCell>
-        <mxCell id="cdc-category" value="OLTP&lt;br&gt;Sources" style="shape=document;fillColor=#dcecff;strokeColor=#7399bf;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="20" y="421" width="105" height="80" />
-        </mxCell>
-        <mxCell id="oltp-header" value="E-commerce Database&lt;br&gt;RDS · PostgreSQL" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="oltp-system">
+        <mxCell id="oltp-header" value="E-commerce&lt;br&gt;OLTP Database&lt;br&gt;RDS · PostgreSQL" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="oltp-system">
           <mxGeometry as="geometry" x="0.0" y="0.0" width="209" height="67" />
         </mxCell>
         <mxCell id="oltp-header-icon" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23252525%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cellipse%20cx%3D%2216%22%20cy%3D%226%22%20rx%3D%2212%22%20ry%3D%224%22/%3E%3Cpath%20d%3D%22M4%206v20c0%205%2024%205%2024%200V6M4%2013c0%205%2024%205%2024%200M4%2020c0%205%2024%205%2024%200%22/%3E%3C/g%3E%3C/svg%3E;imageAspect=0;" vertex="1" parent="oltp-header">
