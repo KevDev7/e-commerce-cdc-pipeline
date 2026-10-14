@@ -1,5 +1,25 @@
 # Olist validation history
 
+## October 13: CSV inputs and string-based raw
+
+The active loader now prepares per-table CSV files instead of Parquet. Source
+column values remain strings in raw. Staging performs deduplication and SQL type
+conversion; CDC metadata remains typed for ordering and history. Original DMS
+files are unchanged. PyArrow is no longer a runtime dependency; the earlier
+Parquet evaluation remains archived with its own optional dependency.
+
+**89 local tests passed**, including CSV quoting, multiline text, null/empty-string
+preservation, source string retention, staged decimals/integers/timestamps,
+invalid values failing in staging, exact money scale, timezone handling, replay,
+ordered change application, deletes, history, file retry and atomic load failure.
+Offline Redshift parsing confirmed **14 models and 40 data tests**. Parsing does
+not prove COPY compatibility or SQL execution in Redshift. No AWS resources were
+contacted or changed; live validation remains pending.
+
+The retained typed warehouse needs a fresh raw baseline from original captures;
+see the [upgrade guide](warehouse.md#upgrade-to-string-based-raw). Older results
+below describe the code in use on those dates.
+
 ## October 13: staging owns event deduplication
 
 Raw now retains repeated event IDs, both within a file and across separately

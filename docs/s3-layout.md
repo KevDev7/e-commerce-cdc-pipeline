@@ -1,6 +1,6 @@
 # S3 layout
 
-Current retained bucket: `olist-cdc-ezajhtylhk8v` (14 files).
+Retained bucket from the earlier Parquet demonstration: `olist-cdc-ezajhtylhk8v` (14 files).
 
 The duplicate replay CSV and its four derived Parquet files have been removed.
 The original CDC batch remains. Current loaders retain repeated deliveries in raw; staging deduplicates them. Historical validation evidence remains unchanged. Migration counts below
@@ -10,13 +10,14 @@ describe the bucket before this cleanup.
 dataset/original-olist-brazilian-ecommerce.zip
 raw/initial-load/<table>/LOAD*.csv
 raw/cdc/*.csv
-copy-ready/initial-load/<table>/LOAD00000001.parquet
-copy-ready/cdc/<original-cdc-filename-without-.csv>/<table>.parquet
+copy-ready/initial-load/<table>/LOAD00000001.csv
+copy-ready/cdc/<original-cdc-filename-without-.csv>/<table>.csv
 ```
 
 Validation reports are kept in Git under `docs/evidence/`; duplicate S3 copies
 have been removed. The bucket contains only the source archive, original captures
-and derived Parquet.
+and derived COPY inputs. The retained bucket still contains earlier Parquet files;
+this tree shows the CSV paths produced by the current loader, not an executed S3 migration.
 
 `initial-load/` holds the baseline full-load snapshots; `cdc/` holds subsequent
 changes. The PostgreSQL schema is still `ecommerce`. A DMS target-schema rename
@@ -26,11 +27,11 @@ CDC files keep their `cdc/` path. The parser accepts both the original and targe
 schema labels; file location determines whether a record is a snapshot.
 
 The ZIP is the complete Kaggle version 2 download. DMS snapshots and CDC files
-remain unchanged in `raw/`. Derived Parquet paths mirror each CSV's path relative
+remain unchanged in `raw/`. Derived CSV paths mirror each original CSV's path relative
 to `raw/`. The full relative path distinguishes snapshots with identical
-filenames in different tables. Snapshot Parquet files keep the original `LOAD`
-filename with a `.parquet` extension, without an extra folder. A CDC file may contain several tables, so each
-gets its own Parquet file. The extension identifies the format; no format-version
+filenames in different tables. Prepared snapshot CSV files keep the original `LOAD`
+filename with a `.csv` extension, without an extra folder. A CDC file may contain several tables, so each
+gets its own prepared CSV file. The extension identifies the format; no format-version
 folder or hash folder is needed.
 
 Retries write the same prepared paths. Capture files must remain immutable:

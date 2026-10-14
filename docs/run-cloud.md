@@ -115,7 +115,7 @@ normal setup → simulate → process → verify → cleanup flow.
 
 ## Cleanup
 
-The loader stores original DMS files unchanged, derives explicitly typed Zstandard Parquet COPY inputs under `copy-ready/`, and commits the raw records with the file ledger in one transaction. A retry skips previously loaded keys without downloading them; capture files must remain immutable. Events redelivered under another file name are retained again in raw and deduplicated by event identity in staging. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
+The loader stores original DMS files unchanged, derives per-table CSV COPY inputs with unchanged source strings under `copy-ready/`, and commits the raw records with the file ledger in one transaction. A retry skips previously loaded keys without downloading them; capture files must remain immutable. Events redelivered under another file name are retained again in raw and deduplicated by event identity in staging. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
 
 ```sh
 .venv/bin/python scripts/cloud_stack.py delete
@@ -129,7 +129,7 @@ Before deletion, stop simulated writes. Deletion retains the bucket and its data
 and removes the compute stack. It does not export sample rows or download data
 to the workstation. It refuses to delete a legacy stack unless the deployed bucket, namespace and COPY role use `Retain` and RDS uses `Snapshot`; update those policies first. The small `data/cloud-state.json` records `retained_bucket`, region and capture prefix before deletion. After `status` confirms DELETE_COMPLETE, run `.venv/bin/python scripts/cloud_stack.py cleanup-logs` to remove the DMS log group. Verify no project RDS/DMS instances or Redshift workgroups remain. Verify the final RDS snapshot is available, the Redshift namespace remains, and the retained bucket is private and readable. Record the snapshot identifier and retained namespace in `data/cloud-state.json`. Remove expired `.aws/credentials`; keep any necessary warehouse credentials only in the ignored, permission-restricted `.env.cloud`. Keep deployment metadata before approving another session. Never modify other projects' resources.
 
-The retained bucket incurs S3 storage/request charges until deliberately removed. It remains accessible through the project AWS profile; the COPY role is retained for future warehouse access. A fresh warehouse rebuild can reuse the retained COPY role scoped to that bucket, with the matching capture prefix and a fresh raw database/ledger; load the original CSV captures to regenerate Parquet and rebuild dbt. The retained namespace already contains the loaded tables, so recreating its workgroup does not require a rebuild. Retention is not an automated cross-session restore service.
+The retained bucket incurs S3 storage/request charges until deliberately removed. It remains accessible through the project AWS profile; the COPY role is retained for future warehouse access. A fresh warehouse rebuild can reuse the retained COPY role scoped to that bucket, with the matching capture prefix and a fresh raw database/ledger; load the original CSV captures to regenerate COPY-ready CSV files and rebuild dbt. The earlier typed raw tables require a fresh baseline; see the [upgrade guide](warehouse.md#upgrade-to-string-based-raw). Recreating the retained namespace's workgroup exposes its existing tables; it does not migrate them to the current design. Retention is not an automated cross-session restore service.
 
 ## Upgrade after the modeling simplification
 
@@ -176,4 +176,4 @@ is separate. Existing namespace names must be inspected before another stack
 creation; the normal fresh-demo command is not a retained-warehouse restore tool.
 The old S3 lineage is preserved separately from new captures.
 
-Before using the current replay checks against a retained warehouse, deploy the [staging deduplication views](warehouse.md#upgrade-to-staging-deduplication) with a normal dbt build.
+Before using the current replay checks against a retained warehouse, follow the [string-based raw upgrade](warehouse.md#upgrade-to-string-based-raw), then build and test dbt.

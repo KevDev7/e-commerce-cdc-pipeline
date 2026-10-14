@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 import pyarrow as pa
 import pyarrow.parquet as pq
 from olist_cdc.cloud_load import aws_session, snapshot_table
-from olist_cdc.parquet import field_type, value_for
+from typed_parquet import field_type, value_for
 import csv
 import gzip
 import io

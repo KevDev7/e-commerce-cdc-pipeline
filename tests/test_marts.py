@@ -7,7 +7,7 @@ import pytest
 
 from olist_cdc.db import ROOT
 from olist_cdc.events import NULL, parse_csv
-from olist_cdc.schema import RAW_METADATA, source_columns
+from olist_cdc.schema import RAW_METADATA, TYPES, source_columns
 from olist_cdc.warehouse import initialize_raw, load_local
 from test_events import csv_text
 
@@ -54,8 +54,10 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
         cursor = database.execute(f'SELECT * FROM staging.stg_{table} LIMIT 0')
         assert [c.name for c in cursor.description] == source_columns(table) + list(RAW_METADATA)
         columns = ','.join(source_columns(table) + [c for c in RAW_METADATA if c != '_source_file'])
+        typed_columns = ','.join(f"cast({c} as {TYPES[c]})" if c in TYPES else c
+                                 for c in source_columns(table)) + ',' + ','.join(c for c in RAW_METADATA if c != '_source_file')
         assert database.execute(f'SELECT {columns} FROM staging.stg_{table} ORDER BY _event_id').fetchall() == \
-            database.execute(f'SELECT DISTINCT {columns} FROM raw.{table} ORDER BY _event_id').fetchall()
+            database.execute(f'SELECT DISTINCT {typed_columns} FROM raw.{table} ORDER BY _event_id').fetchall()
         assert database.execute(f'SELECT count(*),count(DISTINCT _event_id) FROM staging.stg_{table}').fetchone() == \
             (database.execute(f'SELECT count(DISTINCT _event_id) FROM raw.{table}').fetchone()[0],) * 2
     snapshots=[[r[0],*r[3:]] for r in earlier[:2]]

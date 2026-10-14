@@ -18,7 +18,7 @@ def test_event_conversion_is_independent_of_seed_and_warehouse_loaders():
     result = subprocess.run([sys.executable, '-c', '''
 import sys
 import olist_cdc.events
-import olist_cdc.parquet
+import olist_cdc.copy_csv
 assert 'olist_cdc.seed' not in sys.modules
 assert 'olist_cdc.warehouse' not in sys.modules
 '''], capture_output=True, text=True, timeout=30)

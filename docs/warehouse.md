@@ -1,6 +1,6 @@
 # Warehouse layers
 
-The same raw/staging/intermediate/marts structure targets local PostgreSQL for development and Redshift for cloud demonstrations. DMS writes original transaction-preserving CSVs to S3 under `raw/`. They are retained unchanged; explicitly typed Zstandard Parquet inputs for Redshift COPY are derived under `copy-ready/`.
+The same raw/staging/intermediate/marts structure targets local PostgreSQL for development and Redshift for cloud demonstrations. DMS writes original transaction-preserving CSVs to S3 under `raw/`. They are retained unchanged; per-table CSV inputs for Redshift COPY are derived under `copy-ready/`. Source values remain strings in raw; staging assigns their data types.
 
 The database schemas are `raw`, `staging`, `intermediate`, and `marts`.
 The dbt schema-naming macro uses each configured layer name directly. Historical
@@ -8,13 +8,15 @@ validation reports may retain the previous `analytics_` names.
 
 ## Responsibility boundaries
 
-- **Ingestion:** parse the capture format, validate the event contract and convert
-  values to their declared types before loading RAW. It does not calculate business
+- **Ingestion:** parse the capture format, validate event structure and prepare
+  per-table CSV files before loading RAW. Source column values remain strings.
+  Only CDC metadata (sequence, commit time and snapshot flag) is normalized and typed. It does not calculate business
   measures or reconstruct current records. The shared source/event schema lives in
   `src/olist_cdc/schema.py`, independent of source seeding and warehouse drivers.
 - **RAW:** retain every delivered row from each new file, including repeated event
-  IDs, and commit the file's rows atomically with its load ledger entry.
-- **STAGING:** deduplicate by event ID and expose a consistent source-event
+  IDs, store source columns as VARCHAR, and commit the file's rows atomically with its load ledger entry.
+- **STAGING:** deduplicate by event ID, cast source values to their declared types,
+  and expose a consistent source-event
   interface, including the complete raw metadata envelope. Do not reconstruct
   current records or calculate business measures.
 - **INTERMEDIATE:** reconstruct source records and observed history, including
@@ -44,7 +46,13 @@ fields: event ID, operation, sequence, commit timestamp, snapshot flag and sourc
 file. Each view returns one row per `_event_id`, using `row_number()` and choosing
 provenance by ascending `_source_file`. Ties between identical copies do not change
 business values. Different events for the same source primary key remain separate.
-No source values are cast or changed here; only repeated deliveries are collapsed.
+Source amounts become exact `numeric(14,2)` values, counters become integers,
+and dates become timestamps. Invalid casts fail instead of becoming null. Money
+with excess fractional precision is rejected rather than rounded. Business
+timestamps remain timezone-less; timezone-bearing values are rejected. Naive
+`updated_at` values are interpreted as UTC. Nulls stay null, and text columns
+retain empty strings and postal-code leading zeros. These conversions run in SQL
+views when queried; raw loading can succeed before a dbt conversion fails.
 
 The `conflicting_event_copies` dbt test compares event contents excluding
 `_source_file`. If the same ID carries different values, it fails the build rather
@@ -138,6 +146,9 @@ when the retained warehouse is next brought online.
 
 ## Upgrade to staging deduplication
 
+This was the earlier staging-only change. For the current CSV/string-based raw
+design, follow [the newer upgrade below](#upgrade-to-string-based-raw).
+
 Pause scheduling and finish any active run before deploying this change. Run a
 normal `dbt build` to replace staging views and rebuild marts from retained raw
 rows. No raw-table schema change, source backfill or capture restart is needed.
@@ -149,5 +160,33 @@ Event ID still identifies one source change, but is no longer unique at raw's
 physical grain: raw stores deliveries. Staging returns distinct source events.
 The Python parser continues to validate column counts, supported operations,
 source keys and ordering metadata; duplicate event IDs are no longer rejected
-before Parquet conversion. This changes deduplication ownership, not the source
+before preparation of COPY-ready CSV files. This changes deduplication ownership, not the source
 schema or supported business operations.
+
+## Upgrade to string-based raw
+
+This change replaces the earlier typed raw columns and Parquet COPY inputs. A
+normal dbt build alone cannot migrate those raw tables. The cloud loader checks
+raw source-column types and refuses an earlier typed schema before loading files.
+
+For the next authorized AWS demonstration:
+
+1. Pause Airflow and finish active runs. Preserve the existing warehouse and its
+   ledger until the replacement has passed reconciliation. Keep original S3
+   captures unchanged.
+2. Prepare a fresh warehouse/raw baseline with the current DDL. Do not point the
+   current loader at the retained typed namespace, clear its ledger, or mix
+   independent DMS capture lineages. The normal `CREATE IF NOT EXISTS` statements
+   do not migrate existing tables.
+3. Replay the original initial-load and CDC CSV captures from the same lineage.
+   The loader creates CSV COPY inputs, loads raw strings, and records each file.
+   Old derived Parquet files are ignored because loading lists only original
+   `.csv` captures under `raw/`; leave them intact as historical artifacts.
+4. Run `dbt build` and source-to-target reconciliation while the source is quiet.
+   Compare marts and customer history with the prior baseline before resuming
+   scheduling or retiring the old warehouse.
+
+No AWS migration has been performed. Provisioning the replacement warehouse and
+retiring retained resources remain part of a separately budgeted cloud session.
+The earlier staging-only upgrade above describes the prior milestone and is not
+sufficient for this raw schema change.

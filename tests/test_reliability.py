@@ -53,7 +53,7 @@ def test_exported_snapshot_and_wal_cover_concurrent_insert_update_delete(databas
 def test_failure_after_first_table_rolls_back_whole_file_then_retry_succeeds(database):
     initialize_raw(database)
     rows = [customer_row(), ["I", "order_payments", "ecommerce", "o1:1", "o1",
-        "1", "credit_card", "1", "invalid-number",
+        "1", "x" * 257, "1", "100",
         "2026-01-01T00:00:00Z", "0/12345", "2", "2026-01-01T00:00:00Z"]]
     body = csv_text(rows)
     with pytest.raises(psycopg.Error):
@@ -62,7 +62,7 @@ def test_failure_after_first_table_rolls_back_whole_file_then_retry_succeeds(dat
     assert database.execute('SELECT count(*) FROM "raw".customers').fetchone()[0] == 0
     assert database.execute('SELECT count(*) FROM "raw".loaded_files').fetchone()[0] == 0
     database.commit()
-    rows[1][8] = "100"
+    rows[1][6] = "credit_card"
     body = csv_text(rows)
     assert load_local(database, parse_csv(body, "multi.csv"), "multi.csv") == "loaded"
     assert load_local(database, parse_csv(body, "multi.csv"), "multi.csv") == "already_loaded"

@@ -17,7 +17,8 @@ AWS DMS reads to capture these changes.
 - **Log-based CDC:** AWS DMS loads the initial data from RDS PostgreSQL, then
   captures inserts, updates, and deletes.
 - **Python and warehouse ingestion:** Python keeps the original CSV files in S3,
-  converts them to Parquet with explicit data types, and loads Redshift with `COPY`.
+  prepares per-table CSV inputs, and loads Redshift with `COPY`. dbt staging converts
+  source strings into numbers and timestamps.
 - **Reliable processing:** retain delivered events in raw, deduplicate them in
   staging, apply changes in source order, and handle hard deletes.
   Raw rows and the record of their loaded file
@@ -67,7 +68,7 @@ history. The diagram shows selected columns and logical relationships.
 |---|---|
 | Earlier AWS runs | Loaded the historical dataset and verified replay, deletes, recovery, and source-to-target reconciliation. |
 | September 24 scheduled AWS run | Five Airflow runs in a row processed 90 simulated changes. All four current warehouse tables matched RDS after each run. |
-| Current code (October 13) | 87 local tests passed. Parsing with the Redshift adapter confirmed 14 models and 40 dbt data tests. The current code still needs a new end-to-end Redshift test. |
+| Current code (October 13) | 89 local tests passed. Parsing with the Redshift adapter confirmed 14 models and 40 dbt data tests. The current code still needs a new end-to-end Redshift test. |
 
 The AWS results are from earlier code versions, before the latest model changes.
 See the [test results](docs/validation.md),

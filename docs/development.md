@@ -14,7 +14,7 @@ uv run pytest -q
 ```
 
 Tests requiring PostgreSQL are skipped unless `--integration` is supplied.
-The offline suite covers CSV/Parquet conversion, command routing, the Airflow
+The offline suite covers COPY-ready CSV preparation and staged typing, command routing, the Airflow
 batch completion marker, task logs and validation helpers. Integration tests
 exercise rebuilt marts, history, deletes, replay and SQL failure/retry.
 
@@ -33,6 +33,6 @@ their own seed archives and CDC records; no Olist download or full local warehou
 is required. Stop and remove the disposable PostgreSQL instance when done.
 `.github/workflows/checks.yml` contains the complete CI setup and Airflow smoke command.
 
-The production source loader and Parquet conversion are shared with these tests.
+The production source loader and COPY-ready CSV preparation are shared with these tests.
 The local raw loader is a test implementation for PostgreSQL; actual cloud capture
 and Redshift COPY are verified separately in the dated [AWS results](validation.md).

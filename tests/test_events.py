@@ -50,7 +50,7 @@ def test_failed_file_does_not_leave_partial_rows_or_a_checkpoint(database):
     import psycopg
     initialize_raw(database)
     rows = [customer_row(),customer_row(sequence="2",customer_id="p2")]
-    rows[1][8] = "invalid-date"
+    rows[1][6] = "x" * 257  # Exceeds raw VARCHAR storage; not a source type check.
     events = parse_csv(csv_text(rows),"bad.csv")
     with pytest.raises(psycopg.Error):
         load_local(database,events,"bad.csv")

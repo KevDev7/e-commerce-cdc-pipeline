@@ -7,7 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
-from olist_cdc.cloud_load import aws_session, load_file, warehouse_connection
+from olist_cdc.cloud_load import aws_session, load_file, validate_raw_schema, warehouse_connection
 from olist_cdc.events import parse_csv
 from olist_cdc.schema import SOURCE_COLUMNS
 from olist_cdc.warehouse import raw_ddl
@@ -83,6 +83,7 @@ def main():
         cursor = connection.cursor()
         for statement in raw_ddl():
             cursor.execute(statement)
+        validate_raw_schema(cursor)
         connection.commit()
         cursor.execute('SELECT count(*) FROM "raw".loaded_files WHERE source_file=%s', (source,))
         if cursor.fetchone()[0]:

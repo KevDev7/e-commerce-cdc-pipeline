@@ -7,9 +7,9 @@ import boto3
 import redshift_connector
 from psycopg import sql
 
-from olist_cdc.events import parse_csv
-from olist_cdc.parquet import normalized_parquet
-from olist_cdc.schema import SOURCE_COLUMNS
+from olist_cdc.events import NULL, parse_csv
+from olist_cdc.copy_csv import normalized_csv
+from olist_cdc.schema import SOURCE_COLUMNS, source_columns
 from olist_cdc.warehouse import raw_ddl
 
 log = logging.getLogger(__name__)
@@ -26,6 +26,17 @@ def warehouse_connection():
         user=os.environ["REDSHIFT_USER"], password=os.environ["REDSHIFT_PASSWORD"],
         ssl=True, sslmode="verify-full", timeout=30,
     )
+
+
+def validate_raw_schema(cursor):
+    """Refuse to reuse the earlier typed raw schema with this string-based loader."""
+    cursor.execute("SELECT table_name,column_name,data_type FROM information_schema.columns "
+                   "WHERE table_schema='raw'")
+    types = {(table, column): kind for table, column, kind in cursor.fetchall()}
+    if any(types.get((table, column)) != 'character varying'
+           for table in SOURCE_COLUMNS for column in source_columns(table)):
+        raise RuntimeError("Raw source columns must be VARCHAR. Rebuild a fresh raw baseline "
+                           "from retained captures; see docs/warehouse.md#upgrade-to-string-based-raw")
 
 
 def snapshot_table(key, prefix):
@@ -81,14 +92,14 @@ def load_file(connection, s3, bucket, key, role, *, metrics=None):
             # COPY input is derived; the original DMS file remains untouched.
             relative_key = key.removeprefix(os.environ.get("CAPTURE_PREFIX", "raw").rstrip("/") + "/")
             if snapshot:
-                staging_key = f"copy-ready/{relative_key.removesuffix('.csv')}.parquet"
+                staging_key = f"copy-ready/{relative_key.removesuffix('.csv')}.csv"
             else:
-                staging_key = f"copy-ready/{relative_key.removesuffix('.csv')}/{table}.parquet"
-            s3.put_object(Bucket=bucket, Key=staging_key, Body=normalized_parquet(batch, table), ServerSideEncryption="AES256")
+                staging_key = f"copy-ready/{relative_key.removesuffix('.csv')}/{table}.csv"
+            s3.put_object(Bucket=bucket, Key=staging_key, Body=normalized_csv(batch, table), ServerSideEncryption="AES256")
             cursor.execute(f'CREATE TEMP TABLE incoming_{table} (LIKE "raw".{table})')
-            copy_sql = sql.SQL("COPY {} FROM {} IAM_ROLE {} FORMAT AS PARQUET").format(
+            copy_sql = sql.SQL("COPY {} FROM {} IAM_ROLE {} FORMAT AS CSV NULL AS {} TIMEFORMAT 'auto'").format(
                 sql.Identifier("incoming_" + table), sql.Literal(f"s3://{bucket}/{staging_key}"),
-                sql.Literal(role)).as_string()
+                sql.Literal(role), sql.Literal(NULL)).as_string()
             cursor.execute(copy_sql)
             cursor.execute(f'INSERT INTO "raw".{table} SELECT * FROM incoming_{table}')
             cursor.execute(f"DROP TABLE incoming_{table}")
@@ -124,6 +135,7 @@ def load_pending(*, metrics=None):
         cursor = connection.cursor()
         for statement in raw_ddl():
             cursor.execute(statement)
+        validate_raw_schema(cursor)
         connection.commit()
         metrics["files_listed"] = len(keys)
         total = sum(load_file(connection, s3, bucket, key, os.environ["REDSHIFT_COPY_ROLE"], metrics=metrics) for key in keys)

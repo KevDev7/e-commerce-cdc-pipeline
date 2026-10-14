@@ -11,7 +11,8 @@ intermediate views. Staging and intermediate remain views.
 2. The raw loader loads only new files. `raw.loaded_files` prevents loading the same
    file twice; its rows and file entry commit together. Repeated event IDs within
    a file or across different files are retained in raw.
-3. `dbt build` deduplicates source events by `_event_id` in STAGING, reconstructs current
+3. `dbt build` deduplicates source events by `_event_id` and casts source strings to
+   numbers/timestamps in STAGING, reconstructs current
    state and complete customer history (including current flags) in INTERMEDIATE,
    rebuilds all five analytical marts, and runs data tests. MARTS publishes the
    history flags rather than recalculating them.

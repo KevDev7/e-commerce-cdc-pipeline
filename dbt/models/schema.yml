@@ -3,6 +3,7 @@ models:
 - name: stg_customers
   description: >-
     One row per distinct captured customer event, including initial snapshots and deletes.
+    Source values remain strings in raw; staging casts numbers and timestamps.
     Repeated deliveries are retained in raw and deduplicated here by _event_id.
     Multiple events can share customer_id; _event_id identifies the event.
   columns:

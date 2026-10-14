@@ -187,7 +187,7 @@ def delete():
         state["retained_namespace"] = "synthea-cdc" if "WarehouseHost" in result else None
         state["source_snapshot_instance"] = "synthea-cdc-source"
         STATE.write_text(json.dumps(state, indent=2))
-        print(f"Retaining s3://{bucket}/ (source archive, original captures and derived Parquet)")
+        print(f"Retaining s3://{bucket}/ (source archive, original captures and derived COPY inputs)")
     CF.delete_stack(StackName=current["StackId"])
     print("Compute deletion started; retaining S3, the Redshift namespace and an RDS snapshot. Verify DELETE_COMPLETE and the snapshot before declaring retention complete.")
 

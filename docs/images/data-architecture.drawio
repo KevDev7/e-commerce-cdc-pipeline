@@ -1,3 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
 <mxfile host="app.diagrams.net" type="device">
   <diagram id="cdc-data-architecture" name="CDC Data Architecture">
     <mxGraphModel dx="1880" dy="1133" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1880" pageHeight="1133" background="#ffffff" adaptiveColors="auto">
@@ -49,14 +50,14 @@
             <Array as="points" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="python-ingestion-next" edge="1" parent="ingest-zone" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=0.5;exitY=1.0;exitPerimeter=0;entryX=0.5;entryY=0.0;entryPerimeter=0;" source="python-ingestion" target="copy-parquet">
+        <mxCell id="python-ingestion-next" edge="1" parent="ingest-zone" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=0.5;exitY=1.0;exitPerimeter=0;entryX=0.5;entryY=0.0;entryPerimeter=0;" source="python-ingestion" target="copy-csv">
           <mxGeometry as="geometry" relative="1">
             <mxPoint as="sourcePoint" x="132.5" y="325.0" />
             <mxPoint as="targetPoint" x="132.5" y="340.0" />
             <Array as="points" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="copy-parquet-next" edge="1" parent="ingest-zone" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=0.5;exitY=1.0;exitPerimeter=0;entryX=0.5;entryY=0.0;entryPerimeter=0;" source="copy-parquet" target="copy-load">
+        <mxCell id="copy-csv-next" edge="1" parent="ingest-zone" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=0.5;exitY=1.0;exitPerimeter=0;entryX=0.5;entryY=0.0;entryPerimeter=0;" source="copy-csv" target="copy-load">
           <mxGeometry as="geometry" relative="1">
             <mxPoint as="sourcePoint" x="132.5" y="405.0" />
             <mxPoint as="targetPoint" x="132.5" y="420.0" />
@@ -280,16 +281,16 @@
         <mxCell id="capture-csv-icon" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d96a28%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cellipse%20cx%3D%2216%22%20cy%3D%226%22%20rx%3D%2212%22%20ry%3D%224%22/%3E%3Cpath%20d%3D%22M4%206l3%2022c2%203%2016%203%2018%200l3-22M8%2016h16%22/%3E%3C/g%3E%3C/svg%3E;imageAspect=0;" vertex="1" parent="capture-csv">
           <mxGeometry as="geometry" x="10.0" y="18.5" width="28" height="28" />
         </mxCell>
-        <mxCell id="python-ingestion" value="Python Loader&lt;br&gt;Validation + Typing" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
+        <mxCell id="python-ingestion" value="Python Loader&lt;br&gt;Validate + Prepare CSV" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=15;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
           <mxGeometry as="geometry" x="16.0" y="260.0" width="233" height="65" />
         </mxCell>
         <mxCell id="python-ingestion-icon" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23252525%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M10%207L2%2016l8%209M22%207l8%209-8%209M19%204l-6%2024%22/%3E%3C/g%3E%3C/svg%3E;imageAspect=0;" vertex="1" parent="python-ingestion">
           <mxGeometry as="geometry" x="10.0" y="18.5" width="28" height="28" />
         </mxCell>
-        <mxCell id="copy-parquet" value="Amazon S3&lt;br&gt;COPY-ready · Parquet" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
+        <mxCell id="copy-csv" value="Amazon S3&lt;br&gt;COPY-ready · CSV" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
           <mxGeometry as="geometry" x="16.0" y="340.0" width="233" height="65" />
         </mxCell>
-        <mxCell id="copy-parquet-icon" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d96a28%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cellipse%20cx%3D%2216%22%20cy%3D%226%22%20rx%3D%2212%22%20ry%3D%224%22/%3E%3Cpath%20d%3D%22M4%206l3%2022c2%203%2016%203%2018%200l3-22M8%2016h16%22/%3E%3C/g%3E%3C/svg%3E;imageAspect=0;" vertex="1" parent="copy-parquet">
+        <mxCell id="copy-csv-icon" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d96a28%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cellipse%20cx%3D%2216%22%20cy%3D%226%22%20rx%3D%2212%22%20ry%3D%224%22/%3E%3Cpath%20d%3D%22M4%206l3%2022c2%203%2016%203%2018%200l3-22M8%2016h16%22/%3E%3C/g%3E%3C/svg%3E;imageAspect=0;" vertex="1" parent="copy-csv">
           <mxGeometry as="geometry" x="10.0" y="18.5" width="28" height="28" />
         </mxCell>
         <mxCell id="copy-load" value="Redshift COPY&lt;br&gt;Triggered by Python Loader&lt;br&gt;S3 → RAW" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=15;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
@@ -460,7 +461,13 @@
         <mxCell id="load-customers-label" value="Load" vertex="1" parent="1" style="shape=rectangle;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;">
           <mxGeometry as="geometry" x="681.5" y="651" width="45" height="20" />
         </mxCell>
-      </root>
+      <mxCell id="rule-STAGING-typing" value="Source Type Conversion" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
+          <mxGeometry as="geometry" x="300" y="732" width="240" height="20" />
+        </mxCell>
+        <mxCell id="rule-RAW-strings" value="Source Values as Strings" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
+          <mxGeometry as="geometry" x="20" y="712" width="240" height="20" />
+        </mxCell>
+        </root>
     </mxGraphModel>
   </diagram>
 </mxfile>

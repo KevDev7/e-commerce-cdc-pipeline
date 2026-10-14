@@ -6,7 +6,7 @@ It depends on the original session reports and capture keys, which may no longer
 exist. It is not a setup step or a check required for a normal demonstration.
 See the [current runbook](../../run-cloud.md) for operating instructions.
 
-**Decision: use explicitly typed Zstandard Parquet for derived Redshift COPY inputs;
+**Historical decision (superseded by CSV/raw strings in October): use explicitly typed Zstandard Parquet for derived Redshift COPY inputs;
 retain the original Olist archive and DMS CSV captures.** The main benefits are an
 explicit portable file schema and compression for larger snapshots. Small CDC
 files can be larger than gzip CSV, as the measurements below demonstrate.
@@ -65,7 +65,7 @@ During an authorized active AWS session, after the lifecycle/load-failure and
 `aws-measured-250` checks have produced their ignored reports:
 
 ```sh
-uv run --frozen docs/archive/parquet-evaluation/evaluate_parquet.py
+uv run --with 'pyarrow>=25.0.1,<26' docs/archive/parquet-evaluation/evaluate_parquet.py
 ```
 
 This reads S3 and writes only an ignored metrics report; data buffers stay in

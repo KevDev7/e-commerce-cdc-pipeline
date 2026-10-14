@@ -1,8 +1,7 @@
 """Exercise metric commit boundaries with explicit S3/SQL fixtures, not AWS."""
 import io
 import pytest
-import pyarrow as pa
-import pyarrow.parquet as pq
+import csv
 from olist_cdc.cloud_load import load_file
 from test_events import csv_text, customer_row
 
@@ -17,8 +16,10 @@ def test_file_metrics_only_count_committed_files(monkeypatch,fail):
             if query.startswith('INSERT INTO "raw".customers'):
                 assert query == 'INSERT INTO "raw".customers SELECT * FROM incoming_customers'
             if query.startswith("COPY "):
-                assert "FORMAT AS PARQUET" in query
-                assert "CSV" not in query and "GZIP" not in query and "NULL AS" not in query
+                assert "FORMAT AS CSV" in query and "NULL AS '__OLIST_NULL__'" in query
+                assert "TIMEFORMAT 'auto'" in query
+                assert "EMPTYASNULL" not in query and "BLANKSASNULL" not in query
+                assert "PARQUET" not in query
         def fetchone(self):return None
         def commit(self):
             if fail:raise RuntimeError('injected commit failure')
@@ -28,8 +29,10 @@ def test_file_metrics_only_count_committed_files(monkeypatch,fail):
         def get_object(self,**kwargs):
             return {'Body':io.BytesIO(csv_text([customer_row(),customer_row(sequence='2',operation='U'),customer_row(sequence='3',operation='D')]).encode())}
         def put_object(self,**kwargs):
-            assert kwargs["Key"] == "copy-ready/cdc/test/customers.parquet"
-            rows = pq.read_table(pa.BufferReader(kwargs["Body"])).to_pylist()
+            assert kwargs["Key"] == "copy-ready/cdc/test/customers.csv"
+            from olist_cdc.schema import RAW_METADATA, source_columns
+            columns = source_columns("customers") + list(RAW_METADATA)
+            rows = [dict(zip(columns, row)) for row in csv.reader(io.StringIO(kwargs["Body"].decode()))]
             assert [r["_op"] for r in rows] == ["I", "U", "D"]
             assert all(r["_source_file"] == "s3://bucket/raw/cdc/test.csv" for r in rows)
     metrics={}
