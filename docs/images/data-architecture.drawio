@@ -418,6 +418,9 @@
         <mxCell id="rule-INTERMEDIATE-5" value="Views" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="575.0" y="672" width="240" height="20" />
         </mxCell>
+        <mxCell id="rule-INTERMEDIATE-dimensional" value="No Dimensional Modeling" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
+          <mxGeometry as="geometry" x="575.0" y="692" width="240" height="20" />
+        </mxCell>
         <mxCell id="rules-title-MARTS" value="Rules" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#252525;strokeWidth=1.2;fontStyle=5;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="855.0" y="556.0" width="230" height="28" />
         </mxCell>
