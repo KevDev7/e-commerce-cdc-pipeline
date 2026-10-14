@@ -68,7 +68,7 @@ The pending-file task compares S3 CSV keys, ETags and sizes with the last comple
 
 The local checkpoint is under ignored `data/olist-microbatch/` in the bind-mounted project directory. It advances only after loading and dbt build/tests succeed. If loading succeeds but dbt fails, the next run still builds the marts even though the raw file ledger already contains those files. Files arriving after the pending check are picked up again next run if necessary. Missing checkpoint state causes a safe extra load/build. Keep one scheduler for this checkout, do not run manual warehouse commands concurrently, and clear this checkpoint directory while paused if resetting the warehouse or restoring a baseline. After transformation changes, run the manual build command below even if S3 is unchanged; no per-model checkpoints exist. Per-run manifests are small local demo artifacts and may also be cleared while paused.
 
-Inspect run status, durations and retries in Airflow. Each task also emits a JSON summary in its logs, including committed-file input counts for loads. Counts describe incoming records, not new rows after deduplication. Failed attempts log any files already committed before the failure. No separate audit database is used. The completion checkpoint remains separate from monitoring.
+Inspect run status, durations and retries in Airflow. Each task also emits a JSON summary in its logs, including committed-file input counts for loads. Counts describe delivered raw rows, including repeated event IDs; they are not staged unique-event counts. Failed attempts log any files already committed before the failure. No separate audit database is used. The completion checkpoint remains separate from monitoring.
 
 Before cleanup, pause future runs, let the active run finish, and stop local Airflow. Pausing alone does not cancel a running batch:
 
@@ -115,7 +115,7 @@ normal setup → simulate → process → verify → cleanup flow.
 
 ## Cleanup
 
-The loader stores original DMS files unchanged, derives explicitly typed Zstandard Parquet COPY inputs under `copy-ready/`, and commits the raw records with the file ledger in one transaction. A retry skips previously loaded keys without downloading them; capture files must remain immutable. events redelivered under another file name are deduplicated by source identity. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
+The loader stores original DMS files unchanged, derives explicitly typed Zstandard Parquet COPY inputs under `copy-ready/`, and commits the raw records with the file ledger in one transaction. A retry skips previously loaded keys without downloading them; capture files must remain immutable. Events redelivered under another file name are retained again in raw and deduplicated by event identity in staging. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
 
 ```sh
 .venv/bin/python scripts/cloud_stack.py delete
@@ -175,3 +175,5 @@ Retained data incurs ongoing storage charges; the approved one-time run allowanc
 is separate. Existing namespace names must be inspected before another stack
 creation; the normal fresh-demo command is not a retained-warehouse restore tool.
 The old S3 lineage is preserved separately from new captures.
+
+Before using the current replay checks against a retained warehouse, deploy the [staging deduplication views](warehouse.md#upgrade-to-staging-deduplication) with a normal dbt build.

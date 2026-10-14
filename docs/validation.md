@@ -1,5 +1,31 @@
 # Olist validation history
 
+## October 13: staging owns event deduplication
+
+Raw now retains repeated event IDs, both within a file and across separately
+named redeliveries. The parser validates structure and metadata without rejecting
+repeated IDs; Parquet preserves those rows. Both raw loaders insert all delivered
+rows and still commit each original file with its ledger entry atomically. A
+retry of an already completed file is skipped.
+
+All four staging views select one row per event ID. Provenance is selected by
+ascending source-file URI. A new dbt test fails if copies of the same event ID
+contain different values other than file provenance. Current-state and customer
+history reconstruction still happen in intermediate.
+
+**87 tests passed** against small disposable PostgreSQL fixtures. The dbt tests
+exercise duplicate events within one file and across redeliveries for all four
+source tables, unchanged order totals/history, deletes, late events, file retry,
+atomic load rollback, and conflicting copies retained in raw but rejected by the
+data test. Parquet conversion also preserves repeated rows.
+
+Offline Redshift parsing confirmed **14 models and 40 data tests**. No AWS
+resources were contacted or changed, and no Olist dataset was downloaded. A live
+Redshift validation of the new design is pending. The replay/scenario/bootstrap
+utilities now check event uniqueness in staging instead of raw; the replay tool
+expects raw delivery counts to increase for a new filename. Historical cloud
+reports below remain unchanged and describe the earlier raw-deduplication design.
+
 ## October 9: layer boundaries and focused validation fixes
 
 Staging preserves all source columns and event metadata. Intermediate owns

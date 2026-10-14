@@ -21,7 +21,7 @@ def verify(cursor, scenario):
     assert rows('''SELECT status,item_total,freight_total,payment_total,item_count,payment_count
                    FROM marts.fct_orders WHERE order_id=%s''', (key['order'],)) == [
                        ('delivered', 100, 10, 110, 2, 2)]
-    assert rows('''SELECT status FROM "raw".orders
+    assert rows('''SELECT status FROM staging.stg_orders
                    WHERE order_id=%s AND NOT _is_snapshot AND _op IN ('I','U')
                    ORDER BY _source_order''', (key['order'],)) == [
                        ('created',), ('approved',), ('shipped',), ('delivered',)]
@@ -51,12 +51,12 @@ def verify(cursor, scenario):
     ):
         placeholders = ','.join(['%s'] * len(identities))
         for op, count, unique in rows(f'''SELECT _op,count(*),count(DISTINCT _event_id)
-                    FROM "raw".{table} WHERE {column} IN ({placeholders}) AND NOT _is_snapshot GROUP BY _op''', identities):
+                    FROM staging.stg_{table} WHERE {column} IN ({placeholders}) AND NOT _is_snapshot GROUP BY _op''', identities):
             assert count == unique
             operations[op] = operations.get(op, 0) + count
     assert operations == {'I': 9, 'U': 4, 'D': 2}, operations
     return dict(scenario=scenario, operations=operations, captured_status_updates_and_totals=True,
-                hard_deletes=True, rollback_excluded=True, unique_event_ids=True,
+                hard_deletes=True, rollback_excluded=True, unique_staged_event_ids=True,
                 current_customer_city='campinas', customer_attribute_history=True)
 
 

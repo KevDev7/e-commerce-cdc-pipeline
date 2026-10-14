@@ -23,7 +23,7 @@ For recovery testing, stop capture, wait until stopped, commit a second scenario
 Mart rebuild failure/retry is covered by the disposable integration tests. The
 former cloud check that injected failures into custom checkpoint hooks is retired.
 
-With the source quiescent and the latest DMS batch loaded, `.venv/bin/python scripts/reconcile_cloud.py` compares ordered rows field by field with Redshift, reporting the first mismatch or a row-count difference. It does not hash rows or save datasets locally. `.venv/bin/python scripts/verify_replay.py` redelivers a real CDC file and retries the batch, asserting unchanged raw counts and unique event identities. See the Olist validation evidence for completed executions. Reconciliation against an actively changing source would require coordinating a common checkpoint, which this small demo does not automate.
+With the source quiescent and the latest DMS batch loaded, `.venv/bin/python scripts/reconcile_cloud.py` compares ordered rows field by field with Redshift, reporting the first mismatch or a row-count difference. It does not hash rows or save datasets locally. `.venv/bin/python scripts/verify_replay.py` redelivers a previously loaded CDC file under a fresh key. It checks that raw gains the delivered rows, staging retains one row per event ID, a dbt build/tests succeeds, and a retry of completed files adds nothing. Run it with all earlier files loaded and the source quiet. See the Olist validation evidence for completed executions. Reconciliation against an actively changing source would require coordinating a common checkpoint, which this small demo does not automate.
 
 ## Verify a completed simulated lifecycle
 
@@ -35,7 +35,8 @@ uv run python scripts/reconcile_cloud.py
 ```
 
 The scenario check requires all nine simulation phases. It verifies 9 inserts,
-4 updates and 2 deletes, unique event identities, the four captured order statuses in raw,
+4 updates and 2 deletes in deduplicated staging, unique staged event identities,
+the four captured order statuses,
 independent item/payment totals, customer address history, hard-delete application
 exclusion of the rolled-back update, and current-customer joins for the original
 and follow-up orders, alongside separate customer history. Reconciliation compares every current

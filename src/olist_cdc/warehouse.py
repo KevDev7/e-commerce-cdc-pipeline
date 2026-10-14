@@ -42,8 +42,8 @@ def load_local(connection, events, source_file):
             with connection.cursor().copy(query) as copy:
                 for values in batch:
                     copy.write_row(values)
-            connection.execute(sql.SQL("INSERT INTO raw.{} SELECT i.* FROM {} i WHERE NOT EXISTS (SELECT 1 FROM raw.{} r WHERE r._event_id=i._event_id)").format(
-                sql.Identifier(table), temporary, sql.Identifier(table)))
+            connection.execute(sql.SQL("INSERT INTO raw.{} SELECT * FROM {}").format(
+                sql.Identifier(table), temporary))
         connection.execute("INSERT INTO raw.loaded_files (source_file,row_count) VALUES (%s,%s)",
                            (source_file,len(events)))
     return "loaded"

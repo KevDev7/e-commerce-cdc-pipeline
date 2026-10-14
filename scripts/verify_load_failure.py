@@ -64,7 +64,7 @@ def counts(connection):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("key", help="One actual, as-yet-unloaded CDC S3 key containing new events")
+    parser.add_argument("key", help="One actual, as-yet-unloaded CDC S3 key")
     args = parser.parse_args()
     if not (ROOT / '.env.cloud').exists():
         raise RuntimeError('No active cloud environment; provision an authorized demo first')
@@ -87,17 +87,18 @@ def main():
         cursor.execute('SELECT count(*) FROM "raw".loaded_files WHERE source_file=%s', (source,))
         if cursor.fetchone()[0]:
             raise ValueError("File already loaded; choose an unseen file")
-        # Establish the expected number of new event identities before injection.
-        expected = {table: 0 for table in SOURCE_COLUMNS}
+        # Raw retains every row from this new file, including repeated identities.
+        expected_rows = {table: sum(e.table == table for e in events) for table in SOURCE_COLUMNS}
+        expected_unique = {}
         for table in SOURCE_COLUMNS:
-            ids = [e.values[-6] for e in events if e.table == table]
-            if ids:
-                placeholders = ','.join(['%s'] * len(ids))
-                cursor.execute(f'SELECT count(DISTINCT _event_id) FROM "raw".{table} WHERE _event_id IN ({placeholders})', tuple(ids))
-                expected[table] = len(ids) - cursor.fetchone()[0]
+            identities = {e.values[-6] for e in events if e.table == table}
+            if identities:
+                placeholders = ','.join(['%s'] * len(identities))
+                cursor.execute(f'SELECT count(DISTINCT _event_id) FROM raw.{table} WHERE _event_id IN ({placeholders})', tuple(identities))
+                expected_unique[table] = len(identities) - cursor.fetchone()[0]
+            else:
+                expected_unique[table] = 0
         connection.commit()
-        if not sum(expected.values()):
-            raise ValueError("All events already exist; this would not test rollback of new rows")
         before = counts(connection)
         fault = FailBeforeLedger(connection)
         try:
@@ -111,7 +112,8 @@ def main():
         load_file(connection, s3, bucket, args.key, os.environ["REDSHIFT_COPY_ROLE"])
         after_retry = counts(connection)
         for table in SOURCE_COLUMNS:
-            assert after_retry[table] == [x + expected[table] for x in before[table]]
+            assert after_retry[table] == [before[table][0] + expected_rows[table],
+                                          before[table][1] + expected_unique[table]]
         assert after_retry['loaded_files'] == before['loaded_files'] + 1
         assert load_file(connection, s3, bucket, args.key, os.environ["REDSHIFT_COPY_ROLE"]) == 0
         assert counts(connection) == after_retry

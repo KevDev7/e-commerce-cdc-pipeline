@@ -2,7 +2,8 @@ version: 2
 models:
 - name: stg_customers
   description: >-
-    One row per captured customer event, including initial snapshots and deletes.
+    One row per distinct captured customer event, including initial snapshots and deletes.
+    Repeated deliveries are retained in raw and deduplicated here by _event_id.
     Multiple events can share customer_id; _event_id identifies the event.
   columns:
   - name: _event_id

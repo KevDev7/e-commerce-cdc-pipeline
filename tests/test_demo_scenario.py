@@ -43,6 +43,8 @@ def test_standard_scenario_checks_current_joins_and_customer_history(database, t
     body = csv_text(changes)
     load_local(database, parse_csv(body, 'scenario.csv'), 'scenario.csv')
     database.commit()
+    load_local(database, parse_csv(body, 'scenario-replayed.csv'), 'scenario-replayed.csv')
+    database.commit()
     shutil.copyfile(ROOT/'dbt/profiles.yml.example', tmp_path/'profiles.yml')
     result = subprocess.run([str(ROOT/'.venv/bin/dbt'), 'build',
         '--project-dir', str(ROOT/'dbt'), '--profiles-dir', str(tmp_path), '--target', 'local'],

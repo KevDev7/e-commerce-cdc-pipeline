@@ -19,7 +19,6 @@ class Event:
 def parse_csv(text, source_file, *, snapshot_table=None):
     """A file is parsed completely before any warehouse write is attempted."""
     events = []
-    seen = set()
     for line, row in enumerate(csv.reader(io.StringIO(text, newline="")), 1):
         if not row:
             continue
@@ -54,9 +53,6 @@ def parse_csv(text, source_file, *, snapshot_table=None):
             event_id = f"cdc:{table}:{sequence}"
         if not commit_at or commit_at == NULL:
             raise ValueError(f"{source_file}:{line}: missing commit timestamp")
-        if event_id in seen:
-            raise ValueError(f"{source_file}:{line}: repeated event identity inside file")
-        seen.add(event_id)
         events.append(Event(table, values + [event_id, operation,
                       int(sequence), commit_at, snapshot, source_file]))
     return events

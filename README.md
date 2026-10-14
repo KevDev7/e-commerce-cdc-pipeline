@@ -18,8 +18,9 @@ AWS DMS reads to capture these changes.
   captures inserts, updates, and deletes.
 - **Python and warehouse ingestion:** Python keeps the original CSV files in S3,
   converts them to Parquet with explicit data types, and loads Redshift with `COPY`.
-- **Reliable processing:** apply changes in source order, deduplicate replayed
-  events, and handle hard deletes. Raw rows and the record of their loaded file
+- **Reliable processing:** retain delivered events in raw, deduplicate them in
+  staging, apply changes in source order, and handle hard deletes.
+  Raw rows and the record of their loaded file
   commit in one transaction, so a failed load can be retried safely.
 - **SQL and dimensional modeling:** dbt builds staging and intermediate views,
   then five marts. Customer SCD Type 2 history keeps earlier customer versions.
@@ -66,7 +67,7 @@ history. The diagram shows selected columns and logical relationships.
 |---|---|
 | Earlier AWS runs | Loaded the historical dataset and verified replay, deletes, recovery, and source-to-target reconciliation. |
 | September 24 scheduled AWS run | Five Airflow runs in a row processed 90 simulated changes. All four current warehouse tables matched RDS after each run. |
-| Current code (October 9) | 84 local tests passed. Parsing with the Redshift adapter confirmed 14 models and 39 dbt data tests. The current code still needs a new end-to-end Redshift test. |
+| Current code (October 13) | 87 local tests passed. Parsing with the Redshift adapter confirmed 14 models and 40 dbt data tests. The current code still needs a new end-to-end Redshift test. |
 
 The AWS results are from earlier code versions, before the latest model changes.
 See the [test results](docs/validation.md),

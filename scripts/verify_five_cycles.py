@@ -51,8 +51,10 @@ def raw_state():
         q=c.cursor();result={}
         for t in ('customers','orders','order_items','order_payments'):
             q.execute(f'SELECT count(*),count(DISTINCT _event_id),coalesce(max(_source_order),0) FROM "raw".{t}')
-            n,unique,seq=q.fetchone();assert n==unique
-            result[t]={'rows':n,'max_order':str(seq)}
+            n,unique,seq=q.fetchone()
+            q.execute(f'SELECT count(*),count(DISTINCT _event_id) FROM staging.stg_{t}')
+            staged,staged_unique=q.fetchone();assert staged==staged_unique==unique
+            result[t]={'rows':unique,'raw_deliveries':n,'max_order':str(seq)}
         c.commit();return result
 
 

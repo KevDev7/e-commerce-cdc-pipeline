@@ -90,8 +90,7 @@ def load_file(connection, s3, bucket, key, role, *, metrics=None):
                 sql.Identifier("incoming_" + table), sql.Literal(f"s3://{bucket}/{staging_key}"),
                 sql.Literal(role)).as_string()
             cursor.execute(copy_sql)
-            cursor.execute(f'INSERT INTO "raw".{table} SELECT i.* FROM incoming_{table} i WHERE NOT EXISTS '
-                           f'(SELECT 1 FROM "raw".{table} r WHERE r._event_id=i._event_id)')
+            cursor.execute(f'INSERT INTO "raw".{table} SELECT * FROM incoming_{table}')
             cursor.execute(f"DROP TABLE incoming_{table}")
         cursor.execute('INSERT INTO "raw".loaded_files (source_file,row_count) VALUES (%s,%s)', (source, len(events)))
         connection.commit()
@@ -100,7 +99,7 @@ def load_file(connection, s3, bucket, key, role, *, metrics=None):
             for event in events:
                 name = 'snapshot_rows' if event.values[-2] else 'input_' + event.values[-5]
                 metrics[name] = metrics.get(name, 0) + 1
-        log.info("Processed %s: %s incoming events (existing event identities are skipped)", key, len(events))
+        log.info("Processed %s: %s delivered events (staging deduplicates event identities)", key, len(events))
         return len(events)
     except Exception:
         connection.rollback()

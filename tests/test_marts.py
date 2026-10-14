@@ -36,7 +36,7 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
               row('orders',{**order,'order_id':'o3'},14,'I',time0),
               row('orders',{**order,'order_id':'o3'},15,'D',time1),
               row('orders',{**order,'order_id':'o3'},16,'I',time1)]
-    for name,rows in [('later.csv',later),('earlier.csv',earlier),('replayed.csv',earlier)]:
+    for name,rows in [('later.csv',later),('earlier.csv',earlier + [earlier[0]]),('replayed.csv',earlier)]:
         text=csv_text(rows);load_local(database,parse_csv(text,name),name)
     profiles=tmp_path/'profiles';profiles.mkdir();shutil.copyfile(ROOT/'dbt/profiles.yml.example',profiles/'profiles.yml')
     def build():
@@ -53,8 +53,11 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     for table in ('customers', 'orders', 'order_items', 'order_payments'):
         cursor = database.execute(f'SELECT * FROM staging.stg_{table} LIMIT 0')
         assert [c.name for c in cursor.description] == source_columns(table) + list(RAW_METADATA)
-        assert database.execute(f'SELECT * FROM staging.stg_{table} ORDER BY _event_id').fetchall() == \
-            database.execute(f'SELECT * FROM raw.{table} ORDER BY _event_id').fetchall()
+        columns = ','.join(source_columns(table) + [c for c in RAW_METADATA if c != '_source_file'])
+        assert database.execute(f'SELECT {columns} FROM staging.stg_{table} ORDER BY _event_id').fetchall() == \
+            database.execute(f'SELECT DISTINCT {columns} FROM raw.{table} ORDER BY _event_id').fetchall()
+        assert database.execute(f'SELECT count(*),count(DISTINCT _event_id) FROM staging.stg_{table}').fetchone() == \
+            (database.execute(f'SELECT count(DISTINCT _event_id) FROM raw.{table}').fetchone()[0],) * 2
     snapshots=[[r[0],*r[3:]] for r in earlier[:2]]
     if overlap_snapshot:snapshots[0][4]='campinas'
     for snapshot in snapshots:snapshot[-1]='2026-01-03T00:00:00Z' if overlap_snapshot else '2025-12-31T00:00:00Z'
@@ -76,9 +79,28 @@ def test_marts_handle_late_files_deletes_history_and_multiple_payments(database,
     assert database.execute('SELECT * FROM intermediate.int_customer_history ORDER BY customer_version_id').fetchall() == \
         database.execute('SELECT * FROM marts.dim_customer_history ORDER BY customer_version_id').fetchall()
     assert database.execute("SELECT count(*) FROM marts.dim_customer_history WHERE customer_id='c2' AND is_current").fetchone()[0]==0
-    assert database.execute('SELECT count(*) FROM raw.order_payments').fetchone()[0]==2
+    assert database.execute('SELECT count(*) FROM raw.order_payments').fetchone()[0]==4
+    assert database.execute('SELECT count(*) FROM staging.stg_order_payments').fetchone()[0]==2
     assert database.execute('SELECT count(*) FROM raw.customers WHERE _is_snapshot').fetchone()[0]==2
     # Current orders still reflect reinsertion and late snapshots; all changes remain raw.
     assert database.execute("SELECT order_id,status FROM marts.fct_orders ORDER BY order_id").fetchall() == [
         ('o1','delivered'), ('o2','canceled'), ('o3','created'), ('o4','delivered')]
     assert database.execute("SELECT _op FROM raw.orders WHERE order_id='o3' AND NOT _is_snapshot ORDER BY _source_order").fetchall() == [('I',),('D',),('I',)]
+
+
+@pytest.mark.integration
+def test_conflicting_copies_fail_dbt_test_without_discarding_raw(database, tmp_path):
+    initialize_raw(database)
+    from test_events import customer_row
+    load_local(database, parse_csv(csv_text([customer_row(), customer_row(city='campinas')]), 'conflict.csv'), 'conflict.csv')
+    database.commit()
+    shutil.copyfile(ROOT/'dbt/profiles.yml.example', tmp_path/'profiles.yml')
+    result = subprocess.run([str(ROOT/'.venv/bin/dbt'), 'test', '--select', 'conflicting_event_copies',
+        '--project-dir', str(ROOT/'dbt'), '--profiles-dir', str(tmp_path), '--target', 'local'],
+        capture_output=True, text=True, timeout=120,
+        env={**os.environ, 'WAREHOUSE_DATABASE': database.info.dbname,
+             'DBT_SEND_ANONYMOUS_USAGE_STATS': 'false',
+             'DBT_TARGET_PATH': str(tmp_path/'target'), 'DBT_LOG_PATH': str(tmp_path/'logs')})
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert 'FAIL 1 conflicting_event_copies' in result.stdout, result.stdout
+    assert database.execute('SELECT count(*) FROM raw.customers').fetchone() == (2,)

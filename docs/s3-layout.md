@@ -3,8 +3,7 @@
 Current retained bucket: `olist-cdc-ezajhtylhk8v` (14 files).
 
 The duplicate replay CSV and its four derived Parquet files have been removed.
-The original CDC batch remains. Retry and event-deduplication logic, automated
-tests, and historical validation evidence are unchanged. Migration counts below
+The original CDC batch remains. Current loaders retain repeated deliveries in raw; staging deduplicates them. Historical validation evidence remains unchanged. Migration counts below
 describe the bucket before this cleanup.
 
 ```text
@@ -36,7 +35,7 @@ folder or hash folder is needed.
 
 Retries write the same prepared paths. Capture files must remain immutable:
 the loader tracks original S3 keys and skips previously committed files without
-re-downloading them. Events redelivered under another filename are still deduplicated.
+re-downloading them. Events redelivered under another filename are retained in raw and deduplicated in staging.
 A new capture lineage requires a fresh bucket and warehouse state.
 
 On September 24, 2026, all 12 retained Parquet objects were copied to readable paths
@@ -48,7 +47,8 @@ A subsequent change regenerated those 12 Parquet objects with readable event IDs
 All 415,418 snapshot rows and both 15-event CDC files were compared field by field
 against the prior Parquet; only `_event_id` changed. Every uploaded replacement was
 read back and verified. Original CSVs remain unchanged, and no local files were
-created. Replaying the extra CDC copy still deduplicates its events in raw.
+created. At that time, replaying the extra CDC copy deduplicated its events in raw.
+The current design performs that deduplication in staging instead.
 
 The simplified raw file ledger omits content checksums. Deploy against a fresh raw
 warehouse, then replay retained CSV files and rebuild marts. Existing raw ledgers

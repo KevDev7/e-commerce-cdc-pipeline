@@ -34,14 +34,14 @@ def test_missing_order_and_schema_changes_are_rejected():
 
 
 @pytest.mark.integration
-def test_file_retry_and_redelivery_do_not_duplicate_events(database):
+def test_file_retry_is_skipped_but_redelivery_is_preserved_in_raw(database):
     initialize_raw(database)
     text = csv_text([customer_row()])
     events = parse_csv(text,"one.csv")
     assert load_local(database,events,"one.csv") == "loaded"
     assert load_local(database,events,"one.csv") == "already_loaded"
     assert load_local(database,parse_csv(text,"two.csv"),"two.csv") == "loaded"
-    assert database.execute("SELECT count(*) FROM raw.customers").fetchone()[0] == 1
+    assert database.execute("SELECT count(*) FROM raw.customers").fetchone()[0] == 2
     database.commit()
 
 
@@ -83,3 +83,11 @@ def test_target_schema_alias_preserves_cdc_identity_and_operation():
     row[2] = 'unrelated-schema'
     with pytest.raises(ValueError, match='Unexpected schema'):
         parse_csv(csv_text([row]), 'raw/cdc/test.csv')
+
+
+def test_repeated_event_ids_are_preserved_by_parser():
+    rows = [customer_row(), customer_row(), customer_row(city='campinas')]
+    events = parse_csv(csv_text(rows), 'repeated.csv')
+    assert len(events) == 3
+    assert len({e.values[-6] for e in events}) == 1
+    assert [e.values[3] for e in events] == ['sao paulo', 'sao paulo', 'campinas']

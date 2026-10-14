@@ -12,10 +12,11 @@ validation reports may retain the previous `analytics_` names.
   values to their declared types before loading RAW. It does not calculate business
   measures or reconstruct current records. The shared source/event schema lives in
   `src/olist_cdc/schema.py`, independent of source seeding and warehouse drivers.
-- **RAW:** retain captured events, deduplicate redelivery by event identity and
-  commit each file's events atomically with its load ledger entry.
-- **STAGING:** expose a consistent source-event interface, including the complete
-  raw metadata envelope. Do not apply source changes or calculate business measures.
+- **RAW:** retain every delivered row from each new file, including repeated event
+  IDs, and commit the file's rows atomically with its load ledger entry.
+- **STAGING:** deduplicate by event ID and expose a consistent source-event
+  interface, including the complete raw metadata envelope. Do not reconstruct
+  current records or calculate business measures.
 - **INTERMEDIATE:** reconstruct source records and observed history, including
   ordering, deletes, version intervals and current-version flags.
 - **MARTS:** define analytical grains, joins and measures, and publish facts and
@@ -34,15 +35,22 @@ validation reports may retain the previous `analytics_` names.
 | _is_snapshot | Initial-load record flag |
 | _source_file | Original S3 object URI |
 
-`raw.loaded_files` stores source_file, loaded_at, row_count. Raw rows and their ledger entry commit atomically. Redelivery is deduplicated by event identity; already loaded keys are skipped without downloading again. Capture files are immutable: never overwrite a loaded key. A new capture lineage requires fresh raw storage, not reuse of old sequence numbers.
+`raw.loaded_files` stores source_file, loaded_at, row_count. Raw rows and their ledger entry commit atomically. Redelivery under a different file key adds another raw copy of each event; repeated IDs within a file are also preserved. Already loaded file keys are skipped without downloading again, so retrying a completed file does not add copies. Capture files are immutable: never overwrite a loaded key. A new capture lineage requires fresh raw storage, not reuse of old sequence numbers.
 
 ## Staging: four views
 
 All four staging views expose typed source fields and the same six raw metadata
 fields: event ID, operation, sequence, commit timestamp, snapshot flag and source
-file. The views preserve captured values; they do not cast, clean, join or collapse
-events. Tests check event uniqueness, required identifiers and supported operations.
-This is the only staging layer.
+file. Each view returns one row per `_event_id`, using `row_number()` and choosing
+provenance by ascending `_source_file`. Ties between identical copies do not change
+business values. Different events for the same source primary key remain separate.
+No source values are cast or changed here; only repeated deliveries are collapsed.
+
+The `conflicting_event_copies` dbt test compares event contents excluding
+`_source_file`. If the same ID carries different values, it fails the build rather
+than accepting an arbitrary version as valid. Raw retains both copies for inspection.
+Other tests check staged event uniqueness, required identifiers and supported
+operations. This is the only staging layer.
 
 ## Intermediate: five views
 
@@ -127,3 +135,19 @@ metadata fields still support ordering, deduplication and history; original DMS
 captures retain their source format. Retained raw data can rebuild the simpler
 marts without a source backfill. Follow the [upgrade steps](run-cloud.md#upgrade-after-the-modeling-simplification)
 when the retained warehouse is next brought online.
+
+## Upgrade to staging deduplication
+
+Pause scheduling and finish any active run before deploying this change. Run a
+normal `dbt build` to replace staging views and rebuild marts from retained raw
+rows. No raw-table schema change, source backfill or capture restart is needed.
+Raw copies suppressed by the older loader cannot be recovered from Redshift;
+original files remain in S3. New deliveries under new keys are preserved going
+forward. Do not clear the existing file ledger to force a rebuild.
+
+Event ID still identifies one source change, but is no longer unique at raw's
+physical grain: raw stores deliveries. Staging returns distinct source events.
+The Python parser continues to validate column counts, supported operations,
+source keys and ordering metadata; duplicate event IDs are no longer rejected
+before Parquet conversion. This changes deduplication ownership, not the source
+schema or supported business operations.

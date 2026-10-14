@@ -14,6 +14,8 @@ def test_file_metrics_only_count_committed_files(monkeypatch,fail):
         loaded=False
         def cursor(self):return self
         def execute(self,query,*args):
+            if query.startswith('INSERT INTO "raw".customers'):
+                assert query == 'INSERT INTO "raw".customers SELECT * FROM incoming_customers'
             if query.startswith("COPY "):
                 assert "FORMAT AS PARQUET" in query
                 assert "CSV" not in query and "GZIP" not in query and "NULL AS" not in query

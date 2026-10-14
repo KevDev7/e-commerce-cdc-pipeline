@@ -60,3 +60,10 @@ def test_capture_paths_distinguish_snapshot_from_cdc_and_reject_unexpected_table
     assert snapshot_table('raw/cdc/20260922.csv', 'raw') is None
     with pytest.raises(ValueError, match='Unexpected'):
         snapshot_table('raw/initial-load/unknown/LOAD00000001.csv', 'raw')
+
+
+def test_parquet_retains_duplicate_deliveries_for_staging_to_deduplicate():
+    events = parse_csv(csv_text([customer_row(), customer_row()]), 'repeated.csv')
+    rows = pq.read_table(pa.BufferReader(normalized_parquet(events, 'customers'))).to_pylist()
+    assert len(rows) == 2
+    assert rows[0] == rows[1]

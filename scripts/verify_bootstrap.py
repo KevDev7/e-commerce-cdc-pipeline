@@ -1,4 +1,4 @@
-"""Write during a fresh DMS full load, then verify overlapping commits in Redshift raw."""
+"""Write during a fresh DMS full load, then verify overlapping commits in staging."""
 import argparse
 from datetime import datetime, timezone
 import json
@@ -90,14 +90,14 @@ def verify():
         cursor = target.cursor()
         for commit in commits:
             for operation, field in [('I', 'inserted'), ('U', 'updated'), ('D', 'deleted')]:
-                query = 'SELECT count(*) FROM "raw".customers WHERE NOT _is_snapshot AND _op=%s AND customer_id=%s'
+                query = 'SELECT count(*) FROM staging.stg_customers WHERE NOT _is_snapshot AND _op=%s AND customer_id=%s'
                 params = [operation, commit[field]]
                 if operation == 'U':
                     query += ' AND city=%s'
                     params.append(commit['city'])
                 cursor.execute(query, tuple(params))
                 if cursor.fetchone()[0] != 1:
-                    raise AssertionError(f'Missing or duplicated overlapping {operation}: {commit[field]} {commit["city"]}')
+                    raise AssertionError(f'Missing or duplicated staged overlapping {operation}: {commit[field]} {commit["city"]}')
         target.commit()
     result['status'] = 'overlapping_events_verified'
     result['verified_operations'] = len(commits) * 3
