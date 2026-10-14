@@ -259,7 +259,7 @@
         <mxCell id="source-order_payments" value="Payments" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="oltp-system">
           <mxGeometry as="geometry" x="16.0" y="290.0" width="177" height="50" />
         </mxCell>
-        <mxCell id="wal-label" value="PostgreSQL WAL" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="oltp-system">
+        <mxCell id="wal-label" value="Transaction Log (WAL)" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="oltp-system">
           <mxGeometry as="geometry" x="17.0" y="381.0" width="174" height="27" />
         </mxCell>
         <mxCell id="capture-schedule" value="Change Capture:&lt;br&gt;Continuous" style="shape=rectangle;fillColor=#fff4c8;strokeColor=#d3ae53;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="ingest-zone">
