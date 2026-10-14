@@ -467,7 +467,19 @@
         <mxCell id="rule-RAW-strings" value="Source Values as Strings" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="20" y="712" width="240" height="20" />
         </mxCell>
-        </root>
+                <mxCell id="analyst-access-RAW" value="No Access" style="shape=rectangle;strokeColor=none;fillColor=none;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;" vertex="1" parent="warehouse">
+          <mxGeometry as="geometry" x="30" y="50" width="230" height="20" />
+        </mxCell>
+        <mxCell id="analyst-access-STAGING" value="No Access" style="shape=rectangle;strokeColor=none;fillColor=none;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;" vertex="1" parent="warehouse">
+          <mxGeometry as="geometry" x="305" y="50" width="230" height="20" />
+        </mxCell>
+        <mxCell id="analyst-access-INTERMEDIATE" value="No Access" style="shape=rectangle;strokeColor=none;fillColor=none;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;" vertex="1" parent="warehouse">
+          <mxGeometry as="geometry" x="580" y="50" width="230" height="20" />
+        </mxCell>
+        <mxCell id="analyst-access-MARTS" value="Access" style="shape=rectangle;strokeColor=none;fillColor=none;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;" vertex="1" parent="warehouse">
+          <mxGeometry as="geometry" x="855" y="50" width="230" height="20" />
+        </mxCell>
+      </root>
     </mxGraphModel>
   </diagram>
 </mxfile>
