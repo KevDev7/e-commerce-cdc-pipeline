@@ -1,5 +1,21 @@
 # Olist validation history
 
+## October 13: direct COPY into raw
+
+Both raw loaders now COPY directly into raw event tables. Temporary incoming
+tables, INSERT-from-temporary-table statements and temporary-table cleanup are
+removed. The original capture file remains the transaction boundary: all table
+COPYs and its file-ledger entry commit or roll back together. The diagram is
+unchanged because it already shows COPY into raw.
+
+**93 local tests passed**. The fixtures cover failure after an earlier table COPY,
+rollback of all file rows and the ledger, successful retry, completed-file skips,
+retained repeated deliveries, staging validation, current-state marts and history.
+The cloud SQL fixture checks that COPY targets raw directly. The live failure
+probe now tracks COPY operations before injecting its ledger-write failure.
+These checks use small PostgreSQL fixtures and explicit cloud-call fixtures;
+live Redshift validation remains pending. No AWS resources were changed.
+
 ## October 13: source-key checks in staging
 
 The parser now retains null and empty source primary keys. The four staging

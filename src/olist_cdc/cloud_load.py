@@ -96,13 +96,10 @@ def load_file(connection, s3, bucket, key, role, *, metrics=None):
             else:
                 staging_key = f"copy-ready/{relative_key.removesuffix('.csv')}/{table}.csv"
             s3.put_object(Bucket=bucket, Key=staging_key, Body=normalized_csv(batch, table), ServerSideEncryption="AES256")
-            cursor.execute(f'CREATE TEMP TABLE incoming_{table} (LIKE "raw".{table})')
             copy_sql = sql.SQL("COPY {} FROM {} IAM_ROLE {} FORMAT AS CSV NULL AS {} TIMEFORMAT 'auto'").format(
-                sql.Identifier("incoming_" + table), sql.Literal(f"s3://{bucket}/{staging_key}"),
+                sql.Identifier("raw", table), sql.Literal(f"s3://{bucket}/{staging_key}"),
                 sql.Literal(role), sql.Literal(NULL)).as_string()
             cursor.execute(copy_sql)
-            cursor.execute(f'INSERT INTO "raw".{table} SELECT * FROM incoming_{table}')
-            cursor.execute(f"DROP TABLE incoming_{table}")
         cursor.execute('INSERT INTO "raw".loaded_files (source_file,row_count) VALUES (%s,%s)', (source, len(events)))
         connection.commit()
         if metrics is not None:

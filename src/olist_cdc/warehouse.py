@@ -37,13 +37,9 @@ def load_local(connection, events, source_file):
             batch = [event for event in events if event.table == table]
             if not batch:
                 continue
-            temporary = sql.Identifier("incoming_" + table)
-            connection.execute(sql.SQL("CREATE TEMP TABLE {} (LIKE raw.{}) ON COMMIT DROP").format(temporary, sql.Identifier(table)))
-            query = sql.SQL("COPY {} FROM STDIN WITH (FORMAT CSV, NULL {})").format(temporary, sql.Literal(NULL))
+            query = sql.SQL("COPY {} FROM STDIN WITH (FORMAT CSV, NULL {})").format(sql.Identifier("raw", table), sql.Literal(NULL))
             with connection.cursor().copy(query) as copy:
                 copy.write(normalized_csv(batch, table))
-            connection.execute(sql.SQL("INSERT INTO raw.{} SELECT * FROM {}").format(
-                sql.Identifier(table), temporary))
         connection.execute("INSERT INTO raw.loaded_files (source_file,row_count) VALUES (%s,%s)",
                            (source_file,len(events)))
     return "loaded"

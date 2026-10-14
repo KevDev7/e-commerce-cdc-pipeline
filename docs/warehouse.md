@@ -39,6 +39,12 @@ validation reports may retain the previous `analytics_` names.
 
 `raw.loaded_files` stores source_file, loaded_at, row_count. Raw rows and their ledger entry commit atomically. Redelivery under a different file key adds another raw copy of each event; repeated IDs within a file are also preserved. Already loaded file keys are skipped without downloading again, so retrying a completed file does not add copies. Capture files are immutable: never overwrite a loaded key. A new capture lineage requires fresh raw storage, not reuse of old sequence numbers.
 
+Python sends `COPY` directly to each raw event table. No temporary tables or
+intermediate INSERT statements are needed because raw retains every delivered
+row. All table COPYs from one original capture file and its file-ledger entry
+share one transaction. A failure in any COPY or the ledger write rolls back the
+file's raw rows together. Derived CSV files already written to S3 remain available.
+
 ## Staging: four views
 
 All four staging views expose typed source fields and the same six raw metadata

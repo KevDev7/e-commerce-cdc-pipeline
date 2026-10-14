@@ -13,9 +13,9 @@ def test_file_metrics_only_count_committed_files(monkeypatch,fail):
         loaded=False
         def cursor(self):return self
         def execute(self,query,*args):
-            if query.startswith('INSERT INTO "raw".customers'):
-                assert query == 'INSERT INTO "raw".customers SELECT * FROM incoming_customers'
+            assert not query.startswith(('CREATE TEMP TABLE', 'DROP TABLE', 'INSERT INTO "raw".customers'))
             if query.startswith("COPY "):
+                assert query.startswith('COPY "raw"."customers" FROM ')
                 assert "FORMAT AS CSV" in query and "NULL AS '__OLIST_NULL__'" in query
                 assert "TIMEFORMAT 'auto'" in query
                 assert "EMPTYASNULL" not in query and "BLANKSASNULL" not in query
@@ -59,3 +59,18 @@ def test_previously_loaded_file_is_skipped_without_downloading():
     metrics = {}
     assert load_file(Connection(), S3(), 'bucket', 'raw/cdc/test.csv', 'role', metrics=metrics) == 0
     assert metrics == {'files_already_loaded': 1}
+
+
+def test_failure_probe_tracks_direct_copies_before_ledger_failure():
+    from scripts.verify_load_failure import FailBeforeLedger, InjectedFailure
+    class Connection:
+        def cursor(self): return self
+        def execute(self, *args): pass
+    probe = FailBeforeLedger(Connection())
+    cursor = probe.cursor()
+    cursor.execute('COPY "raw"."customers" FROM \'s3://bucket/customers.csv\'')
+    cursor.execute('COPY "raw"."orders" FROM \'s3://bucket/orders.csv\'')
+    assert probe.copied_tables == ['"raw"."customers"', '"raw"."orders"']
+    with pytest.raises(InjectedFailure):
+        cursor.execute('INSERT INTO "raw".loaded_files (source_file,row_count) VALUES (%s,%s)', ('file.csv', 2))
+    assert probe.triggered

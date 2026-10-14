@@ -58,7 +58,7 @@ def test_failure_after_first_table_rolls_back_whole_file_then_retry_succeeds(dat
     body = csv_text(rows)
     with pytest.raises(psycopg.Error):
         load_local(database, parse_csv(body, "multi.csv"), "multi.csv")
-    # customers was inserted before the order_payments COPY failed.
+    # customers was copied into raw before the order_payments COPY failed.
     assert database.execute('SELECT count(*) FROM "raw".customers').fetchone()[0] == 0
     assert database.execute('SELECT count(*) FROM "raw".loaded_files').fetchone()[0] == 0
     database.commit()
