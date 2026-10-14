@@ -6,10 +6,10 @@
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
         <mxCell id="source-zone" value="" style="shape=rectangle;fillColor=#ffffff;strokeColor=#bed0df;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#252525;strokeWidth=1.2;dashed=1;dashPattern=8 7;container=1;pointerEvents=0;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="145" y="228" width="235" height="500" />
+          <mxGeometry as="geometry" x="145" y="228" width="235" height="580" />
         </mxCell>
         <mxCell id="ingest-zone" value="" style="shape=rectangle;fillColor=#ffffff;strokeColor=#bed0df;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#252525;strokeWidth=1.2;dashed=1;dashPattern=8 7;container=1;pointerEvents=0;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="430" y="228" width="265" height="500" />
+          <mxGeometry as="geometry" x="430" y="228" width="265" height="580" />
         </mxCell>
         <mxCell id="warehouse" value="" style="shape=rectangle;fillColor=#ffffff;strokeColor=#777777;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#252525;strokeWidth=1.2;dashed=1;dashPattern=8 7;container=1;pointerEvents=0;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="730" y="182" width="1110" height="838" />
@@ -38,38 +38,38 @@
         </mxCell>
         <mxCell id="dms-capture-next" edge="1" parent="ingest-zone" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=0.5;exitY=1.0;exitPerimeter=0;entryX=0.5;entryY=0.0;entryPerimeter=0;" source="dms-capture" target="capture-csv">
           <mxGeometry as="geometry" relative="1">
-            <mxPoint as="sourcePoint" x="132.5" y="117.0" />
-            <mxPoint as="targetPoint" x="132.5" y="144.0" />
+            <mxPoint as="sourcePoint" x="132.5" y="117" />
+            <mxPoint as="targetPoint" x="132.5" y="152" />
             <Array as="points" />
           </mxGeometry>
         </mxCell>
         <mxCell id="capture-csv-next" edge="1" parent="ingest-zone" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=0.5;exitY=1.0;exitPerimeter=0;entryX=0.5;entryY=0.0;entryPerimeter=0;" source="capture-csv" target="python-ingestion">
           <mxGeometry as="geometry" relative="1">
-            <mxPoint as="sourcePoint" x="132.5" y="209.0" />
-            <mxPoint as="targetPoint" x="132.5" y="260.0" />
+            <mxPoint as="sourcePoint" x="132.5" y="217" />
+            <mxPoint as="targetPoint" x="132.5" y="288" />
             <Array as="points" />
           </mxGeometry>
         </mxCell>
         <mxCell id="python-ingestion-next" edge="1" parent="ingest-zone" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=0.5;exitY=1.0;exitPerimeter=0;entryX=0.5;entryY=0.0;entryPerimeter=0;" source="python-ingestion" target="copy-csv">
           <mxGeometry as="geometry" relative="1">
-            <mxPoint as="sourcePoint" x="132.5" y="325.0" />
-            <mxPoint as="targetPoint" x="132.5" y="340.0" />
+            <mxPoint as="sourcePoint" x="132.5" y="353" />
+            <mxPoint as="targetPoint" x="132.5" y="384" />
             <Array as="points" />
           </mxGeometry>
         </mxCell>
         <mxCell id="copy-csv-next" edge="1" parent="ingest-zone" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=0.5;exitY=1.0;exitPerimeter=0;entryX=0.5;entryY=0.0;entryPerimeter=0;" source="copy-csv" target="copy-load">
           <mxGeometry as="geometry" relative="1">
-            <mxPoint as="sourcePoint" x="132.5" y="405.0" />
-            <mxPoint as="targetPoint" x="132.5" y="420.0" />
+            <mxPoint as="sourcePoint" x="132.5" y="449" />
+            <mxPoint as="targetPoint" x="132.5" y="480" />
             <Array as="points" />
           </mxGeometry>
         </mxCell>
         <mxCell id="load-customers" edge="1" parent="1" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=1.0;exitY=0.5;exitPerimeter=0;entryX=0.0;entryY=0.5;entryPerimeter=0;" source="copy-load" target="raw-customers">
           <mxGeometry as="geometry" relative="1">
-            <mxPoint as="sourcePoint" x="679" y="680.5" />
+            <mxPoint as="sourcePoint" x="679" y="745.5" />
             <mxPoint as="targetPoint" x="776" y="375" />
             <Array as="points">
-              <mxPoint x="724" y="680.5" />
+              <mxPoint x="724" y="745.5" />
               <mxPoint x="724" y="375" />
             </Array>
           </mxGeometry>
@@ -90,10 +90,10 @@
         </mxCell>
         <mxCell id="load-orders" edge="1" parent="1" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=1.0;exitY=0.5;exitPerimeter=0;entryX=0.0;entryY=0.5;entryPerimeter=0;" source="copy-load" target="raw-orders">
           <mxGeometry as="geometry" relative="1">
-            <mxPoint as="sourcePoint" x="679" y="680.5" />
+            <mxPoint as="sourcePoint" x="679" y="745.5" />
             <mxPoint as="targetPoint" x="776" y="445" />
             <Array as="points">
-              <mxPoint x="724" y="680.5" />
+              <mxPoint x="724" y="745.5" />
               <mxPoint x="724" y="445" />
             </Array>
           </mxGeometry>
@@ -114,10 +114,10 @@
         </mxCell>
         <mxCell id="load-order_items" edge="1" parent="1" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=1.0;exitY=0.5;exitPerimeter=0;entryX=0.0;entryY=0.5;entryPerimeter=0;" source="copy-load" target="raw-order_items">
           <mxGeometry as="geometry" relative="1">
-            <mxPoint as="sourcePoint" x="679" y="680.5" />
+            <mxPoint as="sourcePoint" x="679" y="745.5" />
             <mxPoint as="targetPoint" x="776" y="515" />
             <Array as="points">
-              <mxPoint x="724" y="680.5" />
+              <mxPoint x="724" y="745.5" />
               <mxPoint x="724" y="515" />
             </Array>
           </mxGeometry>
@@ -138,10 +138,10 @@
         </mxCell>
         <mxCell id="load-order_payments" edge="1" parent="1" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=classic;endFill=1;strokeColor=#252525;strokeWidth=1.5;fontSize=16;fontFamily=Arial;exitX=1.0;exitY=0.5;exitPerimeter=0;entryX=0.0;entryY=0.5;entryPerimeter=0;" source="copy-load" target="raw-order_payments">
           <mxGeometry as="geometry" relative="1">
-            <mxPoint as="sourcePoint" x="679" y="680.5" />
+            <mxPoint as="sourcePoint" x="679" y="745.5" />
             <mxPoint as="targetPoint" x="776" y="585" />
             <Array as="points">
-              <mxPoint x="724" y="680.5" />
+              <mxPoint x="724" y="745.5" />
               <mxPoint x="724" y="585" />
             </Array>
           </mxGeometry>
@@ -267,7 +267,7 @@
           <mxGeometry as="geometry" x="8" y="6" width="120" height="40" />
         </mxCell>
         <mxCell id="batch-schedule" value="Batch Schedule:&lt;br&gt;Every 5 Minutes" style="shape=rectangle;fillColor=#fff4c8;strokeColor=#d3ae53;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=15;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="ingest-zone">
-          <mxGeometry as="geometry" x="8" y="214" width="120" height="40" />
+          <mxGeometry as="geometry" x="8" y="232" width="120" height="40" />
         </mxCell>
         <mxCell id="dms-capture" value="AWS DMS&lt;br&gt;Initial Load + CDC" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
           <mxGeometry as="geometry" x="16.0" y="52.0" width="233" height="65" />
@@ -276,25 +276,25 @@
           <mxGeometry as="geometry" x="10.0" y="18.5" width="28" height="28" />
         </mxCell>
         <mxCell id="capture-csv" value="Amazon S3&lt;br&gt;Original Capture · CSV" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
-          <mxGeometry as="geometry" x="16.0" y="144.0" width="233" height="65" />
+          <mxGeometry as="geometry" x="16.0" y="152" width="233" height="65" />
         </mxCell>
         <mxCell id="capture-csv-icon" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d96a28%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cellipse%20cx%3D%2216%22%20cy%3D%226%22%20rx%3D%2212%22%20ry%3D%224%22/%3E%3Cpath%20d%3D%22M4%206l3%2022c2%203%2016%203%2018%200l3-22M8%2016h16%22/%3E%3C/g%3E%3C/svg%3E;imageAspect=0;" vertex="1" parent="capture-csv">
           <mxGeometry as="geometry" x="10.0" y="18.5" width="28" height="28" />
         </mxCell>
         <mxCell id="python-ingestion" value="Python Loader&lt;br&gt;Validate + Prepare CSV" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
-          <mxGeometry as="geometry" x="16.0" y="260.0" width="233" height="65" />
+          <mxGeometry as="geometry" x="16.0" y="288" width="233" height="65" />
         </mxCell>
         <mxCell id="python-ingestion-icon" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23252525%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M10%207L2%2016l8%209M22%207l8%209-8%209M19%204l-6%2024%22/%3E%3C/g%3E%3C/svg%3E;imageAspect=0;" vertex="1" parent="python-ingestion">
           <mxGeometry as="geometry" x="10.0" y="18.5" width="28" height="28" />
         </mxCell>
         <mxCell id="copy-csv" value="Amazon S3&lt;br&gt;COPY-ready · CSV" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
-          <mxGeometry as="geometry" x="16.0" y="340.0" width="233" height="65" />
+          <mxGeometry as="geometry" x="16.0" y="384" width="233" height="65" />
         </mxCell>
         <mxCell id="copy-csv-icon" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23d96a28%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cellipse%20cx%3D%2216%22%20cy%3D%226%22%20rx%3D%2212%22%20ry%3D%224%22/%3E%3Cpath%20d%3D%22M4%206l3%2022c2%203%2016%203%2018%200l3-22M8%2016h16%22/%3E%3C/g%3E%3C/svg%3E;imageAspect=0;" vertex="1" parent="copy-csv">
           <mxGeometry as="geometry" x="10.0" y="18.5" width="28" height="28" />
         </mxCell>
         <mxCell id="copy-load" value="Redshift COPY&lt;br&gt;&lt;span style=&quot;font-size:15px&quot;&gt;Triggered by Python Loader&lt;/span&gt;&lt;br&gt;S3 → RAW" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
-          <mxGeometry as="geometry" x="16.0" y="420.0" width="233" height="65" />
+          <mxGeometry as="geometry" x="16.0" y="480" width="233" height="75" />
         </mxCell>
         <mxCell id="copy-load-icon" style="shape=image;image=data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%238c4fff%22%20stroke-width%3D%221.7%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cellipse%20cx%3D%2216%22%20cy%3D%226%22%20rx%3D%2212%22%20ry%3D%224%22/%3E%3Cpath%20d%3D%22M4%206v20c0%205%2024%205%2024%200V6M4%2013c0%205%2024%205%2024%200M4%2020c0%205%2024%205%2024%200%22/%3E%3C/g%3E%3C/svg%3E;imageAspect=0;" vertex="1" parent="copy-load">
           <mxGeometry as="geometry" x="10.0" y="18.5" width="28" height="28" />
@@ -459,7 +459,7 @@
           <mxGeometry as="geometry" x="384.0" y="287" width="45" height="20" />
         </mxCell>
         <mxCell id="load-customers-label" value="Load" vertex="1" parent="1" style="shape=rectangle;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;">
-          <mxGeometry as="geometry" x="681.5" y="651" width="45" height="20" />
+          <mxGeometry as="geometry" x="681.5" y="716" width="45" height="20" />
         </mxCell>
       <mxCell id="rule-STAGING-typing" value="Source Type Conversion" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="300" y="712" width="240" height="20" />
