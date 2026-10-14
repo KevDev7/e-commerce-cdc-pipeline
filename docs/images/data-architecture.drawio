@@ -264,10 +264,10 @@
           <mxGeometry as="geometry" x="17.0" y="381.0" width="174" height="27" />
         </mxCell>
         <mxCell id="capture-schedule" value="Change Capture:&lt;br&gt;Continuous" style="shape=rectangle;fillColor=#fff4c8;strokeColor=#d3ae53;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="ingest-zone">
-          <mxGeometry as="geometry" x="16" y="6" width="233" height="40" />
+          <mxGeometry as="geometry" x="16" y="6" width="110" height="40" />
         </mxCell>
         <mxCell id="batch-schedule" value="Batch Schedule:&lt;br&gt;Every 5 Minutes" style="shape=rectangle;fillColor=#fff4c8;strokeColor=#d3ae53;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=14;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="ingest-zone">
-          <mxGeometry as="geometry" x="16" y="215" width="110" height="40" />
+          <mxGeometry as="geometry" x="16" y="214" width="110" height="40" />
         </mxCell>
         <mxCell id="dms-capture" value="AWS DMS&lt;br&gt;Initial Load + CDC" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="ingest-zone">
           <mxGeometry as="geometry" x="16.0" y="52.0" width="233" height="65" />
@@ -449,11 +449,11 @@
         <mxCell id="capability-2" value="Pipeline Orchestration · Airflow" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="806" y="1008" width="955" height="30" />
         </mxCell>
-        <mxCell id="source-orientation" value="SOURCE SYSTEM ORIENTED" style="shape=singleArrow;arrowSize=0.0178826895565093;fillColor=#dcecff;strokeColor=#7399bf;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="145" y="1060" width="1398" height="40" />
+        <mxCell id="source-orientation" value="SOURCE SYSTEM ORIENTED" style="shape=singleArrow;arrowSize=0.0178826895565093;fillColor=#dcecff;strokeColor=#7399bf;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=bottom;verticalLabelPosition=top;spacingBottom=8;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="145" y="1080" width="1398" height="40" />
         </mxCell>
-        <mxCell id="business-orientation" value="BUSINESS ORIENTED" style="shape=singleArrow;direction=west;arrowSize=0.09803921568627451;fillColor=#f8dfe0;strokeColor=#be7478;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=15;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
-          <mxGeometry as="geometry" x="1560" y="1060" width="255" height="40" />
+        <mxCell id="business-orientation" value="BUSINESS ORIENTED" style="shape=singleArrow;direction=west;arrowSize=0.09803921568627451;fillColor=#f8dfe0;strokeColor=#be7478;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=bottom;verticalLabelPosition=top;spacingBottom=8;fontFamily=Arial;fontSize=15;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="1560" y="1080" width="255" height="40" />
         </mxCell>
         <mxCell id="source-capture-label" value="Pull" vertex="1" parent="1" style="shape=rectangle;strokeColor=none;fillColor=#ffffff;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;">
           <mxGeometry as="geometry" x="384.0" y="287" width="45" height="20" />
