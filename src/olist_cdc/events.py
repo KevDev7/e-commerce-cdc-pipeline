@@ -1,6 +1,7 @@
 """Parse the documented DMS CSV format into a small, explicit event contract."""
 import csv
 from dataclasses import dataclass
+from hashlib import sha256
 import io
 
 from olist_cdc.schema import DMS_METADATA, SOURCE_COLUMNS, source_columns
@@ -39,14 +40,19 @@ def parse_csv(text, source_file, *, snapshot_table=None):
             raise ValueError(f"{source_file}:{line}: expected {expected} fields, received {len(fields)}; check DMS column order")
         values = [None if value == NULL else value for value in fields[:-3]]
         position, sequence, commit_at = fields[-3:]
-        if not values[0]:
-            raise ValueError(f"{source_file}:{line}: missing primary key")
         snapshot = snapshot_table is not None
         if snapshot:
             if operation != "I":
                 raise ValueError("Snapshot files must contain only inserts")
             sequence = "0"
-            event_id = f"snapshot:{table}:{values[0]}"
+            if values[0]:
+                event_id = f"snapshot:{table}:{values[0]}"
+            else:
+                # No source key is available. Preserve each bad row for staging
+                # validation, using a stable file/line identity instead of merging
+                # unrelated rows under a shared missing-key identity.
+                location = sha256(f"{source_file}:{line}".encode()).hexdigest()
+                event_id = f"snapshot-missing-key:{table}:{location}"
         else:
             if not sequence.isdigit() or len(sequence) > 35 or int(sequence) == 0 or not position:
                 raise ValueError(f"{source_file}:{line}: CDC requires source position and a positive change sequence")

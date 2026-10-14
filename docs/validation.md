@@ -1,5 +1,24 @@
 # Olist validation history
 
+## October 13: source-key checks in staging
+
+The parser now retains null and empty source primary keys. The four staging
+models use `required_source_key` tests in place of their earlier `not_null` tests,
+so both nulls and empty strings fail. Invalid rows remain visible in raw and
+staging; failed tests skip dependent dbt models and prevent batch completion.
+
+Valid CDC and snapshot event IDs are unchanged. Missing-key snapshots use a
+stable file/line hash, preventing distinct invalid rows from collapsing under
+one event ID. File-ledger retries still skip already committed captures. No
+raw schema migration is needed for this check change; the prior CSV/string-based
+raw migration is still required for the retained typed AWS warehouse.
+
+**92 local tests passed**, including missing keys for CDC inserts, updates and
+deletes; stable and distinct missing-key snapshot IDs; and all four source tables
+retaining null/empty keys while staging tests fail and downstream marts skip.
+Offline Redshift parsing confirmed **14 models and 40 data tests**. No AWS
+resources were contacted or changed; live Redshift validation remains pending.
+
 ## October 13: CSV inputs and string-based raw
 
 The active loader now prepares per-table CSV files instead of Parquet. Source

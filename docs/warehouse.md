@@ -57,8 +57,18 @@ views when queried; raw loading can succeed before a dbt conversion fails.
 The `conflicting_event_copies` dbt test compares event contents excluding
 `_source_file`. If the same ID carries different values, it fails the build rather
 than accepting an arbitrary version as valid. Raw retains both copies for inspection.
-Other tests check staged event uniqueness, required identifiers and supported
-operations. This is the only staging layer.
+The `required_source_key` tests reject null or empty source keys in all four
+staging models. Python retains those rows instead of rejecting the file. CDC
+rows still use the DMS sequence as their event identity. A snapshot row without
+a key uses `snapshot-missing-key:<table>:<SHA-256 of file URI and line number>`;
+this preserves each bad row separately and stays stable on a retry of the same
+immutable file. A copy under another filename gets a separate fallback identity;
+without a source key, it cannot be safely matched across files. Valid snapshot
+identities remain unchanged. Failed staging tests block dependent dbt models and
+prevent Airflow from marking the batch complete; the rows remain available for
+inspection in raw and staging. No rows are silently dropped or repaired.
+
+Other tests check staged event uniqueness and supported operations. This is the only staging layer.
 
 ## Intermediate: five views
 
@@ -159,7 +169,8 @@ forward. Do not clear the existing file ledger to force a rebuild.
 Event ID still identifies one source change, but is no longer unique at raw's
 physical grain: raw stores deliveries. Staging returns distinct source events.
 The Python parser continues to validate column counts, supported operations,
-source keys and ordering metadata; duplicate event IDs are no longer rejected
+and ordering metadata; source-key validation now belongs to staging. Duplicate
+event IDs are no longer rejected
 before preparation of COPY-ready CSV files. This changes deduplication ownership, not the source
 schema or supported business operations.
 

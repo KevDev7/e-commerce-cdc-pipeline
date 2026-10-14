@@ -14,7 +14,7 @@ models:
   - name: customer_id
     description: Source customer-record key associated with an order in the historical Olist export; the key used for CDC history.
     data_tests:
-    - not_null
+    - required_source_key
   - name: customer_unique_id
     description: Identifier linking the same customer across order-associated records; it is not unique at this model's grain.
   - name: _op
@@ -36,7 +36,7 @@ models:
     - not_null
   - name: order_id
     data_tests:
-    - not_null
+    - required_source_key
   - name: _op
     data_tests:
     - accepted_values:
@@ -56,7 +56,7 @@ models:
     - not_null
   - name: order_item_key
     data_tests:
-    - not_null
+    - required_source_key
   - name: _op
     data_tests:
     - accepted_values:
@@ -76,7 +76,7 @@ models:
     - not_null
   - name: payment_key
     data_tests:
-    - not_null
+    - required_source_key
   - name: _op
     data_tests:
     - accepted_values:

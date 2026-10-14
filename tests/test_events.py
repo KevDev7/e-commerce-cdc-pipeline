@@ -91,3 +91,27 @@ def test_repeated_event_ids_are_preserved_by_parser():
     assert len(events) == 3
     assert len({e.values[-6] for e in events}) == 1
     assert [e.values[3] for e in events] == ['sao paulo', 'sao paulo', 'campinas']
+
+
+def test_cdc_missing_keys_are_preserved_with_source_event_identity():
+    for key in (NULL, ''):
+        for operation in ('I', 'U', 'D'):
+            body = csv_text([customer_row(customer_id=key, operation=operation)])
+            parsed = parse_csv(body, 'missing-key.csv')[0]
+            assert parsed.values[0] == (None if key == NULL else '')
+            assert parsed.values[-6] == 'cdc:customers:1'
+            assert parsed.values[-5] == operation
+
+
+def test_missing_snapshot_keys_get_stable_distinct_file_line_identities():
+    rows = [[r[0], *r[3:]] for r in [customer_row(customer_id=NULL),
+                                    customer_row(customer_id=NULL), customer_row(customer_id='')]]
+    body = csv_text(rows)
+    parsed = parse_csv(body, 'customers/LOAD.csv', snapshot_table='customers')
+    identities = [e.values[-6] for e in parsed]
+    assert len(set(identities)) == 3
+    assert all(i.startswith('snapshot-missing-key:customers:') and len(i) <= 128 for i in identities)
+    assert parsed == parse_csv(body, 'customers/LOAD.csv', snapshot_table='customers')
+    other = parse_csv(body, 'customers/OTHER.csv', snapshot_table='customers')
+    assert not set(identities) & {e.values[-6] for e in other}
+    assert [e.values[0] for e in parsed] == [None, None, '']
