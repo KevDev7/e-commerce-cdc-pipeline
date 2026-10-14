@@ -1,7 +1,7 @@
 # E-commerce CDC Pipeline
 
 This AWS pipeline captures changes in PostgreSQL and builds e-commerce analytics
-marts in Redshift. It uses the [Olist dataset](docs/source.md) to demonstrate
+marts in Redshift. It uses the Olist dataset to demonstrate
 change data capture (CDC), orchestration, dimensional modeling, and recovery
 from failures.
 
@@ -60,7 +60,6 @@ microbatches every five minutes.
 
 Orders join to current customer details. A separate table keeps SCD Type 2
 history. The diagram shows selected columns and logical relationships.
-[Full model definitions](docs/warehouse.md).
 
 ## Validation
 
@@ -70,21 +69,13 @@ history. The diagram shows selected columns and logical relationships.
 | Local checks (October 13) | 93 tests passed with small disposable PostgreSQL fixtures. |
 
 The October 14 run validates the current CSV loader, raw strings, staging checks,
-and rebuilt marts. See the [test results and earlier runs](docs/validation.md) and
-[GitHub CI](https://github.com/KevDev7/e-commerce-cdc-pipeline/actions).
+and rebuilt marts. See [Test results](docs/validation.md) for detailed evidence
+and earlier runs.
 
 ## Run the project
 
 AWS compute runs during demonstrations and is deleted afterward. Verified data
 is retained for replay and future demonstrations.
 
-Follow the **[AWS runbook](docs/run-cloud.md)** to set up the pipeline, simulate
-transactions, run scheduled batches, check results, and clean up. It also explains
-the budget and when to create or remove AWS resources. To run tests without AWS,
-use the [development guide](docs/development.md).
-
-- [Source data and simulated workload](docs/source.md)
-- [Warehouse design](docs/warehouse.md) and [dbt processing](docs/dbt-processing.md)
-- [S3 file layout](docs/s3-layout.md)
-- [Reliability checks](docs/reliability.md) and [verification scenarios](docs/verification.md)
-- [Future learning roadmap](docs/roadmap.md)
+See [Documentation](docs/README.md) for AWS setup, local development, simulated
+workloads, cleanup instructions, and technical details.
