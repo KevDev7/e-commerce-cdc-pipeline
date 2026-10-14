@@ -95,7 +95,7 @@ def main():
             identities = {e.values[-6] for e in events if e.table == table}
             if identities:
                 placeholders = ','.join(['%s'] * len(identities))
-                cursor.execute(f'SELECT count(DISTINCT _event_id) FROM raw.{table} WHERE _event_id IN ({placeholders})', tuple(identities))
+                cursor.execute(f'SELECT count(DISTINCT _event_id) FROM "raw".{table} WHERE _event_id IN ({placeholders})', tuple(identities))
                 expected_unique[table] = len(identities) - cursor.fetchone()[0]
             else:
                 expected_unique[table] = 0

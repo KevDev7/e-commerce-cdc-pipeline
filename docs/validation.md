@@ -1,5 +1,57 @@
 # Olist validation history
 
+## October 14 UTC: full AWS revalidation
+
+A fresh RDS PostgreSQL source was seeded from the retained original Olist ZIP:
+99,441 customers, 99,441 orders, 112,650 items, and 103,886 payments (**415,418
+historical records**). The seed ZIP was temporary and removed after loading.
+AWS DMS ran a new full-load-and-CDC task into a new private S3 bucket; all four
+full loads completed with zero reported errors. The new Redshift namespace was
+kept separate from the old baseline until validation succeeded.
+
+The current Python loader prepared per-table CSV inputs, kept source values as
+strings, and sent COPY directly into raw. **All 14 models and 40 data tests
+passed** after the backfill, the CDC batch, and replay. Full current-state source
+fields matched PostgreSQL before simulation and after the final replay. The
+simulated lifecycle generated 9 inserts, 4 updates and 2 deletes. Final current
+counts were 99,442 customers, 99,443 orders, 112,652 items, and 103,888 payments.
+Order totals, current customer joins, customer history, hard deletes, and the
+absence of the rolled-back sentinel passed the scenario checks.
+
+A deliberate exception after real COPYs into three raw tables and before the
+ledger write left all raw counts and the ledger unchanged. A retry loaded the
+four events once; a completed-file retry added nothing. Redelivery under a new
+filename then added four raw copies without changing unique staged events.
+All five mart row counts and aggregate content fingerprints remained unchanged
+through the replay rebuild. These fingerprints are an additional comparison;
+source reconciliation itself compares every current field directly.
+
+The actual Airflow DAG ran the backfill and a scheduled CDC batch. Quiet
+scheduled runs skipped load/build/completion without waking the warehouse. The
+initial scheduled attempt and first manual load attempt timed out while the new
+SQL endpoint initialized; downstream work and acknowledgement stayed blocked.
+The manual backfill retry succeeded with the original security rules unchanged.
+A Redshift-specific quoting error in the recovery/replay verification SQL was
+fixed and those checks then passed live. Missing-key and invalid-type negative
+cases remain covered by the local fixture suite; no invalid rows were injected
+into the real source for this run.
+
+The approved ceiling was **$2**, with 4 RPUs and a lower compute-deactivation
+limit of 3 RPU-hours. Reported Redshift usage before shutdown was 3,120 RPU-seconds,
+**$0.325 at $0.375/RPU-hour**. RDS, DMS, storage, networking and billing lag are
+additional; this is not a final all-service invoice. Verification ended when the
+required checks passed, without using the remaining allowance for extra runs.
+
+[Sanitized validation evidence](evidence/olist-20261014-validation.json) and
+[retention and cleanup evidence](evidence/olist-20261014-cleanup.json) record the
+results and final resource inventory. Paid compute and local Airflow metadata
+were removed. One verified bucket, one warehouse namespace and one final RDS
+snapshot remain; the old two buckets, namespace and two snapshots were deleted.
+The teardown helper was also corrected to record the actual retained namespace,
+including when it comes from restore metadata; 13 focused post-fix checks passed.
+Older sections below are historical and may describe designs or validation gaps
+that this run supersedes.
+
 ## October 13: direct COPY into raw
 
 Both raw loaders now COPY directly into raw event tables. Temporary incoming

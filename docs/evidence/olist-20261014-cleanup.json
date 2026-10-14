@@ -1,0 +1,78 @@
+{
+  "verified_at": "2026-10-14T04:18:42.528175+00:00",
+  "retained_bucket": "olist-cdc-d801223c9215",
+  "retained_namespace": "synthea-cdc-20261013",
+  "retained_source_snapshot": "synthea-cdc-demo-snapshot-source-4wwzn1kd4849",
+  "removed_buckets": [
+    {
+      "name": "olist-cdc-efe3cff0a88c",
+      "objects_removed": 54,
+      "previous_bytes": 157765180
+    },
+    {
+      "name": "olist-cdc-ezajhtylhk8v",
+      "objects_removed": 14,
+      "previous_bytes": 157553389
+    }
+  ],
+  "removed_snapshots": [
+    "synthea-cdc-demo-snapshot-source-c9sbssrikxav",
+    "synthea-cdc-demo-snapshot-source-iqezmqtyne2k"
+  ],
+  "removed_namespaces": [
+    "synthea-cdc"
+  ],
+  "temporary_replay_objects_removed": 4,
+  "retained_objects": 17,
+  "retained_bytes": 268630746,
+  "retained_keys": [
+    "copy-ready/cdc/CDC_TXN-20261014035158407/customers.csv",
+    "copy-ready/cdc/CDC_TXN-20261014035158407/order_items.csv",
+    "copy-ready/cdc/CDC_TXN-20261014035158407/orders.csv",
+    "copy-ready/cdc/CDC_TXN-20261014035716299/customers.csv",
+    "copy-ready/cdc/CDC_TXN-20261014035716299/order_payments.csv",
+    "copy-ready/cdc/CDC_TXN-20261014035716299/orders.csv",
+    "copy-ready/initial-load/customers/LOAD00000001.csv",
+    "copy-ready/initial-load/order_items/LOAD00000001.csv",
+    "copy-ready/initial-load/order_payments/LOAD00000001.csv",
+    "copy-ready/initial-load/orders/LOAD00000001.csv",
+    "dataset/original-olist-brazilian-ecommerce.zip",
+    "raw/cdc/CDC_TXN-20261014035158407.csv",
+    "raw/cdc/CDC_TXN-20261014035716299.csv",
+    "raw/initial-load/customers/LOAD00000001.csv",
+    "raw/initial-load/order_items/LOAD00000001.csv",
+    "raw/initial-load/order_payments/LOAD00000001.csv",
+    "raw/initial-load/orders/LOAD00000001.csv"
+  ],
+  "final_inventory": {
+    "verified_at": "2026-10-14T04:20:43.562414+00:00",
+    "stack_status": "DELETE_COMPLETE",
+    "namespaces": [
+      {
+        "namespaceName": "synthea-cdc-20261013",
+        "status": "AVAILABLE"
+      }
+    ],
+    "workgroups": [],
+    "source_instances": [],
+    "replication_instances": [],
+    "source_snapshots": [
+      {
+        "DBSnapshotIdentifier": "synthea-cdc-demo-snapshot-source-4wwzn1kd4849",
+        "Status": "available"
+      }
+    ],
+    "buckets": [
+      "olist-cdc-d801223c9215"
+    ],
+    "no_paid_compute": true,
+    "one_verified_version": true
+  },
+  "local_cleanup": {
+    "airflow_container_and_metadata_volume_removed": true,
+    "temporary_seed_archive_removed": true,
+    "project_session_profile_removed": true,
+    "source_passwords_and_deleted_endpoints_removed": true,
+    "retained_warehouse_credentials": "Ignored .env.cloud with permissions 0600"
+  }
+}

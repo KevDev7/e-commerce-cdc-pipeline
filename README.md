@@ -68,9 +68,11 @@ history. The diagram shows selected columns and logical relationships.
 |---|---|
 | Earlier AWS runs | Loaded the historical dataset and verified replay, deletes, recovery, and source-to-target reconciliation. |
 | September 24 scheduled AWS run | Five Airflow runs in a row processed 90 simulated changes. All four current warehouse tables matched RDS after each run. |
-| Current code (October 13) | 93 local tests passed. Parsing with the Redshift adapter confirmed 14 models and 40 dbt data tests. The current code still needs a new end-to-end Redshift test. |
+| October 14 AWS revalidation (UTC) | Backfilled all 415,418 historical rows. All 14 models and 40 dbt tests passed after the backfill, CDC updates, and replay. Field-by-field reconciliation and failed-load recovery passed. |
+| Local checks (October 13) | 93 tests passed with small disposable PostgreSQL fixtures. |
 
-The AWS results are from earlier code versions, before the latest model changes.
+The October 14 run validates the current CSV loader, raw strings, staging checks,
+and rebuilt marts. Older reports describe the code used on their dates.
 See the [test results](docs/validation.md),
 [five-cycle report](docs/five-cycle-validation.md), and
 [GitHub CI](https://github.com/KevDev7/e-commerce-cdc-pipeline/actions).

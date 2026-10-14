@@ -115,6 +115,12 @@ normal setup → simulate → process → verify → cleanup flow.
 
 ## Cleanup
 
+Keep one verified stored version. During a fresh rerun, retain the previous
+version only until the replacement passes tests and reconciliation. Then verify
+ownership and replacement availability before deleting the superseded buckets,
+warehouse namespace and source snapshots. If validation fails, preserve the
+previous reference instead of deleting the fallback.
+
 The loader stores original DMS files unchanged, derives per-table CSV COPY inputs with unchanged source strings under `copy-ready/`, and commits the raw records with the file ledger in one transaction. A retry skips previously loaded keys without downloading them; capture files must remain immutable. Events redelivered under another file name are retained again in raw and deduplicated by event identity in staging. Build marts only after the batch finishes. Each capture lineage requires a fresh raw baseline, not a reset of an existing task's sequence.
 
 ```sh
@@ -146,11 +152,11 @@ DROP TABLE IF EXISTS marts.processed_files;
 The normal table rebuild removes `captured_created_at`, `customer_version_id` and
 `customer_history_status` from `marts.fct_orders`. The cleanup SQL removes the
 retired models and custom mart checkpoint table. Keep `raw.loaded_files`: it
-still prevents duplicate raw ingestion. Original raw events and customer history
+still prevents loading the same file key twice. Original raw events and customer history
 are preserved. No source backfill is needed.
 dbt does not automatically drop retired models.
-Apply this during the next authorized AWS session; the retained cloud warehouse
-has not been changed by the local code simplification.
+This applies to older retained warehouses. The October 14 validation
+rebuilt a fresh baseline and removed the superseded warehouse.
 
 ## Local data retention
 
@@ -164,9 +170,16 @@ containers or volumes. Future local tests recreate disposable databases.
 
 ## Retained databases after this run
 
+The latest verified reference is in namespace `synthea-cdc-20261013` and bucket
+`olist-cdc-d801223c9215`, with one final source snapshot. The older namespace,
+two older buckets and two older source snapshots have been deleted. Consult the
+ignored `data/cloud-state.json` for current identifiers and credentials in
+`.env.cloud`; do not infer the namespace name from the workgroup's default name.
+[Latest inventory](evidence/olist-20261014-cleanup.json).
+
 The RDS snapshot preserves source data without a running source instance. Restore
 it to a new instance before querying it; restoration incurs compute charges.
-Redshift tables and views stay in the retained `synthea-cdc` namespace. Cleanup
+Redshift tables and views stay in the retained namespace recorded in the deployment state. Cleanup
 removes its workgroup, so no SQL endpoint remains until a workgroup is recreated
 and associated with that namespace. Reapply the 4-RPU capacity and usage limit
 before querying. Do not delete the namespace to recreate a compute endpoint.
@@ -174,6 +187,6 @@ before querying. Do not delete the namespace to recreate a compute endpoint.
 Retained data incurs ongoing storage charges; the approved one-time run allowance
 is separate. Existing namespace names must be inspected before another stack
 creation; the normal fresh-demo command is not a retained-warehouse restore tool.
-The old S3 lineage is preserved separately from new captures.
+Historical evidence remains in Git; superseded S3 lineages were removed after verification.
 
-Before using the current replay checks against a retained warehouse, follow the [string-based raw upgrade](warehouse.md#upgrade-to-string-based-raw), then build and test dbt.
+For an older typed warehouse, follow the [string-based raw upgrade](warehouse.md#upgrade-to-string-based-raw) before replay testing. The latest retained reference already uses the current raw schema.

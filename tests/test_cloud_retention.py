@@ -24,6 +24,7 @@ def test_data_survives_while_compute_is_disposable():
 def test_teardown_preserves_bucket_and_refuses_legacy_delete_policy(monkeypatch, tmp_path, missing_policy):
     calls = []
     body = template()
+    body['Resources']['Namespace']['Properties']['NamespaceName'] = 'new-warehouse'
     if missing_policy:
         body['Resources'][missing_policy].pop('DeletionPolicy')
     cf = SimpleNamespace(get_template=lambda **kw: {'TemplateBody': body},
@@ -35,11 +36,13 @@ def test_teardown_preserves_bucket_and_refuses_legacy_delete_policy(monkeypatch,
     module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
     module.STATE = tmp_path/'state.json'; module.STATE.write_text('{}')
     module.stack = lambda: {'StackId': 'project-stack'}
-    module.outputs = lambda: {'S3Bucket': 'project-bucket', 'SourceHost': 'source-host'}
+    module.outputs = lambda: {'S3Bucket': 'project-bucket', 'SourceHost': 'source-host',
+                             'WarehouseHost': 'warehouse-host'}
     if missing_policy is None:
         module.delete()
         assert calls == [{'StackName': 'project-stack'}]
         assert json.loads(module.STATE.read_text())['retained_bucket'] == 'project-bucket'
+        assert json.loads(module.STATE.read_text())['retained_namespace'] == 'new-warehouse'
     else:
         with pytest.raises(RuntimeError, match='DeletionPolicy'):
             module.delete()
@@ -79,9 +82,10 @@ def test_restored_teardown_keeps_external_data_and_checks_its_identity(monkeypat
     module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
     module.STATE=tmp_path/'state.json';module.STATE.write_text(json.dumps(dict(retained,mode='restored')))
     module.stack=lambda:{'StackId':'restore-stack'}
-    module.outputs=lambda:{'S3Bucket':'existing-bucket','CopyRoleArn':'existing-role'}
+    module.outputs=lambda:{'S3Bucket':'existing-bucket','CopyRoleArn':'existing-role','WarehouseHost':'warehouse-host'}
     if tamper:
         with pytest.raises(RuntimeError,match='DeletionPolicy'):module.delete()
         assert not calls
     else:
         module.delete();assert calls==[{'StackName':'restore-stack'}]
+        assert json.loads(module.STATE.read_text())['retained_namespace']=='existing-warehouse'

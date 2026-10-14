@@ -19,7 +19,7 @@ def counts():
         cursor = connection.cursor()
         result = {}
         for table in SOURCE_COLUMNS:
-            cursor.execute(f'SELECT count(*),count(DISTINCT _event_id) FROM raw.{table}')
+            cursor.execute(f'SELECT count(*),count(DISTINCT _event_id) FROM "raw".{table}')
             raw_rows, unique_events = cursor.fetchone()
             cursor.execute(f'SELECT count(*),count(DISTINCT _event_id) FROM staging.stg_{table}')
             staged_rows, staged_unique = cursor.fetchone()
@@ -42,7 +42,7 @@ def main():
     original = originals[0]
     with warehouse_connection() as connection:
         cursor = connection.cursor()
-        cursor.execute('SELECT 1 FROM raw.loaded_files WHERE source_file=%s', (f's3://{bucket}/{original}',))
+        cursor.execute('SELECT 1 FROM "raw".loaded_files WHERE source_file=%s', (f's3://{bucket}/{original}',))
         if not cursor.fetchone():
             raise RuntimeError('Load all capture files and build marts before replay testing')
         connection.commit()

@@ -1,10 +1,12 @@
 # S3 layout
 
-Retained bucket from the earlier Parquet demonstration: `olist-cdc-ezajhtylhk8v` (14 files).
+Current verified bucket: `olist-cdc-d801223c9215` (**17 objects**, 268,630,746 bytes,
+about 256 MiB). It contains one original dataset ZIP, four initial-load captures,
+two CDC captures, and ten prepared CSV files. Temporary replay copies were
+removed after verification; the original DMS captures remain unchanged.
 
-The duplicate replay CSV and its four derived Parquet files have been removed.
-The original CDC batch remains. Current loaders retain repeated deliveries in raw; staging deduplicates them. Historical validation evidence remains unchanged. Migration counts below
-describe the bucket before this cleanup.
+The two older capture buckets were deleted after full validation. One verified
+capture lineage remains. [Cleanup inventory](evidence/olist-20261014-cleanup.json).
 
 ```text
 dataset/original-olist-brazilian-ecommerce.zip
@@ -16,8 +18,8 @@ copy-ready/cdc/<original-cdc-filename-without-.csv>/<table>.csv
 
 Validation reports are kept in Git under `docs/evidence/`; duplicate S3 copies
 have been removed. The bucket contains only the source archive, original captures
-and derived COPY inputs. The retained bucket still contains earlier Parquet files;
-this tree shows the CSV paths produced by the current loader, not an executed S3 migration.
+and derived COPY inputs. The current bucket contains the CSV files produced and verified by the October 14 run;
+no Parquet COPY inputs remain in this capture lineage.
 
 `initial-load/` holds the baseline full-load snapshots; `cdc/` holds subsequent
 changes. The PostgreSQL schema is still `ecommerce`. A DMS target-schema rename
@@ -38,6 +40,11 @@ Retries write the same prepared paths. Capture files must remain immutable:
 the loader tracks original S3 keys and skips previously committed files without
 re-downloading them. Events redelivered under another filename are retained in raw and deduplicated in staging.
 A new capture lineage requires a fresh bucket and warehouse state.
+
+## Historical migrations
+
+The following reports describe earlier buckets and Parquet objects, which have
+now been superseded and removed. Their evidence is preserved in Git.
 
 On September 24, 2026, all 12 retained Parquet objects were copied to readable paths
 inside S3. Replacement sizes and ETags matched before old derived keys were removed.

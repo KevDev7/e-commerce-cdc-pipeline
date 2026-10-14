@@ -184,7 +184,9 @@ def delete():
         state["retained_region"] = "us-east-1"
         state["capture_prefix"] = "raw"
         state["retained_copy_role"] = result.get("CopyRoleArn")
-        state["retained_namespace"] = "synthea-cdc" if "WarehouseHost" in result else None
+        state["retained_namespace"] = (
+            external.get("namespace") or deployed["Resources"]["Namespace"]["Properties"]["NamespaceName"]
+        ) if "WarehouseHost" in result else None
         state["source_snapshot_instance"] = "synthea-cdc-source"
         STATE.write_text(json.dumps(state, indent=2))
         print(f"Retaining s3://{bucket}/ (source archive, original captures and derived COPY inputs)")
