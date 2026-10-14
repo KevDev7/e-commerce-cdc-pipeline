@@ -368,10 +368,10 @@
           <mxGeometry as="geometry" x="25.0" y="632" width="240" height="20" />
         </mxCell>
         <mxCell id="rule-RAW-2" value="Event Deduplication" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
-          <mxGeometry as="geometry" x="25.0" y="692" width="240" height="20" />
+          <mxGeometry as="geometry" x="25.0" y="712" width="240" height="20" />
         </mxCell>
         <mxCell id="rule-RAW-3" value="Atomic File Commits" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
-          <mxGeometry as="geometry" x="25.0" y="712" width="240" height="20" />
+          <mxGeometry as="geometry" x="25.0" y="732" width="240" height="20" />
         </mxCell>
         <mxCell id="rule-RAW-4" value="No Dimensional Modeling" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="25.0" y="652" width="240" height="20" />
@@ -380,7 +380,7 @@
           <mxGeometry as="geometry" x="25.0" y="672" width="240" height="20" />
         </mxCell>
         <mxCell id="rule-RAW-6" value="Only Append" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
-          <mxGeometry as="geometry" x="25.0" y="732" width="240" height="20" />
+          <mxGeometry as="geometry" x="25.0" y="692" width="240" height="20" />
         </mxCell>
         <mxCell id="rules-title-STAGING" value="Rules" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#252525;strokeWidth=1.2;fontStyle=5;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="305.0" y="556.0" width="230" height="28" />
@@ -410,7 +410,7 @@
           <mxGeometry as="geometry" x="575.0" y="612" width="240" height="20" />
         </mxCell>
         <mxCell id="rule-INTERMEDIATE-2" value="Change Ordering" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
-          <mxGeometry as="geometry" x="575.0" y="692" width="240" height="20" />
+          <mxGeometry as="geometry" x="575.0" y="712" width="240" height="20" />
         </mxCell>
         <mxCell id="rule-INTERMEDIATE-3" value="No Cross-Table Joins" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="575.0" y="632" width="240" height="20" />
@@ -440,7 +440,7 @@
           <mxGeometry as="geometry" x="850.0" y="672" width="240" height="20" />
         </mxCell>
         <mxCell id="rule-MARTS-6" value="Only Overwrite" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
-          <mxGeometry as="geometry" x="850.0" y="732" width="240" height="20" />
+          <mxGeometry as="geometry" x="850.0" y="692" width="240" height="20" />
         </mxCell>
         <mxCell id="capability-0" value="Metadata &amp;amp; Lineage · dbt" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="806" y="948" width="955" height="30" />
