@@ -66,18 +66,17 @@ history. The diagram shows selected columns and logical relationships.
 
 | Evidence | Result |
 |---|---|
-| Earlier AWS runs | Loaded the historical dataset and verified replay, deletes, recovery, and source-to-target reconciliation. |
-| September 24 scheduled AWS run | Five Airflow runs in a row processed 90 simulated changes. All four current warehouse tables matched RDS after each run. |
 | October 14 AWS revalidation (UTC) | Backfilled all 415,418 historical rows. All 14 models and 40 dbt tests passed after the backfill, CDC updates, and replay. Field-by-field reconciliation and failed-load recovery passed. |
 | Local checks (October 13) | 93 tests passed with small disposable PostgreSQL fixtures. |
 
 The October 14 run validates the current CSV loader, raw strings, staging checks,
-and rebuilt marts. Older reports describe the code used on their dates.
-See the [test results](docs/validation.md),
-[five-cycle report](docs/five-cycle-validation.md), and
+and rebuilt marts. See the [test results and earlier runs](docs/validation.md) and
 [GitHub CI](https://github.com/KevDev7/e-commerce-cdc-pipeline/actions).
 
 ## Run the project
+
+AWS compute runs during demonstrations and is deleted afterward. Verified data
+is retained for replay and future demonstrations.
 
 Follow the **[AWS runbook](docs/run-cloud.md)** to set up the pipeline, simulate
 transactions, run scheduled batches, check results, and clean up. It also explains
