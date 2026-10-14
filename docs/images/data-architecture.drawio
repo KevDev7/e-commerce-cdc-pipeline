@@ -221,7 +221,7 @@
         <mxCell id="ingest-header" value="Ingest" style="shape=rectangle;fillColor=#f7f7f7;strokeColor=#777777;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=18;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="430" y="172" width="265" height="44" />
         </mxCell>
-        <mxCell id="warehouse-title" value="Data Warehouse" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=20;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
+        <mxCell id="warehouse-title" value="OLAP Data Warehouse" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=20;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="985" y="181" width="630" height="29" />
         </mxCell>
         <mxCell id="redshift-annotation" value="Amazon Redshift" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;spacingLeft=36;" vertex="1" parent="1">
