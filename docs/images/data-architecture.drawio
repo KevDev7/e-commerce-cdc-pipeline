@@ -437,6 +437,9 @@
         <mxCell id="rule-MARTS-6" value="Only Overwrite" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
           <mxGeometry as="geometry" x="850.0" y="692" width="240" height="20" />
         </mxCell>
+        <mxCell id="rule-MARTS-aggregation" value="Aggregation" style="shape=rectangle;strokeColor=none;fillColor=none;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=16;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="warehouse">
+          <mxGeometry as="geometry" x="850.0" y="732" width="240" height="20" />
+        </mxCell>
         <mxCell id="capability-0" value="Metadata &amp;amp; Lineage · dbt" style="shape=rectangle;fillColor=#ffffff;strokeColor=#252525;rounded=0;whiteSpace=wrap;html=1;align=center;verticalAlign=middle;fontFamily=Arial;fontSize=17;fontColor=#252525;strokeWidth=1.2;" vertex="1" parent="1">
           <mxGeometry as="geometry" x="806" y="948" width="955" height="30" />
         </mxCell>
