@@ -36,10 +36,12 @@ def parse_csv(text, source_file, *, snapshot_table=None):
         if table not in SOURCE_COLUMNS or operation not in ("I", "U", "D"):
             raise ValueError(f"{source_file}:{line}: unsupported table or operation")
         expected = len(source_columns(table)) + len(DMS_METADATA)
-        if len(fields) != expected:
-            raise ValueError(f"{source_file}:{line}: expected {expected} fields, received {len(fields)}; check DMS column order")
-        values = [None if value == NULL else value for value in fields[:-3]]
-        position, sequence, commit_at = fields[-3:]
+        # Retained captures have an extra _source_lsn before the two metadata
+        # columns. Ignore it so historical replay produces identical events.
+        if len(fields) not in (expected, expected + 1):
+            raise ValueError(f"{source_file}:{line}: expected {expected} fields (or {expected + 1} for legacy captures), received {len(fields)}; check DMS column order")
+        values = [None if value == NULL else value for value in fields[:len(source_columns(table))]]
+        sequence, commit_at = fields[-2:]
         snapshot = snapshot_table is not None
         if snapshot:
             if operation != "I":
@@ -54,8 +56,8 @@ def parse_csv(text, source_file, *, snapshot_table=None):
                 location = sha256(f"{source_file}:{line}".encode()).hexdigest()
                 event_id = f"snapshot-missing-key:{table}:{location}"
         else:
-            if not sequence.isdigit() or len(sequence) > 35 or int(sequence) == 0 or not position:
-                raise ValueError(f"{source_file}:{line}: CDC requires source position and a positive change sequence")
+            if not sequence.isdigit() or len(sequence) > 35 or int(sequence) == 0:
+                raise ValueError(f"{source_file}:{line}: CDC requires a positive change sequence")
             event_id = f"cdc:{table}:{sequence}"
         if not commit_at or commit_at == NULL:
             raise ValueError(f"{source_file}:{line}: missing commit timestamp")

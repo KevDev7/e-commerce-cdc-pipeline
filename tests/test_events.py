@@ -9,7 +9,7 @@ from olist_cdc.warehouse import initialize_raw, load_local
 
 def customer_row(sequence="1", operation="I", city="sao paulo", customer_id="c1"):
     return [operation,"customers","ecommerce",customer_id,"person1","00123",city,"SP",
-            "2026-01-01T00:00:00Z","0/12345",sequence,"2026-01-01T00:00:00Z"]
+            "2026-01-01T00:00:00Z",sequence,"2026-01-01T00:00:00Z"]
 
 
 def csv_text(rows):
@@ -30,7 +30,7 @@ def test_missing_order_and_schema_changes_are_rejected():
     with pytest.raises(ValueError, match="change sequence"):
         parse_csv(csv_text([customer_row(sequence="")]), "bad.csv")
     with pytest.raises(ValueError, match="expected"):
-        parse_csv(csv_text([customer_row()+["extra-column"]]), "bad.csv")
+        parse_csv(csv_text([customer_row()+["extra-column", "extra-column"]]), "bad.csv")
 
 
 @pytest.mark.integration

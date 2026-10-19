@@ -56,8 +56,16 @@ Four tables retain the [source columns](source.md), including `updated_at`, plus
 | `_source_file` | Original S3 object URI |
 
 Python validates column counts, supported tables/schema labels and operations,
-required source position and sequence, and commit metadata. The shared contract
-is in `src/olist_cdc/schema.py`. Business values remain strings in raw.
+the required CDC change sequence, and commit metadata. New DMS captures append
+`_source_order` and `_commit_at` after the source columns. For replay, the parser
+also accepts retained files with the old `_source_lsn` column before those two
+columns; that unused value is ignored. Both layouts produce the same event IDs
+and COPY-ready rows. The shared contract is in `src/olist_cdc/schema.py`.
+Business values remain strings in raw.
+
+Removing `_source_lsn` requires no raw schema change or full backfill. Existing
+captures and prepared files can stay in S3. The updated table mappings take effect
+when deployed to DMS; the parser supports both layouts before and after deployment.
 
 COPY writes directly into the raw tables. All table COPYs from one original file
 and its `raw.loaded_files` entry share one transaction. A failure rolls back that

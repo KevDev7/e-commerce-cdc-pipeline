@@ -7,7 +7,8 @@ from test_events import csv_text, customer_row
 
 
 @pytest.mark.parametrize('fail',[False,True])
-def test_file_metrics_only_count_committed_files(monkeypatch,fail):
+@pytest.mark.parametrize('legacy', [False, True])
+def test_file_metrics_only_count_committed_files(monkeypatch,fail,legacy):
     monkeypatch.setenv('CAPTURE_PREFIX','raw')
     class Connection:
         loaded=False
@@ -27,7 +28,11 @@ def test_file_metrics_only_count_committed_files(monkeypatch,fail):
         def close(self):pass
     class S3:
         def get_object(self,**kwargs):
-            return {'Body':io.BytesIO(csv_text([customer_row(),customer_row(sequence='2',operation='U'),customer_row(sequence='3',operation='D')]).encode())}
+            rows = [customer_row(),customer_row(sequence='2',operation='U'),customer_row(sequence='3',operation='D')]
+            if legacy:
+                for row in rows:
+                    row.insert(-2, '0/12345')
+            return {'Body':io.BytesIO(csv_text(rows).encode())}
         def put_object(self,**kwargs):
             assert kwargs["Key"] == "copy-ready/cdc/test/customers.csv"
             from olist_cdc.schema import RAW_METADATA, source_columns

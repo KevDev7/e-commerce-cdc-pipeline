@@ -10,7 +10,7 @@ active runs before manual warehouse loading or builds.
 | Area | Checks |
 |---|---|
 | Source | Retry-safe seeding/simulation, committed inserts/updates/deletes, and rollback exclusion |
-| Ingestion | CSV structure and metadata, source string preservation, atomic file loads, and completed-file retries |
+| Ingestion | CSV structure and metadata, replay compatibility with captures containing the retired `_source_lsn` column, source string preservation, atomic file loads, and completed-file retries |
 | Staging | Event deduplication, conflicting copies, required keys, and strict type conversion |
 | Intermediate | Out-of-order events, late snapshots, deletes/reinserts, and customer history intervals |
 | Marts | Current customer joins, independent item/payment totals, repeated builds, and model failure/retry |
@@ -20,6 +20,11 @@ The rollback check observes PostgreSQL and the CDC path excluding uncommitted
 writes; PostgreSQL provides transaction rollback. Our code implements file-load
 transactions, staging checks, model logic, and batch completion safeguards.
 Local fixtures test negative cases without downloading Olist or using AWS.
+Offline tests compare initial-load and insert/update/delete records in both CSV
+layouts for all four tables. They verify identical event identities and COPY-ready
+output, and exercise the cloud loader with fake S3/SQL clients for both layouts.
+The two-column metadata capture configuration has not been verified in a new AWS
+run; the dated results below describe the earlier three-column capture format.
 
 ## Verify a normal demonstration
 

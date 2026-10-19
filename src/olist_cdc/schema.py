@@ -20,7 +20,7 @@ TYPES = {
 }
 
 # DMS appends these fields after the source columns; raw retains a normalized envelope.
-DMS_METADATA = ("_source_lsn", "_source_order", "_commit_at")
+DMS_METADATA = ("_source_order", "_commit_at")
 RAW_METADATA = ("_event_id", "_op", "_source_order", "_commit_at", "_is_snapshot", "_source_file")
 
 
